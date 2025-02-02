@@ -127,9 +127,15 @@ $ssl_info = isset($metadata['ssl_info']) ? $metadata['ssl_info'] : [];
         <p class="hsz-ssl-info">
             <strong><?php _e('SSL/TLS Information:', 'hellaz-sitez-analyzer'); ?></strong>
             <ul>
-                <li><?php _e('Valid From:', 'hellaz-sitez-analyzer'); ?> <?php echo esc_html($ssl_info['valid_from']); ?></li>
-                <li><?php _e('Valid To:', 'hellaz-sitez-analyzer'); ?> <?php echo esc_html($ssl_info['valid_to']); ?></li>
-                <li><?php _e('Issuer:', 'hellaz-sitez-analyzer'); ?> <?php echo esc_html($ssl_info['issuer']); ?></li>
+                <?php if (!empty($ssl_info['valid_from'])) : ?>
+                    <li><?php _e('Valid From:', 'hellaz-sitez-analyzer'); ?> <?php echo esc_html($ssl_info['valid_from']); ?></li>
+                <?php endif; ?>
+                <?php if (!empty($ssl_info['valid_to'])) : ?>
+                    <li><?php _e('Valid To:', 'hellaz-sitez-analyzer'); ?> <?php echo esc_html($ssl_info['valid_to']); ?></li>
+                <?php endif; ?>
+                <?php if (!empty($ssl_info['issuer'])) : ?>
+                    <li><?php _e('Issuer:', 'hellaz-sitez-analyzer'); ?> <?php echo esc_html($ssl_info['issuer']); ?></li>
+                <?php endif; ?>
             </ul>
         </p>
     <?php endif; ?>

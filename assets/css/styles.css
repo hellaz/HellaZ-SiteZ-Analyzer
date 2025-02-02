@@ -25,3 +25,78 @@
     margin: 0 auto;
     border-radius: 8px; /* Optional: Adds a modern touch */
 }
+/* Metadata Template Styles */
+.hsz-metadata {
+    font-family: Arial, sans-serif;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
+.hsz-metadata .hsz-favicon img {
+    max-width: 50px;
+    height: auto;
+    display: block;
+    margin: 0 auto 10px;
+    border-radius: 4px;
+}
+
+.hsz-metadata .hsz-title {
+    margin-top: 0;
+    font-size: 1.5em;
+    color: #333;
+}
+
+.hsz-metadata .hsz-description {
+    margin: 10px 0;
+    color: #666;
+}
+
+.hsz-metadata .hsz-canonical-url,
+.hsz-metadata .hsz-og-title,
+.hsz-metadata .hsz-twitter-title {
+    margin: 10px 0;
+    font-size: 0.9em;
+    color: #555;
+}
+
+/* Social Media Template Styles */
+.hsz-social-media {
+    margin-top: 20px;
+}
+
+.hsz-social-media h4 {
+    margin-bottom: 10px;
+    font-size: 1.2em;
+    color: #333;
+}
+
+.hsz-social-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.hsz-social-item {
+    background-color: #0073aa;
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 0.9em;
+}
+
+.hsz-social-item a {
+    color: #fff;
+    text-decoration: none;
+}
+
+.hsz-social-item:hover {
+    background-color: #005177;
+}

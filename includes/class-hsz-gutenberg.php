@@ -1,4 +1,4 @@
-// Gutenberg block integration
+<?php
 namespace HSZ;
 
 class Gutenberg {

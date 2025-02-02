@@ -19,14 +19,16 @@ class SocialMedia {
  
     public function detect_social_media_links($html) {
             $platforms = [
-                'facebook' => '/facebook\.com/i',
-                'twitter' => '/twitter\.com/i',
-                'instagram' => '/instagram\.com/i',
-                'linkedin' => '/linkedin\.com/i',
-                'youtube' => '/youtube\.com/i',
-                'vimeo' => '/vimeo\.com/i',
-                'tiktok' => '/tiktok\.com/i',
-                'bsky' => '/bsky\.app/i',
+            'facebook' => '/facebook\.com/i',
+            'twitter' => '/twitter\.com/i',
+            'instagram' => '/instagram\.com/i',
+            'linkedin' => '/linkedin\.com/i',
+            'youtube' => '/youtube\.com/i',
+            'vimeo' => '/vimeo\.com/i',
+            'tiktok' => '/tiktok\.com/i',
+            'bsky' => '/bsky\.app/i',
+            'youtube' => '/youtube\.com/i',
+            'pinterest' => '/pinterest\.com/i',
             ];
     
             $social_media = [];

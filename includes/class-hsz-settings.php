@@ -93,11 +93,6 @@ class Settings {
         echo '<input type="text" name="hsz_fallback_image" value="' . esc_attr($fallback_image) . '" class="regular-text">';
     }
 
-    public function render_api_key_field() {
-        $api_key = get_option('hsz_api_key', '');
-        echo '<input type="text" name="hsz_api_key" value="' . esc_attr($api_key) . '" class="regular-text">';
-    }
-
     public function render_enable_disclaimer_field() {
         $enable_disclaimer = get_option('hsz_enable_disclaimer', false);
         echo '<input type="checkbox" name="hsz_enable_disclaimer" value="1"' . checked(1, $enable_disclaimer, false) . '>';
@@ -107,4 +102,11 @@ class Settings {
         $disclaimer_message = get_option('hsz_disclaimer_message', __('This is a default disclaimer message.', 'hellaz-sitez-analyzer'));
         echo '<textarea name="hsz_disclaimer_message" rows="5" class="large-text">' . esc_textarea($disclaimer_message) . '</textarea>';
     }
+
+    public function render_api_key_field() {
+        $api_key = get_option('hsz_api_key', '');
+        echo '<input type="text" name="hsz_api_key" value="' . esc_attr($api_key) . '" class="regular-text">';
+        echo '<p class="description">' . __('Enter your IP Geolocation API key (e.g., from ip-api.com).', 'hellaz-sitez-analyzer') . '</p>';
+    }
+    
 }

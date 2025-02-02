@@ -1,4 +1,4 @@
-// Security information retrieval
+<?php
 namespace HSZ;
 
 class Security {

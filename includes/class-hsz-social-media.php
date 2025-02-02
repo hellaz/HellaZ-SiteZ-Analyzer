@@ -15,4 +15,25 @@ class SocialMedia {
         }
         return $links;
     }
+    public function detect_social_media_links($html) {
+            $platforms = [
+                'facebook' => '/facebook\.com/i',
+                'twitter' => '/twitter\.com/i',
+                'instagram' => '/instagram\.com/i',
+                'linkedin' => '/linkedin\.com/i',
+                'youtube' => '/youtube\.com/i',
+                'vimeo' => '/vimeo\.com/i',
+                'tiktok' => '/tiktok\.com/i',
+                'bsky' => '/bsky\.app/i',
+            ];
+    
+            $social_media = [];
+            foreach ($platforms as $platform => $pattern) {
+                if (preg_match_all($pattern, $html, $matches)) {
+                    $social_media[$platform] = array_unique($matches[0]);
+                }
+            }
+            return $social_media;
+        }
+    
 }

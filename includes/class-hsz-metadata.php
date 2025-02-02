@@ -7,28 +7,31 @@ class Metadata {
         if (!filter_var($url, FILTER_VALIDATE_URL)) {
             return [];
         }
-    
+
         // Fetch remote content
         $response = wp_remote_get($url);
         if (is_wp_error($response)) {
             return [];
         }
-    
+
         // Check HTTP response code
         $response_code = wp_remote_retrieve_response_code($response);
         if ($response_code !== 200) {
             return [];
         }
-    
+
         // Parse HTML content
         $html = wp_remote_retrieve_body($response);
-    
+
         // Suppress warnings for malformed HTML
         libxml_use_internal_errors(true);
         $dom = new \DOMDocument();
         @$dom->loadHTML($html);
         libxml_clear_errors();
-    
+
+        // Extract headers
+        $headers = wp_remote_retrieve_headers($response);
+
         // Extract standard metadata
         $metadata = [
             'title' => $this->get_tag_content($dom, 'title'),
@@ -38,11 +41,13 @@ class Metadata {
             'twitter:title' => $this->get_meta_tag($dom, 'twitter:title'),
             'canonical_url' => $this->get_canonical_url($dom),
             'favicon' => $this->get_favicon($dom, $url),
+            'emails' => $this->get_emails($html),
+            'contact_forms' => $this->get_contact_forms($html),
+            'rss_feeds' => (new RSS())->detect_feeds($html),
+            'technology_stack' => (new Security())->detect_technology_stack($html, $headers),
+            'social_media' => (new SocialMedia())->detect_social_media_links($html),
         ];
 
-        $rss_feeds = (new RSS())->detect_feeds($html);
-        $metadata['rss_feeds'] = $rss_feeds;
-        
         return $metadata;
     }
 
@@ -91,5 +96,17 @@ class Metadata {
         $host = isset($parsed_base['host']) ? $parsed_base['host'] : '';
         $path = isset($parsed_base['path']) ? dirname($parsed_base['path']) : '';
         return esc_url(rtrim($scheme . $host . $path, '/') . '/' . ltrim($url, '/'));
+    }
+
+    private function get_emails($html) {
+        $pattern = '/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/';
+        preg_match_all($pattern, $html, $matches);
+        return array_unique($matches[0]);
+    }
+
+    private function get_contact_forms($html) {
+        $pattern = '/<form[^>]*action="([^"]+)"[^>]*>/i';
+        preg_match_all($pattern, $html, $matches);
+        return array_unique($matches[1]);
     }
 }

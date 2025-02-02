@@ -1,4 +1,4 @@
-// Metadata extraction logic
+<?php
 namespace HSZ;
 
 class Metadata {

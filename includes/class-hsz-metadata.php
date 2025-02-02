@@ -7,24 +7,28 @@ class Metadata {
         if (!filter_var($url, FILTER_VALIDATE_URL)) {
             return [];
         }
-
+    
         // Fetch remote content
         $response = wp_remote_get($url);
         if (is_wp_error($response)) {
             return [];
         }
-
+    
         // Check HTTP response code
         $response_code = wp_remote_retrieve_response_code($response);
         if ($response_code !== 200) {
             return [];
         }
-
+    
         // Parse HTML content
         $html = wp_remote_retrieve_body($response);
+    
+        // Suppress warnings for malformed HTML
+        libxml_use_internal_errors(true);
         $dom = new \DOMDocument();
         @$dom->loadHTML($html);
-
+        libxml_clear_errors();
+    
         // Extract standard metadata
         $metadata = [
             'title' => $this->get_tag_content($dom, 'title'),
@@ -35,7 +39,7 @@ class Metadata {
             'canonical_url' => $this->get_canonical_url($dom),
             'favicon' => $this->get_favicon($dom, $url),
         ];
-
+    
         return $metadata;
     }
 

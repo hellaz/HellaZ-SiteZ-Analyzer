@@ -17,6 +17,7 @@ define('HSZ_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('HSZ_VERSION', '1.0.0'); // Version constant
 
 // Autoload classes
+// Autoload classes
 spl_autoload_register(function ($class) {
     $prefix = 'HSZ\\';
     $base_dir = HSZ_PLUGIN_PATH . 'includes/';
@@ -26,9 +27,14 @@ spl_autoload_register(function ($class) {
         return; // Not a class in the HSZ namespace
     }
 
-    // Remove the namespace prefix and prepend "class-hsz-"
+    // Remove the namespace prefix
     $relative_class = substr($class, $len);
-    $file = $base_dir . 'class-hsz-' . str_replace('\\', '-', strtolower($relative_class)) . '.php';
+
+    // Convert camelCase to kebab-case (e.g., SocialMedia → social-media)
+    $file_name = strtolower(preg_replace('/([a-z])([A-Z])/', '$1-$2', $relative_class));
+
+    // Prepend "class-hsz-" to the file name
+    $file = $base_dir . 'class-hsz-' . $file_name . '.php';
 
     if (file_exists($file)) {
         require_once $file;

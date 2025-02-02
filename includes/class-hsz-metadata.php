@@ -7,22 +7,22 @@ class Metadata {
         if (!filter_var($url, FILTER_VALIDATE_URL)) {
             return [];
         }
-
+    
         // Fetch remote content
         $response = wp_remote_get($url);
         if (is_wp_error($response)) {
             return [];
         }
-
+    
         // Check HTTP response code
         $response_code = wp_remote_retrieve_response_code($response);
-        if ($response_code !== 200) {
-            return [];
+        if ($response_code < 200 || $response_code >= 400) {
+            return ['error' => sprintf(__('HTTP Error: %d', 'hellaz-sitez-analyzer'), $response_code)];
         }
-
+    
         // Parse HTML content
         $html = wp_remote_retrieve_body($response);
-
+    
         // Suppress warnings for malformed HTML
         libxml_use_internal_errors(true);
         $dom = new \DOMDocument();

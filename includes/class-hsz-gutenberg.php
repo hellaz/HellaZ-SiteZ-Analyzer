@@ -30,6 +30,8 @@ class Gutenberg {
     }
 
     public function register_block() {
+        error_log('Registering Gutenberg block...'); // Debugging
+
         // Register block script
         wp_register_script(
             'hsz-gutenberg-block',
@@ -50,5 +52,7 @@ class Gutenberg {
             'editor_script' => 'hsz-gutenberg-block',
             'render_callback' => [$this, 'render_block'],
         ]);
+
+        error_log('Gutenberg block registered.'); // Debugging
     }
 }

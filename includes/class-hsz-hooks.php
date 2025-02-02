@@ -1,4 +1,4 @@
-// Hook and filter system
+<?php
 namespace HSZ;
 
 class Hooks {

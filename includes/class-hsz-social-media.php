@@ -1,4 +1,4 @@
-// Social media detection logic
+<?php
 namespace HSZ;
 
 class SocialMedia {

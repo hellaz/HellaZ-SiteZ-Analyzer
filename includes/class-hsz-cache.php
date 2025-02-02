@@ -1,4 +1,4 @@
-// Caching system (Transient API)
+<?php
 namespace HSZ;
 
 class Cache {

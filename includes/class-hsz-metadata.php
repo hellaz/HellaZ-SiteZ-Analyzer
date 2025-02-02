@@ -2,10 +2,6 @@
 namespace HSZ;
 
 class Metadata {
-    public function __construct() {
-        add_action('init', [$this, 'extract_metadata']);
-    }
-
     public function extract_metadata($url) {
         // Validate URL
         if (!filter_var($url, FILTER_VALIDATE_URL)) {

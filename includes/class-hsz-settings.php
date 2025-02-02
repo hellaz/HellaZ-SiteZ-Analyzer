@@ -10,7 +10,7 @@ class Settings {
     public function add_settings_page() {
         add_options_page(
             __('HellaZ SiteZ Analyzer Settings', 'hellaz-sitez-analyzer'),
-            'SiteZ Analyzer',
+            __('SiteZ Analyzer', 'hellaz-sitez-analyzer'),
             'manage_options',
             'hsz-settings',
             [$this, 'render_settings_page']
@@ -23,7 +23,7 @@ class Settings {
             <h1><?php _e('HellaZ SiteZ Analyzer Settings', 'hellaz-sitez-analyzer'); ?></h1>
             <form method="post" action="options.php">
                 <?php
-                settings_fields('hsz_settings_group');
+                settings_fields('hsz-settings');
                 do_settings_sections('hsz-settings');
                 submit_button();
                 ?>
@@ -39,7 +39,7 @@ class Settings {
             [$this, 'render_general_settings_description'],
             'hsz-settings'
         );
-    
+
         // Fallback Image
         add_settings_field(
             'hsz_fallback_image',
@@ -49,7 +49,7 @@ class Settings {
             'hsz_general_settings'
         );
         register_setting('hsz-settings', 'hsz_fallback_image');
-    
+
         // API Key
         add_settings_field(
             'hsz_api_key',
@@ -60,24 +60,51 @@ class Settings {
         );
         register_setting('hsz-settings', 'hsz_api_key');
 
-        // Disclaimer
-        register_setting('hsz_settings_group', 'hsz_enable_disclaimer');
-        add_settings_field('hsz_enable_disclaimer', __('Enable Disclaimer Label', 'hellaz-sitez-analyzer'), [$this, 'render_disclaimer_field'], 'hsz-settings', 'hsz_main_section');
+        // Disclaimer Enable/Disable
+        add_settings_field(
+            'hsz_enable_disclaimer',
+            __('Enable Disclaimer', 'hellaz-sitez-analyzer'),
+            [$this, 'render_enable_disclaimer_field'],
+            'hsz-settings',
+            'hsz_general_settings'
+        );
+        register_setting('hsz-settings', 'hsz_enable_disclaimer', [
+            'type' => 'boolean',
+            'default' => false,
+        ]);
+
+        // Disclaimer Message
+        add_settings_field(
+            'hsz_disclaimer_message',
+            __('Disclaimer Message', 'hellaz-sitez-analyzer'),
+            [$this, 'render_disclaimer_message_field'],
+            'hsz-settings',
+            'hsz_general_settings'
+        );
+        register_setting('hsz-settings', 'hsz_disclaimer_message');
     }
-    
+
+    public function render_general_settings_description() {
+        echo '<p>' . __('Configure general settings for the HellaZ SiteZ Analyzer plugin.', 'hellaz-sitez-analyzer') . '</p>';
+    }
+
     public function render_fallback_image_field() {
         $fallback_image = get_option('hsz_fallback_image', '');
         echo '<input type="text" name="hsz_fallback_image" value="' . esc_attr($fallback_image) . '" class="regular-text">';
     }
-    
+
     public function render_api_key_field() {
         $api_key = get_option('hsz_api_key', '');
         echo '<input type="text" name="hsz_api_key" value="' . esc_attr($api_key) . '" class="regular-text">';
-    }    
+    }
 
+    public function render_enable_disclaimer_field() {
+        $enable_disclaimer = get_option('hsz_enable_disclaimer', false);
+        echo '<input type="checkbox" name="hsz_enable_disclaimer" value="1"' . checked(1, $enable_disclaimer, false) . '>';
+    }
 
-    public function render_disclaimer_field() {
-        $value = get_option('hsz_enable_disclaimer', 'yes');
-        echo '<input type="checkbox" name="hsz_enable_disclaimer" value="yes" ' . checked($value, 'yes', false) . ' />';
+    public function render_disclaimer_message_field() {
+        $disclaimer_message = get_option('hsz_disclaimer_message', __('This is a default disclaimer message.', 'hellaz-sitez-analyzer'));
+        echo '<textarea name="hsz_disclaimer_message" rows="5" class="large-text">' . esc_textarea($disclaimer_message) . '</textarea>';
     }
 }

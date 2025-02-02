@@ -1,4 +1,4 @@
-// Settings page and user configuration
+<?php
 namespace HSZ;
 
 class Settings {

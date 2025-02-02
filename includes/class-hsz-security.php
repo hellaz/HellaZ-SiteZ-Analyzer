@@ -20,4 +20,28 @@ class Security {
 
         return $ssl_info;
     }
+    public function detect_technology_stack($html, $headers) {
+        $stack = [];
+
+        // Detect CMS
+        if (strpos($html, 'wp-content') !== false || strpos($html, 'WordPress') !== false) {
+            $stack['cms'] = 'WordPress';
+        } elseif (strpos($html, 'Drupal') !== false) {
+            $stack['cms'] = 'Drupal';
+        }
+
+        // Detect JavaScript frameworks
+        if (strpos($html, 'React') !== false) {
+            $stack['js_framework'] = 'React';
+        } elseif (strpos($html, 'Vue') !== false) {
+            $stack['js_framework'] = 'Vue.js';
+        }
+
+        // Detect web server from headers
+        if (isset($headers['server'])) {
+            $stack['web_server'] = $headers['server'];
+        }
+
+        return $stack;
+    }
 }

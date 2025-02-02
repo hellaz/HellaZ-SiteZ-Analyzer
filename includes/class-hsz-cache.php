@@ -16,4 +16,17 @@ class Cache {
         // Fetch and process data here
         return [];
     }
+
+    public function clear_cache() {
+        if (isset($_POST['hsz_clear_cache'])) {
+            delete_transient('hsz_metadata_cache');
+            add_settings_error('hsz_messages', 'cache_cleared', __('Cache cleared successfully.', 'hellaz-sitez-analyzer'), 'success');
+        }
+    }
+    
+    public function render_cache_clear_button() {
+        echo '<form method="post">';
+        submit_button(__('Clear Cache', 'hellaz-sitez-analyzer'), 'secondary', 'hsz_clear_cache');
+        echo '</form>';
+    }
 }

@@ -1,9 +1,10 @@
 // Core plugin logic
+<?php
 namespace HSZ;
 
 class Core {
     public static function init() {
-        // Load dependencies
+        // Initialize all plugin components
         new Metadata();
         new SocialMedia();
         new RSS();

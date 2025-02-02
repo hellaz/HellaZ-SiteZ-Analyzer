@@ -16,8 +16,6 @@ $contact_forms = isset($metadata['contact_forms']) ? $metadata['contact_forms'] 
 $technology_stack = isset($metadata['technology_stack']) ? $metadata['technology_stack'] : [];
 $social_media = isset($metadata['social_media']) ? $metadata['social_media'] : [];
 $ssl_info = isset($metadata['ssl_info']) ? $metadata['ssl_info'] : [];
-?>
-
 // Disclaimer settings
 $enable_disclaimer = get_option('hsz_enable_disclaimer', false);
 $disclaimer_message = get_option('hsz_disclaimer_message', __('This is a default disclaimer message.', 'hellaz-sitez-analyzer'));

@@ -18,3 +18,10 @@
     margin: 10px 0;
     color: #666;
 }
+.hsz-fallback-image {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    border-radius: 8px; /* Optional: Adds a modern touch */
+}

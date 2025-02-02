@@ -143,7 +143,7 @@ $disclaimer_message = get_option('hsz_disclaimer_message', __('This is a default
         </p>
     <?php endif; ?>
 
-    <!-- Add logic to display the server location in the output. 
+    <!-- Add logic to display the server location in the output. -->
     <?php if (!empty($metadata['server_location'])) : ?>
         <p class="hsz-server-location">
             <strong><?php _e('Server Location:', 'hellaz-sitez-analyzer'); ?></strong>

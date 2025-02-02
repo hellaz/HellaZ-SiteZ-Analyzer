@@ -59,7 +59,8 @@ class Settings {
             'hsz_general_settings'
         );
         register_setting('hsz-settings', 'hsz_api_key');
-    
+
+        // Disclaimer
         register_setting('hsz_settings_group', 'hsz_enable_disclaimer');
         add_settings_field('hsz_enable_disclaimer', __('Enable Disclaimer Label', 'hellaz-sitez-analyzer'), [$this, 'render_disclaimer_field'], 'hsz-settings', 'hsz_main_section');
     }

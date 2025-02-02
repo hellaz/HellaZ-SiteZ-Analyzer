@@ -50,16 +50,6 @@ class Settings {
         );
         register_setting('hsz-settings', 'hsz_fallback_image');
 
-        // API Key
-        add_settings_field(
-            'hsz_api_key',
-            __('API Key', 'hellaz-sitez-analyzer'),
-            [$this, 'render_api_key_field'],
-            'hsz-settings',
-            'hsz_general_settings'
-        );
-        register_setting('hsz-settings', 'hsz_api_key');
-
         // Disclaimer Enable/Disable
         add_settings_field(
             'hsz_enable_disclaimer',
@@ -82,6 +72,44 @@ class Settings {
             'hsz_general_settings'
         );
         register_setting('hsz-settings', 'hsz_disclaimer_message');
+
+        // External API Settings
+        add_settings_section(
+            'hsz_api_settings',
+            __('External API Settings', 'hellaz-sitez-analyzer'),
+            [$this, 'render_api_settings_description'],
+            'hsz-settings'
+        );
+
+        // VirusTotal API Key
+        add_settings_field(
+            'hsz_virustotal_api_key',
+            __('VirusTotal API Key', 'hellaz-sitez-analyzer'),
+            [$this, 'render_virustotal_api_key_field'],
+            'hsz-settings',
+            'hsz_api_settings'
+        );
+        register_setting('hsz-settings', 'hsz_virustotal_api_key');
+
+        // URLScan.io API Key
+        add_settings_field(
+            'hsz_urlscan_api_key',
+            __('URLScan.io API Key', 'hellaz-sitez-analyzer'),
+            [$this, 'render_urlscan_api_key_field'],
+            'hsz-settings',
+            'hsz_api_settings'
+        );
+        register_setting('hsz-settings', 'hsz_urlscan_api_key');
+
+        // BuiltWith API Key
+        add_settings_field(
+            'hsz_builtwith_api_key',
+            __('BuiltWith API Key', 'hellaz-sitez-analyzer'),
+            [$this, 'render_builtwith_api_key_field'],
+            'hsz-settings',
+            'hsz_api_settings'
+        );
+        register_setting('hsz-settings', 'hsz_builtwith_api_key');
     }
 
     public function render_general_settings_description() {
@@ -103,10 +131,25 @@ class Settings {
         echo '<textarea name="hsz_disclaimer_message" rows="5" class="large-text">' . esc_textarea($disclaimer_message) . '</textarea>';
     }
 
-    public function render_api_key_field() {
-        $api_key = get_option('hsz_api_key', '');
-        echo '<input type="text" name="hsz_api_key" value="' . esc_attr($api_key) . '" class="regular-text">';
-        echo '<p class="description">' . __('Enter your IP Geolocation API key (e.g., from ip-api.com).', 'hellaz-sitez-analyzer') . '</p>';
+    public function render_api_settings_description() {
+        echo '<p>' . __('Configure API keys for external services. Leave blank if you do not wish to use these services.', 'hellaz-sitez-analyzer') . '</p>';
     }
-    
+
+    public function render_virustotal_api_key_field() {
+        $api_key = get_option('hsz_virustotal_api_key', '');
+        echo '<input type="text" name="hsz_virustotal_api_key" value="' . esc_attr($api_key) . '" class="regular-text">';
+        echo '<p class="description">' . __('Get your API key from <a href="https://www.virustotal.com/" target="_blank">VirusTotal</a>.', 'hellaz-sitez-analyzer') . '</p>';
+    }
+
+    public function render_urlscan_api_key_field() {
+        $api_key = get_option('hsz_urlscan_api_key', '');
+        echo '<input type="text" name="hsz_urlscan_api_key" value="' . esc_attr($api_key) . '" class="regular-text">';
+        echo '<p class="description">' . __('Get your API key from <a href="https://urlscan.io/" target="_blank">URLScan.io</a>.', 'hellaz-sitez-analyzer') . '</p>';
+    }
+
+    public function render_builtwith_api_key_field() {
+        $api_key = get_option('hsz_builtwith_api_key', '');
+        echo '<input type="text" name="hsz_builtwith_api_key" value="' . esc_attr($api_key) . '" class="regular-text">';
+        echo '<p class="description">' . __('Get your API key from <a href="https://builtwith.com/" target="_blank">BuiltWith</a>.', 'hellaz-sitez-analyzer') . '</p>';
+    }
 }

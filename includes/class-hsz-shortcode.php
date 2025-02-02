@@ -1,4 +1,4 @@
-// Shortcode integration
+<?php
 namespace HSZ;
 
 class Shortcode {

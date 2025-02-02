@@ -37,6 +37,9 @@ class Metadata {
             'title' => $this->get_tag_content($dom, 'title'),
             'description' => $this->get_meta_tag($dom, 'description'),
             'keywords' => $this->get_meta_tag($dom, 'keywords'),
+            'author' => $this->get_meta_tag($dom, 'author'),
+            'referrer' => $this->get_meta_tag($dom, 'referrer'),
+            'language' => $this->get_language($dom),
             'og:title' => $this->get_meta_tag($dom, 'og:title'),
             'twitter:title' => $this->get_meta_tag($dom, 'twitter:title'),
             'canonical_url' => $this->get_canonical_url($dom),
@@ -78,6 +81,14 @@ class Metadata {
             if ($meta->getAttribute('name') === $name || $meta->getAttribute('property') === $name) {
                 return esc_html($meta->getAttribute('content'));
             }
+        }
+        return '';
+    }
+
+    private function get_language($dom) {
+        $html = $dom->getElementsByTagName('html')->item(0);
+        if ($html && $html->hasAttribute('lang')) {
+            return esc_html($html->getAttribute('lang'));
         }
         return '';
     }
@@ -135,7 +146,7 @@ class Metadata {
         // Use ip-api.com (free tier)
         $response = wp_remote_get("http://ip-api.com/json/$host");
         if (is_wp_error($response)) {
-            return '';
+            return __('Server location unavailable.', 'hellaz-sitez-analyzer');
         }
 
         $body = json_decode(wp_remote_retrieve_body($response), true);
@@ -143,7 +154,7 @@ class Metadata {
             return $body['city'] . ', ' . $body['country'];
         }
 
-        return '';
+        return __('Server location unavailable.', 'hellaz-sitez-analyzer');
     }
 
     private function get_technology_stack($url) {

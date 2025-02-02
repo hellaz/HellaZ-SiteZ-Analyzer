@@ -43,9 +43,10 @@ class Metadata {
             'favicon' => $this->get_favicon($dom, $url),
             'emails' => $this->get_emails($html),
             'contact_forms' => $this->get_contact_forms($html),
-            'rss_feeds' => (new RSS())->detect_feeds($html),
+            'rss_feeds' => (new RSS())->detect_rss_feeds($html),
             'technology_stack' => (new Security())->detect_technology_stack($html, $headers),
             'social_media' => (new SocialMedia())->detect_social_media_links($html),
+            'ssl_info' => (new Security())->get_ssl_info($url), // Add SSL/TLS info
         ];
 
         return $metadata;

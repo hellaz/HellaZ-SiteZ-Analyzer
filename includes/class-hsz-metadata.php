@@ -39,7 +39,10 @@ class Metadata {
             'canonical_url' => $this->get_canonical_url($dom),
             'favicon' => $this->get_favicon($dom, $url),
         ];
-    
+
+        $rss_feeds = (new RSS())->detect_feeds($html);
+        $metadata['rss_feeds'] = $rss_feeds;
+        
         return $metadata;
     }
 

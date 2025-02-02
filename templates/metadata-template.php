@@ -15,6 +15,7 @@ $emails = isset($metadata['emails']) ? $metadata['emails'] : [];
 $contact_forms = isset($metadata['contact_forms']) ? $metadata['contact_forms'] : [];
 $technology_stack = isset($metadata['technology_stack']) ? $metadata['technology_stack'] : [];
 $social_media = isset($metadata['social_media']) ? $metadata['social_media'] : [];
+$ssl_info = isset($metadata['ssl_info']) ? $metadata['ssl_info'] : [];
 ?>
 
 <div class="hsz-metadata">
@@ -119,5 +120,17 @@ $social_media = isset($metadata['social_media']) ? $metadata['social_media'] : [
                 <?php endforeach; ?>
             </ul>
         </div>
+    <?php endif; ?>
+
+    <!-- SSL/TLS Information -->
+    <?php if (!empty($ssl_info)) : ?>
+        <p class="hsz-ssl-info">
+            <strong><?php _e('SSL/TLS Information:', 'hellaz-sitez-analyzer'); ?></strong>
+            <ul>
+                <li><?php _e('Valid From:', 'hellaz-sitez-analyzer'); ?> <?php echo esc_html($ssl_info['valid_from']); ?></li>
+                <li><?php _e('Valid To:', 'hellaz-sitez-analyzer'); ?> <?php echo esc_html($ssl_info['valid_to']); ?></li>
+                <li><?php _e('Issuer:', 'hellaz-sitez-analyzer'); ?> <?php echo esc_html($ssl_info['issuer']); ?></li>
+            </ul>
+        </p>
     <?php endif; ?>
 </div>

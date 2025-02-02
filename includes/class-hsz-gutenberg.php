@@ -32,4 +32,18 @@ class Gutenberg {
 
         error_log('Gutenberg block registered.'); // Debugging
     }
+    
+    public function render_block($attributes) {
+        $url = isset($attributes['url']) ? esc_url($attributes['url']) : '';
+        if (empty($url)) {
+            return '<p>' . __('Please provide a valid URL.', 'hellaz-sitez-analyzer') . '</p>';
+        }
+    
+        // Extract metadata
+        $metadata = (new Metadata())->extract_metadata($url);
+    
+        ob_start();
+        include HSZ_PLUGIN_PATH . 'templates/metadata-template.php';
+        return ob_get_clean();
+    }
 }

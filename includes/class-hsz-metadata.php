@@ -48,7 +48,12 @@ class Metadata {
             'social_media' => (new SocialMedia())->detect_social_media_links($html),
             'ssl_info' => (new Security())->get_ssl_info($url), // Add SSL/TLS info
         ];
-
+        // Use API key for external API calls
+        $api_key = get_option('hsz_api_key', '');
+        if (!empty($api_key)) {
+            $metadata['server_location'] = $this->get_server_location($url, $api_key);
+        }
+        
         return $metadata;
     }
 
@@ -110,4 +115,22 @@ class Metadata {
         preg_match_all($pattern, $html, $matches);
         return array_unique($matches[1]);
     }
+    private function get_server_location($url, $api_key) {
+        $host = parse_url($url, PHP_URL_HOST);
+        if (!$host) {
+            return '';
+        }
+    
+        $response = wp_remote_get("https://api.ip-api.com/json/$host?fields=country,city&key=$api_key");
+        if (is_wp_error($response)) {
+            return '';
+        }
+    
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+        if (isset($body['country'], $body['city'])) {
+            return $body['city'] . ', ' . $body['country'];
+        }
+    
+        return '';
+    }    
 }

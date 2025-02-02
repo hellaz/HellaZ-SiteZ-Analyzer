@@ -1,4 +1,4 @@
-// RSS feed handling logic
+<?php
 namespace HSZ;
 
 class RSS {

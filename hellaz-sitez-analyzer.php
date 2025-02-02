@@ -14,26 +14,22 @@ if (!defined('ABSPATH')) {
 }
 
 // Define constants
-// Define constants
 define('HSZ_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('HSZ_PLUGIN_URL', plugin_dir_url(__FILE__));
 
 // Autoload classes
 spl_autoload_register(function ($class) {
-    // Only load classes in the HSZ namespace
     $prefix = 'HSZ\\';
     $base_dir = HSZ_PLUGIN_PATH . 'includes/';
     $len = strlen($prefix);
 
     if (strncmp($prefix, $class, $len) !== 0) {
-        return; // Not a class in the HSZ namespace
+        return;
     }
 
-    // Remove the namespace prefix and convert to file path
     $relative_class = substr($class, $len);
     $file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
 
-    // Include the file if it exists
     if (file_exists($file)) {
         require_once $file;
     }

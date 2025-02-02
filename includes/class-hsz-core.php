@@ -14,6 +14,7 @@ class Core {
         new Settings();
         new Hooks();
         new Fallbacks();
+        new Widget();
 
         // Load text domain for translations
         load_plugin_textdomain('hellaz-sitez-analyzer', false, dirname(plugin_basename(__FILE__)) . '/languages/');

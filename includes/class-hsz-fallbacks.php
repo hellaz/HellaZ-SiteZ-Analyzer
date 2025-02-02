@@ -1,4 +1,4 @@
-// Fallback logic for missing data
+<?php
 namespace HSZ;
 
 class Fallbacks {

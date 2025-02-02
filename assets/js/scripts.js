@@ -1,7 +1,3 @@
-document.addEventListener('DOMContentLoaded', function () {
-    console.log('HellaZ SiteZ Analyzer scripts loaded.');
-});
-
 const { registerBlockType } = wp.blocks;
 const { TextControl } = wp.components;
 const { createElement } = wp.element;

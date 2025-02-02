@@ -7,9 +7,17 @@ class Shortcode {
     }
 
     public function render_shortcode($atts) {
-        $atts = shortcode_atts(['url' => ''], $atts);
+        $atts = shortcode_atts([
+            'url' => '',
+        ], $atts);
+
         $url = esc_url($atts['url']);
-        $metadata = Metadata::extract_metadata($url);
+        if (empty($url)) {
+            return '<p>' . __('Please provide a valid URL.', 'hellaz-sitez-analyzer') . '</p>';
+        }
+
+        // Extract metadata
+        $metadata = (new Metadata())->extract_metadata($url);
 
         ob_start();
         include HSZ_PLUGIN_PATH . 'templates/metadata-template.php';

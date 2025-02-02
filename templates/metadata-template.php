@@ -18,6 +18,11 @@ $social_media = isset($metadata['social_media']) ? $metadata['social_media'] : [
 $ssl_info = isset($metadata['ssl_info']) ? $metadata['ssl_info'] : [];
 ?>
 
+// Disclaimer settings
+$enable_disclaimer = get_option('hsz_enable_disclaimer', false);
+$disclaimer_message = get_option('hsz_disclaimer_message', __('This is a default disclaimer message.', 'hellaz-sitez-analyzer'));
+?>
+
 <div class="hsz-metadata">
     <!-- Favicon -->
     <div class="hsz-favicon">
@@ -138,5 +143,12 @@ $ssl_info = isset($metadata['ssl_info']) ? $metadata['ssl_info'] : [];
                 <?php endif; ?>
             </ul>
         </p>
+    <?php endif; ?>
+
+    <!-- Disclaimer -->
+    <?php if ($enable_disclaimer && !empty($disclaimer_message)) : ?>
+        <div class="hsz-disclaimer">
+            <p><em><?php echo wp_kses_post($disclaimer_message); ?></em></p>
+        </div>
     <?php endif; ?>
 </div>

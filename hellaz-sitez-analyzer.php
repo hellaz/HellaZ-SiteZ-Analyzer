@@ -1,51 +1,62 @@
 <?php
 /**
  * Plugin Name: HellaZ SiteZ Analyzer
- * Description: Analyze websites for metadata, security, and more.
- * Version: 1.0
- * Author: Your Name
- * Text Domain: hellaz-sitez-analyzer
+ * Description: A comprehensive remote website analysis plugin for WordPress.
+ * Version: 1.0.0
+ * Author: HellaZ Team
+ * GitHub URI: https://github.com/hellaz/HellaZ-SiteZ-Analyzer
  */
 
-// Exit if accessed directly
 if (!defined('ABSPATH')) {
-    exit;
+    exit; // Exit if accessed directly
 }
 
-// Define plugin constants
+// Define constants
 define('HSZ_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('HSZ_PLUGIN_URL', plugin_dir_url(__FILE__));
+define('HSZ_VERSION', '1.0.0'); // Version constant
 
 // Autoload classes
 spl_autoload_register(function ($class) {
-    $namespace = 'HSZ\\';
-    if (strpos($class, $namespace) === 0) {
-        $class_name = str_replace($namespace, '', $class);
-        $file = HSZ_PLUGIN_PATH . 'includes/' . strtolower($class_name) . '.php';
-        if (file_exists($file)) {
-            require_once $file;
-        }
+    $prefix = 'HSZ\\';
+    $base_dir = HSZ_PLUGIN_PATH . 'includes/';
+    $len = strlen($prefix);
+
+    if (strncmp($prefix, $class, $len) !== 0) {
+        return; // Not a class in the HSZ namespace
+    }
+
+    // Remove the namespace prefix
+    $relative_class = substr($class, $len);
+
+    // Convert camelCase to kebab-case (e.g., SocialMedia → social-media)
+    $file_name = strtolower(preg_replace('/([a-z])([A-Z])/', '$1-$2', $relative_class));
+
+    // Prepend "class-hsz-" to the file name
+    $file = $base_dir . 'class-hsz-' . $file_name . '.php';
+
+    if (file_exists($file)) {
+        require_once $file;
+    } else {
+        error_log("Class file not found: $file"); // Debugging
     }
 });
 
 // Initialize the plugin
 add_action('plugins_loaded', function () {
-    // Load text domain for translations
-    load_plugin_textdomain('hellaz-sitez-analyzer', false, dirname(plugin_basename(__FILE__)) . '/languages');
-
-    // Initialize Gutenberg block
-    if (class_exists('HSZ\Gutenberg')) {
-        new \HSZ\Gutenberg();
-    }
-
-    // Initialize shortcode
-    if (class_exists('HSZ\Shortcode')) {
-        new \HSZ\Shortcode();
-    }
-
-    // Initialize settings page
-    if (class_exists('HSZ\Settings')) {
-        new \HSZ\Settings();
+    try {
+        \HSZ\Core::init();
+    } catch (\Exception $e) {
+        error_log('HellaZ SiteZ Analyzer initialization failed: ' . $e->getMessage());
+        add_action('admin_notices', function () use ($e) {
+            ?>
+            <div class="notice notice-error">
+                <p>
+                    <?php echo esc_html__('HellaZ SiteZ Analyzer failed to initialize. Error: ', 'hellaz-sitez-analyzer') . esc_html($e->getMessage()); ?>
+                </p>
+            </div>
+            <?php
+        });
     }
 });
 

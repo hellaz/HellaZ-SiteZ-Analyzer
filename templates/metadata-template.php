@@ -78,39 +78,64 @@ $disclaimer_message = get_option('hsz_disclaimer_message', __('This is a default
         </ul>
     </div>
 
-    <!-- Server Location & SSL/TLS Information (Side by Side) -->
-    <div class="hsz-section hsz-server-ssl">
-        <div class="hsz-side-by-side">
-            <div class="hsz-server-location">
-                <h4><?php _e('Server Location', 'hellaz-sitez-analyzer'); ?></h4>
-                <p>
-                    <?php if (!empty($server_location)) : ?>
-                        <?php echo esc_html($server_location); ?>
-                    <?php else : ?>
-                        <?php _e('Server location unavailable.', 'hellaz-sitez-analyzer'); ?>
-                    <?php endif; ?>
-                </p>
-            </div>
+    <!-- Server Information (Combined Server Location + SSL/TLS Info) -->
+    <div class="hsz-section hsz-server-info">
+        <h4><?php _e('Server Information', 'hellaz-sitez-analyzer'); ?></h4>
+        <ul>
+            <?php if (!empty($server_location)) : ?>
+                <li><strong><?php _e('Server Location:', 'hellaz-sitez-analyzer'); ?></strong> <?php echo esc_html($server_location); ?></li>
+            <?php endif; ?>
 
-            <div class="hsz-ssl-info">
-                <h4><?php _e('SSL/TLS Information', 'hellaz-sitez-analyzer'); ?></h4>
-                <ul>
-                    <?php if (!empty($ssl_info)) : ?>
-                        <?php if (!empty($ssl_info['valid_from'])) : ?>
-                            <li><strong><?php _e('Valid From:', 'hellaz-sitez-analyzer'); ?></strong> <?php echo esc_html($ssl_info['valid_from']); ?></li>
-                        <?php endif; ?>
-                        <?php if (!empty($ssl_info['valid_to'])) : ?>
-                            <li><strong><?php _e('Valid To:', 'hellaz-sitez-analyzer'); ?></strong> <?php echo esc_html($ssl_info['valid_to']); ?></li>
-                        <?php endif; ?>
-                        <?php if (!empty($ssl_info['issuer'])) : ?>
-                            <li><strong><?php _e('Issuer:', 'hellaz-sitez-analyzer'); ?></strong> <?php echo esc_html($ssl_info['issuer']); ?></li>
-                        <?php endif; ?>
-                    <?php else : ?>
-                        <li><?php _e('SSL/TLS information unavailable.', 'hellaz-sitez-analyzer'); ?></li>
-                    <?php endif; ?>
-                </ul>
-            </div>
-        </div>
+            <?php if (!empty($ssl_info)) : ?>
+                <?php if (!empty($ssl_info['valid_from'])) : ?>
+                    <li><strong><?php _e('SSL Valid From:', 'hellaz-sitez-analyzer'); ?></strong> <?php echo esc_html($ssl_info['valid_from']); ?></li>
+                <?php endif; ?>
+                <?php if (!empty($ssl_info['valid_to'])) : ?>
+                    <li><strong><?php _e('SSL Valid To:', 'hellaz-sitez-analyzer'); ?></strong> <?php echo esc_html($ssl_info['valid_to']); ?></li>
+                <?php endif; ?>
+                <?php if (!empty($ssl_info['issuer'])) : ?>
+                    <li><strong><?php _e('SSL Issuer:', 'hellaz-sitez-analyzer'); ?></strong> <?php echo esc_html($ssl_info['issuer']); ?></li>
+                <?php endif; ?>
+            <?php else : ?>
+                <li><?php _e('SSL/TLS information unavailable.', 'hellaz-sitez-analyzer'); ?></li>
+            <?php endif; ?>
+
+            <?php if (!empty($security_analysis)) : ?>
+                <?php foreach ($security_analysis as $key => $value) : ?>
+                    <li><strong><?php echo esc_html(ucfirst($key)); ?>:</strong> <?php echo esc_html($value); ?></li>
+                <?php endforeach; ?>
+            <?php endif; ?>
+
+            <?php if (!empty($urlscan_analysis)) : ?>
+                <li><strong><?php _e('URLScan Report:', 'hellaz-sitez-analyzer'); ?></strong> 
+                    <a href="<?php echo esc_url($urlscan_analysis); ?>" target="<?php echo esc_attr($link_target); ?>"><?php _e('View Report', 'hellaz-sitez-analyzer'); ?></a>
+                </li>
+            <?php endif; ?>
+        </ul>
+    </div>
+
+    <!-- Social Media Profiles -->
+    <div class="hsz-section hsz-social-media">
+        <h4><?php _e('Social Media Profiles', 'hellaz-sitez-analyzer'); ?></h4>
+        <ul class="hsz-social-list">
+            <?php if (!empty($social_media)) : ?>
+                <?php foreach ($social_media as $platform => $links) : ?>
+                    <?php foreach ($links as $link) : ?>
+                        <?php
+                        // Extract username from the link
+                        $username = basename($link);
+                        ?>
+                        <li>
+                            <a href="<?php echo esc_url($link); ?>" target="<?php echo esc_attr($link_target); ?>" rel="noopener noreferrer">
+                                <i class="fab fa-<?php echo esc_attr($platform); ?>"></i> <?php echo esc_html($username); ?>
+                            </a>
+                        </li>
+                    <?php endforeach; ?>
+                <?php endforeach; ?>
+            <?php else : ?>
+                <li><?php _e('No social media profiles detected.', 'hellaz-sitez-analyzer'); ?></li>
+            <?php endif; ?>
+        </ul>
     </div>
 
     <!-- Contact Information (Emails + Contact Forms in 2 Columns) -->
@@ -144,56 +169,6 @@ $disclaimer_message = get_option('hsz_disclaimer_message', __('This is a default
             </div>
         </div>
     </div>
-
-    <!-- Social Media Profiles (Horizontal with Icons) -->
-    <div class="hsz-section hsz-social-media">
-        <h4><?php _e('Social Media Profiles', 'hellaz-sitez-analyzer'); ?></h4>
-        <ul class="hsz-social-list">
-            <?php if (!empty($social_media)) : ?>
-                <?php foreach ($social_media as $platform => $links) : ?>
-                    <?php foreach ($links as $link) : ?>
-                        <li>
-                            <a href="<?php echo esc_url($link); ?>" target="<?php echo esc_attr($link_target); ?>" rel="noopener noreferrer">
-                                <i class="fab fa-<?php echo esc_attr($platform); ?>"></i> <?php echo esc_html(basename($link)); ?>
-                            </a>
-                        </li>
-                    <?php endforeach; ?>
-                <?php endforeach; ?>
-            <?php else : ?>
-                <li><?php _e('No social media profiles detected.', 'hellaz-sitez-analyzer'); ?></li>
-            <?php endif; ?>
-        </ul>
-    </div>
-
-    <!-- Security Analysis -->
-    <div class="hsz-section hsz-security-analysis">
-        <h4><?php _e('Security Analysis', 'hellaz-sitez-analyzer'); ?></h4>
-        <?php if (!empty($security_analysis)) : ?>
-            <?php if (isset($security_analysis['error'])) : ?>
-                <p><?php echo esc_html($security_analysis['error']); ?></p>
-            <?php else : ?>
-                <ul>
-                    <?php foreach ($security_analysis as $key => $value) : ?>
-                        <li><strong><?php echo esc_html(ucfirst($key)); ?>:</strong> <?php echo esc_html($value); ?></li>
-                    <?php endforeach; ?>
-                </ul>
-            <?php endif; ?>
-        <?php else : ?>
-            <p><?php _e('Security analysis unavailable.', 'hellaz-sitez-analyzer'); ?></p>
-        <?php endif; ?>
-    </div>
-
-    <!-- URLScan Analysis -->
-    <?php if (!empty($urlscan_analysis)) : ?>
-        <div class="hsz-section hsz-urlscan-analysis">
-            <h4><?php _e('URLScan Analysis', 'hellaz-sitez-analyzer'); ?></h4>
-            <p>
-                <a href="<?php echo esc_url($urlscan_analysis); ?>" target="<?php echo esc_attr($link_target); ?>" rel="noopener noreferrer">
-                    <?php _e('View URLScan Report', 'hellaz-sitez-analyzer'); ?>
-                </a>
-            </p>
-        </div>
-    <?php endif; ?>
 
     <!-- RSS Feeds -->
     <div class="hsz-section hsz-rss-feeds">

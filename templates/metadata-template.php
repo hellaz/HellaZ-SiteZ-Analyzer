@@ -103,15 +103,17 @@ $disclaimer_message = get_option('hsz_disclaimer_message', __('This is a default
     <!-- Security Analysis -->
     <div class="hsz-section hsz-security-analysis">
         <h4><?php _e('Security Analysis', 'hellaz-sitez-analyzer'); ?></h4>
-        <ul>
-            <?php if (!empty($security_analysis)) : ?>
+        <?php if (is_array($security_analysis) && !empty($security_analysis)) : ?>
+            <ul>
                 <?php foreach ($security_analysis as $key => $value) : ?>
                     <li><strong><?php echo esc_html(ucfirst($key)); ?>:</strong> <?php echo esc_html($value); ?></li>
                 <?php endforeach; ?>
-            <?php else : ?>
-                <li><?php _e('Security analysis unavailable.', 'hellaz-sitez-analyzer'); ?></li>
-            <?php endif; ?>
-        </ul>
+            </ul>
+        <?php elseif (isset($security_analysis['error'])) : ?>
+            <p><?php echo esc_html($security_analysis['error']); ?></p>
+        <?php else : ?>
+            <p><?php _e('Security analysis unavailable.', 'hellaz-sitez-analyzer'); ?></p>
+        <?php endif; ?>
     </div>
 
     <!-- URLScan Analysis -->

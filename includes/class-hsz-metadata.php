@@ -5,13 +5,13 @@ class Metadata {
     public function extract_metadata($url) {
         // Validate URL
         if (!filter_var($url, FILTER_VALIDATE_URL)) {
-            return [];
+            return ['error' => __('Invalid URL.', 'hellaz-sitez-analyzer')];
         }
 
         // Fetch remote content
         $response = wp_remote_get($url);
         if (is_wp_error($response)) {
-            return [];
+            return ['error' => __('Failed to fetch remote content.', 'hellaz-sitez-analyzer')];
         }
 
         // Check HTTP response code
@@ -60,11 +60,15 @@ class Metadata {
         $virustotal_api_key = get_option('hsz_virustotal_api_key', '');
         if (!empty($virustotal_api_key)) {
             $metadata['security_analysis'] = $this->get_security_analysis($url, $virustotal_api_key);
+        } else {
+            $metadata['security_analysis'] = __('VirusTotal API key not provided.', 'hellaz-sitez-analyzer');
         }
 
         $urlscan_api_key = get_option('hsz_urlscan_api_key', '');
         if (!empty($urlscan_api_key)) {
             $metadata['urlscan_analysis'] = $this->get_urlscan_analysis($url, $urlscan_api_key);
+        } else {
+            $metadata['urlscan_analysis'] = __('URLScan.io API key not provided.', 'hellaz-sitez-analyzer');
         }
 
         return $metadata;
@@ -140,12 +144,13 @@ class Metadata {
     private function get_server_location($url) {
         $host = parse_url($url, PHP_URL_HOST);
         if (!$host) {
-            return '';
+            return __('Server location unavailable.', 'hellaz-sitez-analyzer');
         }
 
         // Use ip-api.com (free tier)
         $response = wp_remote_get("http://ip-api.com/json/$host");
         if (is_wp_error($response)) {
+            error_log('IP-API Error: ' . $response->get_error_message());
             return __('Server location unavailable.', 'hellaz-sitez-analyzer');
         }
 
@@ -154,6 +159,7 @@ class Metadata {
             return $body['city'] . ', ' . $body['country'];
         }
 
+        error_log('IP-API Response: ' . print_r($body, true));
         return __('Server location unavailable.', 'hellaz-sitez-analyzer');
     }
 
@@ -164,9 +170,15 @@ class Metadata {
         }
 
         // Use BuiltWith (free tier)
-        $response = wp_remote_get("https://api.builtwith.com/free1/api.json?KEY=YOUR_FREE_API_KEY&LOOKUP=$host");
+        $builtwith_api_key = get_option('hsz_builtwith_api_key', '');
+        if (empty($builtwith_api_key)) {
+            return ['BuiltWith API key not provided.'];
+        }
+
+        $response = wp_remote_get("https://api.builtwith.com/free1/api.json?KEY=$builtwith_api_key&LOOKUP=$host");
         if (is_wp_error($response)) {
-            return [];
+            error_log('BuiltWith Error: ' . $response->get_error_message());
+            return ['Failed to fetch technology stack.'];
         }
 
         $body = json_decode(wp_remote_retrieve_body($response), true);
@@ -174,7 +186,8 @@ class Metadata {
             return $body['Results'];
         }
 
-        return [];
+        error_log('BuiltWith Response: ' . print_r($body, true));
+        return ['Failed to fetch technology stack.'];
     }
 
     private function get_security_analysis($url, $api_key) {
@@ -186,7 +199,8 @@ class Metadata {
         ]);
 
         if (is_wp_error($response)) {
-            return [];
+            error_log('VirusTotal Error: ' . $response->get_error_message());
+            return ['Failed to fetch security analysis.'];
         }
 
         $body = json_decode(wp_remote_retrieve_body($response), true);
@@ -194,7 +208,8 @@ class Metadata {
             return $body['data']['attributes'];
         }
 
-        return [];
+        error_log('VirusTotal Response: ' . print_r($body, true));
+        return ['Failed to fetch security analysis.'];
     }
 
     private function get_urlscan_analysis($url, $api_key) {
@@ -207,7 +222,8 @@ class Metadata {
         ]);
 
         if (is_wp_error($response)) {
-            return [];
+            error_log('URLScan.io Error: ' . $response->get_error_message());
+            return ['Failed to fetch URLScan analysis.'];
         }
 
         $body = json_decode(wp_remote_retrieve_body($response), true);
@@ -215,6 +231,7 @@ class Metadata {
             return $body['result'];
         }
 
-        return [];
+        error_log('URLScan.io Response: ' . print_r($body, true));
+        return ['Failed to fetch URLScan analysis.'];
     }
 }

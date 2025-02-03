@@ -17,7 +17,6 @@ define('HSZ_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('HSZ_VERSION', '1.0.0'); // Version constant
 
 // Autoload classes
-// Autoload classes
 spl_autoload_register(function ($class) {
     $prefix = 'HSZ\\';
     $base_dir = HSZ_PLUGIN_PATH . 'includes/';
@@ -59,4 +58,13 @@ add_action('plugins_loaded', function () {
             <?php
         });
     }
+});
+
+// Enqueue styles and scripts
+add_action('wp_enqueue_scripts', function () {
+    // Enqueue Font Awesome
+    wp_enqueue_style('font-awesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css', [], '6.0.0');
+
+    // Enqueue plugin-specific styles
+    wp_enqueue_style('hsz-styles', HSZ_PLUGIN_URL . 'assets/css/style.css', [], '1.0');
 });

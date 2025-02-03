@@ -87,6 +87,22 @@
     color: #555;
 }
 
+.hsz-side-by-side {
+    display: flex;
+    gap: 20px;
+}
+
+.hsz-columns {
+    display: flex;
+    gap: 20px;
+}
+
+.hsz-column {
+    flex: 1;
+}
+
+
+
 /* Social Media Template Styles */
 .hsz-social-media {
     margin-top: 20px;
@@ -123,4 +139,23 @@
 
 .hsz-social-item:hover {
     background-color: #005177;
+}
+
+.hsz-social-list {
+    display: flex;
+    gap: 10px;
+    list-style: none;
+    padding: 0;
+}
+
+.hsz-social-list li a {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    text-decoration: none;
+    color: #333;
+}
+
+.hsz-social-list li a:hover {
+    text-decoration: underline;
 }

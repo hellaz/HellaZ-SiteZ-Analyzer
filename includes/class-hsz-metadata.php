@@ -141,101 +141,112 @@ class Metadata {
         return array_unique($matches[1]);
     }
 
+    private function get_cached_data($cache_key, $callback, $expiry = 86400) {
+        // Check if cached data exists
+        $cached_data = get_option($cache_key, false);
+        if ($cached_data && isset($cached_data['timestamp']) && time() - $cached_data['timestamp'] < $expiry) {
+            return $cached_data['data'];
+        }
+
+        // Fetch fresh data using the callback
+        $fresh_data = call_user_func($callback);
+
+        // Cache the fresh data
+        update_option($cache_key, [
+            'data' => $fresh_data,
+            'timestamp' => time(),
+        ], false);
+
+        return $fresh_data;
+    }    
+    
     private function get_server_location($url) {
         $host = parse_url($url, PHP_URL_HOST);
         if (!$host) {
-            return __('Server location unavailable.', 'hellaz-sitez-analyzer');
+            return '';
         }
 
-        // Use ip-api.com (free tier)
-        $response = wp_remote_get("http://ip-api.com/json/$host");
-        if (is_wp_error($response)) {
-            error_log('IP-API Error: ' . $response->get_error_message());
-            return __('Server location unavailable.', 'hellaz-sitez-analyzer');
-        }
+        $cache_key = 'hsz_ipapi_' . md5($host);
+        return $this->get_cached_data($cache_key, function () use ($host) {
+            $response = wp_remote_get("http://ip-api.com/json/$host");
+            if (is_wp_error($response)) {
+                error_log('IP-API Error: ' . $response->get_error_message());
+                return '';
+            }
 
-        $body = json_decode(wp_remote_retrieve_body($response), true);
-        if (isset($body['city'], $body['country'])) {
-            return $body['city'] . ', ' . $body['country'];
-        }
+            $body = json_decode(wp_remote_retrieve_body($response), true);
+            if (isset($body['city'], $body['country'])) {
+                return $body['city'] . ', ' . $body['country'];
+            }
 
-        error_log('IP-API Response: ' . print_r($body, true));
-        return __('Server location unavailable.', 'hellaz-sitez-analyzer');
+            return '';
+        });
     }
 
-    private function get_technology_stack($url) {
-        $host = parse_url($url, PHP_URL_HOST);
-        if (!$host) {
-            return [];
-        }
+    private function get_technology_stack($url, $api_key) {
+        $cache_key = 'hsz_builtwith_' . md5($url);
+        return $this->get_cached_data($cache_key, function () use ($url, $api_key) {
+            $response = wp_remote_get("https://api.builtwith.com/free1/api.json?KEY=$api_key&LOOKUP=" . parse_url($url, PHP_URL_HOST));
+            if (is_wp_error($response)) {
+                error_log('BuiltWith Error: ' . $response->get_error_message());
+                return ['error' => __('Failed to fetch technology stack.', 'hellaz-sitez-analyzer')];
+            }
 
-        // Use BuiltWith (free tier)
-        $builtwith_api_key = get_option('hsz_builtwith_api_key', '');
-        if (empty($builtwith_api_key)) {
-            return ['BuiltWith API key not provided.'];
-        }
+            $body = json_decode(wp_remote_retrieve_body($response), true);
+            if (isset($body['Results'])) {
+                return $body['Results'];
+            }
 
-        $response = wp_remote_get("https://api.builtwith.com/free1/api.json?KEY=$builtwith_api_key&LOOKUP=$host");
-        if (is_wp_error($response)) {
-            error_log('BuiltWith Error: ' . $response->get_error_message());
-            return ['Failed to fetch technology stack.'];
-        }
-
-        $body = json_decode(wp_remote_retrieve_body($response), true);
-        if (isset($body['Results'])) {
-            return $body['Results'];
-        }
-
-        error_log('BuiltWith Response: ' . print_r($body, true));
-        return ['Failed to fetch technology stack.'];
+            return ['error' => __('Failed to fetch technology stack.', 'hellaz-sitez-analyzer')];
+        });
     }
 
     private function get_security_analysis($url, $api_key) {
-        if (empty($api_key)) {
-            return ['error' => __('VirusTotal API key not provided.', 'hellaz-sitez-analyzer')];
-        }
-    
-        $response = wp_remote_post('https://www.virustotal.com/api/v3/urls', [
-            'headers' => [
-                'x-apikey' => $api_key,
-            ],
-            'body' => ['url' => $url],
-        ]);
-    
-        if (is_wp_error($response)) {
-            error_log('VirusTotal Error: ' . $response->get_error_message());
+        $cache_key = 'hsz_virustotal_' . md5($url);
+        return $this->get_cached_data($cache_key, function () use ($url, $api_key) {
+            $response = wp_remote_post('https://www.virustotal.com/api/v3/urls', [
+                'headers' => [
+                    'x-apikey' => $api_key,
+                ],
+                'body' => ['url' => $url],
+            ]);
+
+            if (is_wp_error($response)) {
+                error_log('VirusTotal Error: ' . $response->get_error_message());
+                return ['error' => __('Failed to fetch security analysis.', 'hellaz-sitez-analyzer')];
+            }
+
+            $body = json_decode(wp_remote_retrieve_body($response), true);
+            if (isset($body['data']['attributes'])) {
+                return $body['data']['attributes'];
+            }
+
             return ['error' => __('Failed to fetch security analysis.', 'hellaz-sitez-analyzer')];
-        }
-    
-        $body = json_decode(wp_remote_retrieve_body($response), true);
-        if (isset($body['data']['attributes'])) {
-            return $body['data']['attributes'];
-        }
-    
-        error_log('VirusTotal Response: ' . print_r($body, true));
-        return ['error' => __('Failed to fetch security analysis.', 'hellaz-sitez-analyzer')];
+        });
     }
 
     private function get_urlscan_analysis($url, $api_key) {
-        $response = wp_remote_post('https://urlscan.io/api/v1/scan/', [
-            'headers' => [
-                'API-Key' => $api_key,
-                'Content-Type' => 'application/json',
-            ],
-            'body' => json_encode(['url' => $url]),
-        ]);
+        $cache_key = 'hsz_urlscan_' . md5($url);
+        return $this->get_cached_data($cache_key, function () use ($url, $api_key) {
+            $response = wp_remote_post('https://urlscan.io/api/v1/scan/', [
+                'headers' => [
+                    'API-Key' => $api_key,
+                    'Content-Type' => 'application/json',
+                ],
+                'body' => json_encode(['url' => $url]),
+            ]);
 
-        if (is_wp_error($response)) {
-            error_log('URLScan.io Error: ' . $response->get_error_message());
-            return ['Failed to fetch URLScan analysis.'];
-        }
+            if (is_wp_error($response)) {
+                error_log('URLScan.io Error: ' . $response->get_error_message());
+                return ['error' => __('Failed to fetch URLScan analysis.', 'hellaz-sitez-analyzer')];
+            }
 
-        $body = json_decode(wp_remote_retrieve_body($response), true);
-        if (isset($body['result'])) {
-            return $body['result'];
-        }
+            $body = json_decode(wp_remote_retrieve_body($response), true);
+            if (isset($body['result'])) {
+                return $body['result'];
+            }
 
-        error_log('URLScan.io Response: ' . print_r($body, true));
-        return ['Failed to fetch URLScan analysis.'];
+            return ['error' => __('Failed to fetch URLScan analysis.', 'hellaz-sitez-analyzer')];
+        });
     }
 }

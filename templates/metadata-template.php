@@ -119,15 +119,11 @@ $disclaimer_message = get_option('hsz_disclaimer_message', __('This is a default
         <h4><?php _e('Social Media Profiles', 'hellaz-sitez-analyzer'); ?></h4>
         <ul class="hsz-social-list">
             <?php if (!empty($social_media)) : ?>
-                <?php foreach ($social_media as $platform => $links) : ?>
-                    <?php foreach ($links as $link) : ?>
-                        <?php
-                        // Extract username from the link
-                        $username = basename($link);
-                        ?>
+                <?php foreach ($social_media as $platform => $profiles) : ?>
+                    <?php foreach ($profiles as $profile) : ?>
                         <li>
-                            <a href="<?php echo esc_url($link); ?>" target="<?php echo esc_attr($link_target); ?>" rel="noopener noreferrer">
-                                <i class="fab fa-<?php echo esc_attr($platform); ?>"></i> <?php echo esc_html($username); ?>
+                            <a href="<?php echo esc_url($profile['url']); ?>" target="<?php echo esc_attr($link_target); ?>" rel="noopener noreferrer">
+                                <i class="fab fa-<?php echo esc_attr($platform); ?>"></i> <?php echo esc_html($profile['username']); ?>
                             </a>
                         </li>
                     <?php endforeach; ?>

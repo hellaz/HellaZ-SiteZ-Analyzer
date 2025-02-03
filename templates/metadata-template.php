@@ -89,30 +89,34 @@ $disclaimer_message = get_option('hsz_disclaimer_message', __('This is a default
     <!-- Technology Stack -->
     <div class="hsz-section hsz-technology-stack">
         <h4><?php _e('Technology Stack', 'hellaz-sitez-analyzer'); ?></h4>
-        <ul>
-            <?php if (!empty($technology_stack)) : ?>
-                <?php foreach ($technology_stack as $item) : ?>
-                    <li><?php echo esc_html($item); ?></li>
-                <?php endforeach; ?>
+        <?php if (isset($technology_stack) && !empty($technology_stack)) : ?>
+            <?php if (isset($technology_stack['error'])) : ?>
+                <p><?php echo esc_html($technology_stack['error']); ?></p>
             <?php else : ?>
-                <li><?php _e('Technology stack information unavailable.', 'hellaz-sitez-analyzer'); ?></li>
+                <ul>
+                    <?php foreach ($technology_stack as $item) : ?>
+                        <li><?php echo esc_html($item); ?></li>
+                    <?php endforeach; ?>
+                </ul>
+                <p class="hsz-timestamp"><?php printf(__('Last updated: %s', 'hellaz-sitez-analyzer'), human_time_diff(get_option('hsz_builtwith_' . md5($url))['timestamp'], time())); ?></p>
             <?php endif; ?>
-        </ul>
+        <?php endif; ?>
     </div>
 
     <!-- Security Analysis -->
     <div class="hsz-section hsz-security-analysis">
         <h4><?php _e('Security Analysis', 'hellaz-sitez-analyzer'); ?></h4>
-        <?php if (is_array($security_analysis) && !empty($security_analysis)) : ?>
-            <ul>
-                <?php foreach ($security_analysis as $key => $value) : ?>
-                    <li><strong><?php echo esc_html(ucfirst($key)); ?>:</strong> <?php echo esc_html($value); ?></li>
-                <?php endforeach; ?>
-            </ul>
-        <?php elseif (isset($security_analysis['error'])) : ?>
-            <p><?php echo esc_html($security_analysis['error']); ?></p>
-        <?php else : ?>
-            <p><?php _e('Security analysis unavailable.', 'hellaz-sitez-analyzer'); ?></p>
+        <?php if (isset($security_analysis) && !empty($security_analysis)) : ?>
+            <?php if (isset($security_analysis['error'])) : ?>
+                <p><?php echo esc_html($security_analysis['error']); ?></p>
+            <?php else : ?>
+                <ul>
+                    <?php foreach ($security_analysis as $key => $value) : ?>
+                        <li><strong><?php echo esc_html(ucfirst($key)); ?>:</strong> <?php echo esc_html($value); ?></li>
+                    <?php endforeach; ?>
+                </ul>
+                <p class="hsz-timestamp"><?php printf(__('Last updated: %s', 'hellaz-sitez-analyzer'), human_time_diff(get_option('hsz_virustotal_' . md5($url))['timestamp'], time())); ?></p>
+            <?php endif; ?>
         <?php endif; ?>
     </div>
 

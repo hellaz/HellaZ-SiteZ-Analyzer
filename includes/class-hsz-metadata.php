@@ -54,7 +54,7 @@ class Metadata {
 
         // Free APIs
         $metadata['server_location'] = $this->get_server_location($url); // IPStack or ip-api.com (free tier)
-        $metadata['technology_stack'] = array_merge($metadata['technology_stack'], $this->get_technology_stack($url)); // BuiltWith (free tier)
+        // $metadata['technology_stack'] = array_merge($metadata['technology_stack'], $this->get_technology_stack($url)); // BuiltWith (free tier)
 
         // Premium APIs
         $virustotal_api_key = get_option('hsz_virustotal_api_key', '');
@@ -158,8 +158,8 @@ class Metadata {
         ], false);
 
         return $fresh_data;
-    }    
-    
+    }
+
     private function get_server_location($url) {
         $host = parse_url($url, PHP_URL_HOST);
         if (!$host) {

@@ -191,25 +191,29 @@ class Metadata {
     }
 
     private function get_security_analysis($url, $api_key) {
+        if (empty($api_key)) {
+            return ['error' => __('VirusTotal API key not provided.', 'hellaz-sitez-analyzer')];
+        }
+    
         $response = wp_remote_post('https://www.virustotal.com/api/v3/urls', [
             'headers' => [
                 'x-apikey' => $api_key,
             ],
             'body' => ['url' => $url],
         ]);
-
+    
         if (is_wp_error($response)) {
             error_log('VirusTotal Error: ' . $response->get_error_message());
-            return ['Failed to fetch security analysis.'];
+            return ['error' => __('Failed to fetch security analysis.', 'hellaz-sitez-analyzer')];
         }
-
+    
         $body = json_decode(wp_remote_retrieve_body($response), true);
         if (isset($body['data']['attributes'])) {
             return $body['data']['attributes'];
         }
-
+    
         error_log('VirusTotal Response: ' . print_r($body, true));
-        return ['Failed to fetch security analysis.'];
+        return ['error' => __('Failed to fetch security analysis.', 'hellaz-sitez-analyzer')];
     }
 
     private function get_urlscan_analysis($url, $api_key) {

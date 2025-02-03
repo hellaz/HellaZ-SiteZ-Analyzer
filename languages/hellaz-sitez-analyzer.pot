@@ -1,25 +1,147 @@
-// POT file for translations
 msgid ""
 msgstr ""
-"Project-Id-Version: HellaZ SiteZ Analyzer 1.0.0\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-01 12:00+0000\n"
+"Project-Id-Version: HellaZ SiteZ Analyzer\n"
+"POT-Creation-Date: 2023-10-XX XX:XX+XXXX\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Last-Translator: Your Name <your.email@example.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 3.0\n"
+"X-Generator: Poedit X.X\n"
 
-#: hellaz-sitez-analyzer.php:15
+#: hellaz-sitez-analyzer.php:XX
+msgid "HellaZ SiteZ Analyzer"
+msgstr ""
+
+#: hellaz-sitez-analyzer.php:XX
+msgid "Analyze websites for metadata, security, and more."
+msgstr ""
+
+#: includes/class-hsz-settings.php:XX
 msgid "HellaZ SiteZ Analyzer Settings"
 msgstr ""
 
-#: includes/class-hsz-settings.php:45
-msgid "Enable Disclaimer Label"
+#: includes/class-hsz-settings.php:XX
+msgid "SiteZ Analyzer"
 msgstr ""
 
-#: templates/metadata-template.php:3
-msgid "No description available."
+#: includes/class-hsz-settings.php:XX
+msgid "VirusTotal API Key"
+msgstr ""
+
+#: includes/class-hsz-settings.php:XX
+msgid "Enter your VirusTotal API key."
+msgstr ""
+
+#: includes/class-hsz-settings.php:XX
+msgid "URLScan.io API Key"
+msgstr ""
+
+#: includes/class-hsz-settings.php:XX
+msgid "Enter your URLScan.io API key."
+msgstr ""
+
+#: includes/class-hsz-settings.php:XX
+msgid "BuiltWith API Key"
+msgstr ""
+
+#: includes/class-hsz-settings.php:XX
+msgid "Enter your BuiltWith API key."
+msgstr ""
+
+#: includes/class-hsz-settings.php:XX
+msgid "Enable Disclaimer"
+msgstr ""
+
+#: includes/class-hsz-settings.php:XX
+msgid "Check to enable the disclaimer message."
+msgstr ""
+
+#: includes/class-hsz-settings.php:XX
+msgid "Disclaimer Message"
+msgstr ""
+
+#: includes/class-hsz-settings.php:XX
+msgid "Enter the disclaimer message to display."
+msgstr ""
+
+#: includes/class-hsz-settings.php:XX
+msgid "Link Target"
+msgstr ""
+
+#: includes/class-hsz-settings.php:XX
+msgid "Choose how links should open."
+msgstr ""
+
+#: templates/metadata-template.php:XX
+msgid "Basic Metadata"
+msgstr ""
+
+#: templates/metadata-template.php:XX
+msgid "Author:"
+msgstr ""
+
+#: templates/metadata-template.php:XX
+msgid "Keywords:"
+msgstr ""
+
+#: templates/metadata-template.php:XX
+msgid "Referrer:"
+msgstr ""
+
+#: templates/metadata-template.php:XX
+msgid "Language:"
+msgstr ""
+
+#: templates/metadata-template.php:XX
+msgid "Canonical URL:"
+msgstr ""
+
+#: templates/metadata-template.php:XX
+msgid "Server Information"
+msgstr ""
+
+#: templates/metadata-template.php:XX
+msgid "Server Location:"
+msgstr ""
+
+#: templates/metadata-template.php:XX
+msgid "SSL Valid From:"
+msgstr ""
+
+#: templates/metadata-template.php:XX
+msgid "SSL Valid To:"
+msgstr ""
+
+#: templates/metadata-template.php:XX
+msgid "SSL Issuer:"
+msgstr ""
+
+#: templates/metadata-template.php:XX
+msgid "Social Media Profiles"
+msgstr ""
+
+#: templates/metadata-template.php:XX
+msgid "No social media profiles detected."
+msgstr ""
+
+#: templates/metadata-template.php:XX
+msgid "Contact Information"
+msgstr ""
+
+#: templates/metadata-template.php:XX
+msgid "Emails"
+msgstr ""
+
+#: templates/metadata-template.php:XX
+msgid "Contact Forms"
+msgstr ""
+
+#: templates/metadata-template.php:XX
+msgid "RSS Feeds"
+msgstr ""
+
+#: templates/metadata-template.php:XX
+msgid "No RSS feeds detected."
 msgstr ""

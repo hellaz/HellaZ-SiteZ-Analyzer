@@ -14,15 +14,15 @@ $twitter_title = isset($metadata['twitter:title']) ? esc_html($metadata['twitter
 $rss_feeds = isset($metadata['rss_feeds']) ? $metadata['rss_feeds'] : [];
 $emails = isset($metadata['emails']) ? $metadata['emails'] : [];
 $contact_forms = isset($metadata['contact_forms']) ? $metadata['contact_forms'] : [];
-$technology_stack = isset($metadata['technology_stack']) ? $metadata['technology_stack'] : [];
-$social_media = isset($metadata['social_media']) ? $metadata['social_media'] : [];
-$ssl_info = isset($metadata['ssl_info']) ? $metadata['ssl_info'] : [];
+$technology_stack = isset($metadata['technology_stack']) && is_array($metadata['technology_stack']) ? $metadata['technology_stack'] : [];
+$social_media = isset($metadata['social_media']) && is_array($metadata['social_media']) ? $metadata['social_media'] : [];
+$ssl_info = isset($metadata['ssl_info']) && is_array($metadata['ssl_info']) ? $metadata['ssl_info'] : [];
 $author = isset($metadata['author']) ? $metadata['author'] : '';
 $keywords = isset($metadata['keywords']) ? $metadata['keywords'] : '';
 $referrer = isset($metadata['referrer']) ? $metadata['referrer'] : '';
 $language = isset($metadata['language']) ? $metadata['language'] : '';
 $server_location = isset($metadata['server_location']) ? $metadata['server_location'] : '';
-$security_analysis = isset($metadata['security_analysis']) ? $metadata['security_analysis'] : [];
+$security_analysis = isset($metadata['security_analysis']) && is_array($metadata['security_analysis']) ? $metadata['security_analysis'] : [];
 $urlscan_analysis = isset($metadata['urlscan_analysis']) ? $metadata['urlscan_analysis'] : '';
 
 // Disclaimer settings
@@ -89,24 +89,21 @@ $disclaimer_message = get_option('hsz_disclaimer_message', __('This is a default
     <!-- Technology Stack -->
     <div class="hsz-section hsz-technology-stack">
         <h4><?php _e('Technology Stack', 'hellaz-sitez-analyzer'); ?></h4>
-        <?php if (isset($technology_stack) && !empty($technology_stack)) : ?>
-            <?php if (isset($technology_stack['error'])) : ?>
-                <p><?php echo esc_html($technology_stack['error']); ?></p>
+        <ul>
+            <?php if (!empty($technology_stack)) : ?>
+                <?php foreach ($technology_stack as $item) : ?>
+                    <li><?php echo esc_html($item); ?></li>
+                <?php endforeach; ?>
             <?php else : ?>
-                <ul>
-                    <?php foreach ($technology_stack as $item) : ?>
-                        <li><?php echo esc_html($item); ?></li>
-                    <?php endforeach; ?>
-                </ul>
-                <p class="hsz-timestamp"><?php printf(__('Last updated: %s', 'hellaz-sitez-analyzer'), human_time_diff(get_option('hsz_builtwith_' . md5($url))['timestamp'], time())); ?></p>
+                <li><?php _e('Technology stack information unavailable.', 'hellaz-sitez-analyzer'); ?></li>
             <?php endif; ?>
-        <?php endif; ?>
+        </ul>
     </div>
 
     <!-- Security Analysis -->
     <div class="hsz-section hsz-security-analysis">
         <h4><?php _e('Security Analysis', 'hellaz-sitez-analyzer'); ?></h4>
-        <?php if (isset($security_analysis) && !empty($security_analysis)) : ?>
+        <?php if (!empty($security_analysis)) : ?>
             <?php if (isset($security_analysis['error'])) : ?>
                 <p><?php echo esc_html($security_analysis['error']); ?></p>
             <?php else : ?>
@@ -115,8 +112,9 @@ $disclaimer_message = get_option('hsz_disclaimer_message', __('This is a default
                         <li><strong><?php echo esc_html(ucfirst($key)); ?>:</strong> <?php echo esc_html($value); ?></li>
                     <?php endforeach; ?>
                 </ul>
-                <p class="hsz-timestamp"><?php printf(__('Last updated: %s', 'hellaz-sitez-analyzer'), human_time_diff(get_option('hsz_virustotal_' . md5($url))['timestamp'], time())); ?></p>
             <?php endif; ?>
+        <?php else : ?>
+            <p><?php _e('Security analysis unavailable.', 'hellaz-sitez-analyzer'); ?></p>
         <?php endif; ?>
     </div>
 

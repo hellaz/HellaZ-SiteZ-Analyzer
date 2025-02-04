@@ -38,7 +38,7 @@ spl_autoload_register(function ($class) {
     if (file_exists($file)) {
         require_once $file;
     } else {
-        error_log("Class file not found: $file"); // Debugging
+        error_log("Autoloader Class file could not be found: $file"); // Debugging
     }
 });
 

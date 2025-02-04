@@ -7,7 +7,7 @@ class Gutenberg {
     }
 
     public function register_block() {
-        error_log('Registering Gutenberg block...'); // Debugging
+        error_log('Registering HSZ Gutenberg block...'); // Debugging
 
         // Register block script
         wp_register_script(
@@ -34,16 +34,18 @@ class Gutenberg {
     }
     
     public function render_block($attributes) {
-        $url = isset($attributes['url']) ? esc_url($attributes['url']) : '';
+        $url = isset($attributes['url']) ? esc_url_raw($attributes['url']) : '';
         if (empty($url)) {
-            return '<p>' . __('Please provide a valid URL.', 'hellaz-sitez-analyzer') . '</p>';
+            return '<p>' . __('Please enter a valid URL.', 'hellaz-sitez-analyzer') . '</p>';
         }
-    
-        // Extract metadata
+
         $metadata = (new Metadata())->extract_metadata($url);
-    
+        if (isset($metadata['error'])) {
+            return '<p>' . esc_html($metadata['error']) . '</p>';
+        }
+
         ob_start();
-        include HSZ_PLUGIN_PATH . 'templates/metadata-template.php';
+        include plugin_dir_path(__FILE__) . '../templates/metadata-template.php';
         return ob_get_clean();
     }
 }

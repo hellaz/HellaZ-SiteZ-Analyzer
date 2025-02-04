@@ -85,7 +85,7 @@ $disclaimer_message = get_option('hsz_disclaimer_message', __('This is a default
             <?php if (!empty($server_location)) : ?>
                 <li><strong><?php _e('Server Location:', 'hellaz-sitez-analyzer'); ?></strong> <?php echo esc_html($server_location); ?></li>
             <?php endif; ?>
-
+    
             <?php if (!empty($ssl_info)) : ?>
                 <?php if (!empty($ssl_info['valid_from'])) : ?>
                     <li><strong><?php _e('SSL Valid From:', 'hellaz-sitez-analyzer'); ?></strong> <?php echo esc_html($ssl_info['valid_from']); ?></li>
@@ -99,19 +99,38 @@ $disclaimer_message = get_option('hsz_disclaimer_message', __('This is a default
             <?php else : ?>
                 <li><?php _e('SSL/TLS information unavailable.', 'hellaz-sitez-analyzer'); ?></li>
             <?php endif; ?>
-
-            <?php if (!empty($security_analysis)) : ?>
-                <?php foreach ($security_analysis as $key => $value) : ?>
-                    <li><strong><?php echo esc_html(ucfirst($key)); ?>:</strong> <?php echo esc_html($value); ?></li>
-                <?php endforeach; ?>
-            <?php endif; ?>
-
-            <?php if (!empty($urlscan_analysis)) : ?>
-                <li><strong><?php _e('URLScan Report:', 'hellaz-sitez-analyzer'); ?></strong> 
-                    <a href="<?php echo esc_url($urlscan_analysis); ?>" target="<?php echo esc_attr($link_target); ?>"><?php _e('View Report', 'hellaz-sitez-analyzer'); ?></a>
-                </li>
-            <?php endif; ?>
         </ul>
+    
+        <!-- Server Information Security and Technology Stack in Columns -->
+        <div class="hsz-columns">
+            <div class="hsz-column">
+                <h5><?php _e('Security Analysis (VirusTotal)', 'hellaz-sitez-analyzer'); ?></h5>
+                <ul>
+                    <?php if (!empty($security_analysis) && !isset($security_analysis['error'])) : ?>
+                        <li><?php printf(__('Malicious Detections: %d (Sites flagged as harmful)', 'hellaz-sitez-analyzer'), $security_analysis['malicious']); ?></li>
+                        <li><?php printf(__('Suspicious Detections: %d (Sites flagged as potentially harmful)', 'hellaz-sitez-analyzer'), $security_analysis['suspicious']); ?></li>
+                        <li><?php printf(__('Harmless Detections: %d (Sites flagged as safe)', 'hellaz-sitez-analyzer'), $security_analysis['harmless']); ?></li>
+                        <li><?php printf(__('Last Updated: %s', 'hellaz-sitez-analyzer'), date('Y-m-d H:i:s')); ?></li>
+                    <?php else : ?>
+                        <li><?php _e('Security analysis unavailable.', 'hellaz-sitez-analyzer'); ?></li>
+                    <?php endif; ?>
+                </ul>
+            </div>
+    
+            <div class="hsz-column">
+                <h5><?php _e('Technology Stack (BuiltWith)', 'hellaz-sitez-analyzer'); ?></h5>
+                <ul>
+                    <?php if (!empty($technology_stack) && !isset($technology_stack['error'])) : ?>
+                        <?php foreach ($technology_stack as $tech) : ?>
+                            <li><?php echo esc_html($tech); ?></li>
+                        <?php endforeach; ?>
+                        <li><?php printf(__('Last Updated: %s', 'hellaz-sitez-analyzer'), date('Y-m-d H:i:s')); ?></li>
+                    <?php else : ?>
+                        <li><?php _e('Technology stack detection unavailable.', 'hellaz-sitez-analyzer'); ?></li>
+                    <?php endif; ?>
+                </ul>
+            </div>
+        </div>
     </div>
 
     <!-- Social Media Profiles -->

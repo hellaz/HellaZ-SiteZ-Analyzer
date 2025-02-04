@@ -2,10 +2,10 @@
 namespace HSZ;
 
 class Metadata {
-    private $api_manager;
+    private $apimanager;
 
     public function __construct() {
-        $this->api_manager = new APIManager();
+        $this->apimanager = new APImanager();
     }
 
     /**

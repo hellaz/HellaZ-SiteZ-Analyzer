@@ -2,45 +2,55 @@
 namespace HSZ;
 
 class Metadata {
+    private $api_manager;
+
+    public function __construct() {
+        $this->api_manager = new API_Manager();
+    }
+
+    /**
+     * Extract metadata from a given URL.
+     *
+     * @param string $url The URL to analyze.
+     * @return array Extracted metadata or an error message.
+     */
     public function extract_metadata($url) {
         // Validate URL
         if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            Utils::log_admin_notice(__('Invalid URL:', 'hellaz-sitez-analyzer') . ' ' . $url);
             return ['error' => __('Invalid URL.', 'hellaz-sitez-analyzer')];
         }
-    
+
         // Cache key for storing metadata
         $cache_key = 'hsz_metadata_' . md5($url);
         $cached_data = get_transient($cache_key);
-    
+
+        // Return cached data if available
+        if ($cached_data) {
+            return $cached_data;
+        }
+
         // Fetch remote content
-        $response = wp_remote_get($url, ['timeout' => 5]); // Set a timeout of 5 seconds
+        $response = wp_remote_get($url, ['timeout' => 5]);
         if (is_wp_error($response)) {
-            // Log the error for admins
-            $this->log_admin_notice(__('Failed to fetch remote content.', 'hellaz-sitez-analyzer'));
-    
-            // Return cached data if available, otherwise hide the section
+            Utils::log_admin_notice(__('Failed to fetch remote content:', 'hellaz-sitez-analyzer') . ' ' . $response->get_error_message());
             return $cached_data ?: [];
         }
-    
+
         // Check HTTP response code
         $response_code = wp_remote_retrieve_response_code($response);
         if ($response_code !== 200) {
-            // Log the error for admins
-            $this->log_admin_notice(sprintf(__('HTTP Error: %d', 'hellaz-sitez-analyzer'), $response_code));
-    
-            // Return cached data if available, otherwise hide the section
+            Utils::log_admin_notice(sprintf(__('HTTP Error: %d', 'hellaz-sitez-analyzer'), $response_code));
             return $cached_data ?: [];
         }
-    
+
         // Parse HTML content
         $html = wp_remote_retrieve_body($response);
-    
-        // Suppress warnings for malformed HTML
         libxml_use_internal_errors(true);
         $dom = new \DOMDocument();
         @$dom->loadHTML($html);
         libxml_clear_errors();
-    
+
         // Extract standard metadata
         $metadata = [
             'title' => $this->get_tag_content($dom, 'title'),
@@ -60,49 +70,51 @@ class Metadata {
             'social_media' => (new SocialMedia())->detect_social_media_links($html),
             'ssl_info' => (new Security())->get_ssl_info($url),
         ];
-    
+
         // Free APIs
         $metadata['server_location'] = $this->get_server_location($url); // IP-API
-    
+
         // Premium APIs
         $virustotal_api_key = get_option('hsz_virustotal_api_key', '');
         if (!empty($virustotal_api_key)) {
-            try {
-                $metadata['security_analysis'] = (new Security())->get_security_analysis($url, $virustotal_api_key);
-            } catch (\Exception $e) {
-                $this->log_admin_notice(__('VirusTotal API Error:', 'hellaz-sitez-analyzer') . ' ' . $e->getMessage());
-            }
+            $metadata['security_analysis'] = (new Security())->get_security_analysis($url, $virustotal_api_key);
         }
-    
+
         $urlscan_api_key = get_option('hsz_urlscan_api_key', '');
         if (!empty($urlscan_api_key)) {
-            try {
-                $metadata['urlscan_analysis'] = (new Security())->get_urlscan_analysis($url, $urlscan_api_key);
-            } catch (\Exception $e) {
-                $this->log_admin_notice(__('URLScan.io API Error:', 'hellaz-sitez-analyzer') . ' ' . $e->getMessage());
-            }
+            $metadata['urlscan_analysis'] = (new Security())->get_urlscan_analysis($url, $urlscan_api_key);
         }
-    
+
         $builtwith_api_key = get_option('hsz_builtwith_api_key', '');
         if (!empty($builtwith_api_key)) {
-            try {
-                $metadata['technology_stack'] = (new Security())->get_technology_stack($url, $builtwith_api_key);
-            } catch (\Exception $e) {
-                $this->log_admin_notice(__('BuiltWith API Error:', 'hellaz-sitez-analyzer') . ' ' . $e->getMessage());
-            }
+            $metadata['technology_stack'] = (new Security())->get_technology_stack($url, $builtwith_api_key);
         }
-    
+
         // Cache the results for 24 hours
         set_transient($cache_key, $metadata, DAY_IN_SECONDS);
-    
+
         return $metadata;
     }
 
+    /**
+     * Get the content of a specific tag.
+     *
+     * @param \DOMDocument $dom The DOMDocument object.
+     * @param string $tag The tag name.
+     * @return string The tag content.
+     */
     private function get_tag_content($dom, $tag) {
         $element = $dom->getElementsByTagName($tag)->item(0);
         return $element ? trim($element->textContent) : '';
     }
 
+    /**
+     * Get the value of a specific meta tag.
+     *
+     * @param \DOMDocument $dom The DOMDocument object.
+     * @param string $name The meta tag name.
+     * @return string The meta tag value.
+     */
     private function get_meta_tag($dom, $name) {
         $meta_tags = $dom->getElementsByTagName('meta');
         foreach ($meta_tags as $meta) {
@@ -113,11 +125,23 @@ class Metadata {
         return '';
     }
 
+    /**
+     * Get the language of the document.
+     *
+     * @param \DOMDocument $dom The DOMDocument object.
+     * @return string The document language.
+     */
     private function get_language($dom) {
         $html_tag = $dom->getElementsByTagName('html')->item(0);
         return $html_tag ? $html_tag->getAttribute('lang') : '';
     }
 
+    /**
+     * Get the canonical URL.
+     *
+     * @param \DOMDocument $dom The DOMDocument object.
+     * @return string The canonical URL.
+     */
     private function get_canonical_url($dom) {
         $links = $dom->getElementsByTagName('link');
         foreach ($links as $link) {
@@ -128,20 +152,41 @@ class Metadata {
         return '';
     }
 
-    private function get_favicon($dom, $url) {
+    /**
+     * Get the favicon URL.
+     *
+     * @param \DOMDocument $dom The DOMDocument object.
+     * @param string $base_url The base URL.
+     * @return string The favicon URL.
+     */
+    private function get_favicon($dom, $base_url) {
         $icons = $dom->getElementsByTagName('link');
         foreach ($icons as $icon) {
             if (in_array($icon->getAttribute('rel'), ['icon', 'shortcut icon'])) {
-                return $this->resolve_url($icon->getAttribute('href'), $url);
+                return $this->resolve_url($icon->getAttribute('href'), $base_url);
             }
         }
         return '';
     }
 
+    /**
+     * Resolve a relative URL to an absolute URL.
+     *
+     * @param string $relative_url The relative URL.
+     * @param string $base_url The base URL.
+     * @return string The resolved URL.
+     */
     private function resolve_url($relative_url, $base_url) {
         return filter_var($relative_url, FILTER_VALIDATE_URL) ? $relative_url : rtrim($base_url, '/') . '/' . ltrim($relative_url, '/');
     }
 
+    /**
+     * Extract emails from the HTML content.
+     *
+     * @param string $html The HTML content.
+     * @param \DOMDocument $dom The DOMDocument object.
+     * @return array Extracted emails.
+     */
     private function get_emails($html, $dom) {
         $emails = [];
 
@@ -162,6 +207,14 @@ class Metadata {
         return array_unique($emails);
     }
 
+    /**
+     * Extract contact forms from the HTML content.
+     *
+     * @param string $url The base URL.
+     * @param string $html The HTML content.
+     * @param \DOMDocument $dom The DOMDocument object.
+     * @return array Extracted contact form URLs.
+     */
     private function get_contact_forms($url, $html, $dom) {
         $forms = [];
         $contact_keywords = ['contact', 'kontakt', 'contato', '聯絡', '連絡', 'contacto']; // Add more languages as needed
@@ -242,6 +295,13 @@ class Metadata {
         return $forms;
     }
 
+    /**
+     * Normalize and validate a URL.
+     *
+     * @param string $url The URL to normalize.
+     * @param string $base_url The base URL.
+     * @return string The normalized URL.
+     */
     private function normalize_and_validate_url($url, $base_url) {
         // Resolve relative URLs
         $resolved_url = $this->resolve_url($url, $base_url);
@@ -259,6 +319,12 @@ class Metadata {
         return filter_var($resolved_url, FILTER_VALIDATE_URL) ? $resolved_url : null;
     }
 
+    /**
+     * Check if a URL is a valid contact form URL.
+     *
+     * @param string $url The URL to check.
+     * @return bool Whether the URL is valid.
+     */
     private function is_valid_contact_form_url($url) {
         // Exclude URLs with query strings that are unlikely to be contact forms
         $excluded_keywords = ['search', 'login', 'logout', 'register', 'cart', 'checkout'];
@@ -282,69 +348,12 @@ class Metadata {
         return false;
     }
 
-    private function get_address($dom, $url) {
-        $address = '';
-
-        // Extract address from JSON-LD structured data
-        $scripts = $dom->getElementsByTagName('script');
-        foreach ($scripts as $script) {
-            if ($script->getAttribute('type') === 'application/ld+json') {
-                $json = json_decode($script->textContent, true);
-                if (isset($json['@type']) && $json['@type'] === 'Organization' && isset($json['address'])) {
-                    $address = is_array($json['address']) ? implode(', ', $json['address']) : $json['address'];
-                    break;
-                }
-            }
-        }
-
-        // Fallback: Extract address-like patterns using multilingual keywords
-        if (empty($address)) {
-            $body = $dom->getElementsByTagName('body')->item(0)->textContent;
-            $patterns = [
-                '/\b(?:address|adresse|dirección|地址|住所)\b\s*:\s*[^\n]+/i', // Multilingual address keywords
-                '/\b\d{1,5}\s+\w+\s+(?:street|st|avenue|ave|road|rd|boulevard|blvd)\b/i',
-                '/\b(?:city|town|village|ville|ciudad|stadt)\b\s*:\s*\w+/i',
-                '/\bzip\s*:\s*\d{5}/i',
-                '/\bcountry\s*:\s*\w+/i',
-            ];
-            foreach ($patterns as $pattern) {
-                if (preg_match($pattern, $body, $match)) {
-                    $address .= $match[0] . ', ';
-                }
-            }
-            $address = rtrim($address, ', ');
-        }
-
-        // Follow common pages like /about/, /about-us/, /contact/ for additional address extraction
-        if (empty($address)) {
-            $common_pages = ['/about/', '/about-us/', '/contact/'];
-            foreach ($common_pages as $path) {
-                $page_url = rtrim($url, '/') . $path;
-                $page_response = wp_remote_get($page_url);
-                if (!is_wp_error($page_response) && wp_remote_retrieve_response_code($page_response) === 200) {
-                    $page_html = wp_remote_retrieve_body($page_response);
-                    libxml_use_internal_errors(true);
-                    $page_dom = new \DOMDocument();
-                    @$page_dom->loadHTML($page_html);
-                    libxml_clear_errors();
-
-                    $scripts = $page_dom->getElementsByTagName('script');
-                    foreach ($scripts as $script) {
-                        if ($script->getAttribute('type') === 'application/ld+json') {
-                            $json = json_decode($script->textContent, true);
-                            if (isset($json['@type']) && $json['@type'] === 'Organization' && isset($json['address'])) {
-                                $address = is_array($json['address']) ? implode(', ', $json['address']) : $json['address'];
-                                break 2; // Exit both loops
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return $address;
-    }
-
+    /**
+     * Extract the server location using IP-API.
+     *
+     * @param string $url The URL to analyze.
+     * @return string The server location.
+     */
     private function get_server_location($url) {
         $host = parse_url($url, PHP_URL_HOST);
         if (!$host) {
@@ -353,6 +362,7 @@ class Metadata {
 
         $response = wp_remote_get("http://ip-api.com/json/$host");
         if (is_wp_error($response)) {
+            Utils::log_admin_notice(__('Failed to fetch server location:', 'hellaz-sitez-analyzer') . ' ' . $response->get_error_message());
             return '';
         }
 

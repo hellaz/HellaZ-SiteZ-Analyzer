@@ -63,7 +63,7 @@ add_action('plugins_loaded', function () {
 // Enqueue styles and scripts
 add_action('wp_enqueue_scripts', function () {
     // Enqueue Font Awesome
-    wp_enqueue_style('font-awesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css', [], '6.0.0');
+    wp_enqueue_style('font-awesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css', [], '6.7.2');
 
     // Enqueue plugin-specific styles
     wp_enqueue_style('hsz-styles', HSZ_PLUGIN_URL . 'assets/css/style.css', [], '1.0');

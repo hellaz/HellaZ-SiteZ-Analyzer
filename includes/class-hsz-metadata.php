@@ -51,7 +51,7 @@ class Metadata {
             'contact_forms' => $this->get_contact_forms($html),
             'rss_feeds' => (new RSS())->detect_rss_feeds($html),
             'social_media' => (new SocialMedia())->detect_social_media_links($html),
-            'ssl_info' => $security->get_ssl_info($url),
+            'ssl_info' => $security->get_ssl_info($url), // Ensure this method exists
         ];
 
         // Free APIs

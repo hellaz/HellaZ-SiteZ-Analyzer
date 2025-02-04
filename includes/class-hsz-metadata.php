@@ -7,31 +7,39 @@ class Metadata {
         if (!filter_var($url, FILTER_VALIDATE_URL)) {
             return ['error' => __('Invalid URL.', 'hellaz-sitez-analyzer')];
         }
-
+    
+        // Cache key for storing metadata
+        $cache_key = 'hsz_metadata_' . md5($url);
+        $cached_data = get_transient($cache_key);
+    
+        if ($cached_data) {
+            return $cached_data; // Return cached results if available
+        }
+    
         // Fetch remote content
         $response = wp_remote_get($url);
         if (is_wp_error($response)) {
             return ['error' => __('Failed to fetch remote content.', 'hellaz-sitez-analyzer')];
         }
-
+    
         // Check HTTP response code
         $response_code = wp_remote_retrieve_response_code($response);
         if ($response_code !== 200) {
             return ['error' => sprintf(__('HTTP Error: %d', 'hellaz-sitez-analyzer'), $response_code)];
         }
-
+    
         // Parse HTML content
         $html = wp_remote_retrieve_body($response);
-
+    
         // Suppress warnings for malformed HTML
         libxml_use_internal_errors(true);
         $dom = new \DOMDocument();
         @$dom->loadHTML($html);
         libxml_clear_errors();
-
+    
         // Initialize Security class
         $security = new Security();
-
+    
         // Extract standard metadata
         $metadata = [
             'title' => $this->get_tag_content($dom, 'title'),
@@ -51,26 +59,29 @@ class Metadata {
             'social_media' => (new SocialMedia())->detect_social_media_links($html),
             'ssl_info' => $security->get_ssl_info($url),
         ];
-
+    
         // Free APIs
         $metadata['server_location'] = $this->get_server_location($url); // IP-API
-
+    
         // Premium APIs
         $virustotal_api_key = get_option('hsz_virustotal_api_key', '');
         if (!empty($virustotal_api_key)) {
             $metadata['security_analysis'] = $security->get_security_analysis($url, $virustotal_api_key);
         }
-
+    
         $urlscan_api_key = get_option('hsz_urlscan_api_key', '');
         if (!empty($urlscan_api_key)) {
             $metadata['urlscan_analysis'] = $security->get_urlscan_analysis($url, $urlscan_api_key);
         }
-
+    
         $builtwith_api_key = get_option('hsz_builtwith_api_key', '');
         if (!empty($builtwith_api_key)) {
             $metadata['technology_stack'] = $security->get_technology_stack($url, $builtwith_api_key);
         }
-
+    
+        // Cache the results for 24 hours
+        set_transient($cache_key, $metadata, DAY_IN_SECONDS);
+    
         return $metadata;
     }
 

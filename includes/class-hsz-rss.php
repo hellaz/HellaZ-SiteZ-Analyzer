@@ -2,33 +2,34 @@
 namespace HSZ;
 
 class RSS {
-    public function __construct() {
-        add_action('init', [$this, 'detect_rss_feeds']);
-    }
-
     public function detect_rss_feeds($html) {
-        $pattern = '/<link[^>]+type="application\/rss\+xml"[^>]*>/i';
-        preg_match_all($pattern, $html, $matches);
+        // Cache key for storing RSS feeds
+        $cache_key = 'hsz_rss_feeds_' . md5($html);
+        $cached_feeds = get_transient($cache_key);
+    
+        if ($cached_feeds) {
+            return $cached_feeds; // Return cached results if available
+        }
+    
         $feeds = [];
-        foreach ($matches[0] as $match) {
-            if (preg_match('/href="([^"]+)"/i', $match, $href)) {
-                $feeds[] = $href[1];
+        $dom = new \DOMDocument();
+        @$dom->loadHTML($html);
+    
+        // Extract RSS feeds from <link> tags
+        $links = $dom->getElementsByTagName('link');
+        foreach ($links as $link) {
+            $type = $link->getAttribute('type');
+            if (in_array($type, ['application/rss+xml', 'application/atom+xml'])) {
+                $href = $link->getAttribute('href');
+                if (filter_var($href, FILTER_VALIDATE_URL)) {
+                    $feeds[] = $href;
+                }
             }
         }
+    
+        // Cache the results for 24 hours
+        set_transient($cache_key, $feeds, DAY_IN_SECONDS);
+    
         return $feeds;
     }
-
-// Redundant based on the above    
-//    public function detect_feeds($html) {
-//        $pattern = '/<link[^>]+type="application\/(rss|atom)\+xml"[^>]*>/i';
-//        preg_match_all($pattern, $html, $matches);
-//        $feeds = [];
-//        foreach ($matches[0] as $match) {
-//            if (preg_match('/href="([^"]+)"/i', $match, $href)) {
-//                $feeds[] = $href[1];
-//            }
-//        }
-//        return $feeds;
-//    }
-
 }

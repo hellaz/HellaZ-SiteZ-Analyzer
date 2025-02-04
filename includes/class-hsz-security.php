@@ -2,10 +2,10 @@
 namespace HSZ;
 
 class Security {
-    private $api_manager;
+    private $apimanager;
 
     public function __construct() {
-        $this->api_manager = new API_Manager();
+        $this->apimanager = new APIManager();
     }
 
     /**

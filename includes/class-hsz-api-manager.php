@@ -1,7 +1,17 @@
 <?php
 namespace HSZ;
 
-class API_Manager {
+class APIManager {
+    private function log_admin_notice($message) {
+        // Add an admin notice
+        add_action('admin_notices', function () use ($message) {
+            echo '<div class="notice notice-error"><p>' . esc_html($message) . '</p></div>';
+        });
+
+        // Log the error to the debug log
+        error_log('[HellaZ SiteZ Analyzer] ' . $message);
+    }
+
     public function make_api_request($url, $args = [], $cache_key = '', $cache_duration = HOUR_IN_SECONDS) {
         // Check if cached data is available
         if (!empty($cache_key)) {
@@ -22,13 +32,13 @@ class API_Manager {
         $response = wp_remote_get($url, $args);
 
         if (is_wp_error($response)) {
-            Utils::log_admin_notice(__('API Request Failed:', 'hellaz-sitez-analyzer') . ' ' . $response->get_error_message());
+            $this->log_admin_notice(__('API Request Failed:', 'hellaz-sitez-analyzer') . ' ' . $response->get_error_message());
             return !empty($cache_key) ? get_transient($cache_key) : [];
         }
 
         $response_code = wp_remote_retrieve_response_code($response);
         if ($response_code !== 200) {
-            Utils::log_admin_notice(sprintf(__('API HTTP Error: %d', 'hellaz-sitez-analyzer'), $response_code));
+            $this->log_admin_notice(sprintf(__('API HTTP Error: %d', 'hellaz-sitez-analyzer'), $response_code));
             return !empty($cache_key) ? get_transient($cache_key) : [];
         }
 

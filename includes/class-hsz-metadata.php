@@ -29,9 +29,6 @@ class Metadata {
         @$dom->loadHTML($html);
         libxml_clear_errors();
 
-        // Extract headers
-        $headers = wp_remote_retrieve_headers($response);
-
         // Initialize Security class
         $security = new Security();
 
@@ -47,11 +44,12 @@ class Metadata {
             'twitter:title' => $this->get_meta_tag($dom, 'twitter:title'),
             'canonical_url' => $this->get_canonical_url($dom),
             'favicon' => $this->get_favicon($dom, $url),
-            'emails' => $this->get_emails($html),
-            'contact_forms' => $this->get_contact_forms($html),
+            'emails' => $this->get_emails($html, $dom), // Pass both $html and $dom
+            'contact_forms' => $this->get_contact_forms($html, $dom), // Pass both $html and $dom
+            'address' => $this->get_address($dom),
             'rss_feeds' => (new RSS())->detect_rss_feeds($html),
             'social_media' => (new SocialMedia())->detect_social_media_links($html),
-            'ssl_info' => $security->get_ssl_info($url), // Ensure this method exists
+            'ssl_info' => $security->get_ssl_info($url),
         ];
 
         // Free APIs
@@ -65,7 +63,7 @@ class Metadata {
 
         $urlscan_api_key = get_option('hsz_urlscan_api_key', '');
         if (!empty($urlscan_api_key)) {
-            $metadata['urlscan_analysis'] = $this->get_urlscan_analysis($url, $urlscan_api_key);
+            $metadata['urlscan_analysis'] = $security->get_urlscan_analysis($url, $urlscan_api_key);
         }
 
         $builtwith_api_key = get_option('hsz_builtwith_api_key', '');
@@ -74,50 +72,6 @@ class Metadata {
         }
 
         return $metadata;
-    }
-
-    private function get_tag_content($dom, $tag) {
-        $element = $dom->getElementsByTagName($tag)->item(0);
-        return $element ? trim($element->textContent) : '';
-    }
-
-    private function get_meta_tag($dom, $name) {
-        $meta_tags = $dom->getElementsByTagName('meta');
-        foreach ($meta_tags as $meta) {
-            if ($meta->getAttribute('name') === $name || $meta->getAttribute('property') === $name) {
-                return trim($meta->getAttribute('content'));
-            }
-        }
-        return '';
-    }
-
-    private function get_language($dom) {
-        $html_tag = $dom->getElementsByTagName('html')->item(0);
-        return $html_tag ? $html_tag->getAttribute('lang') : '';
-    }
-
-    private function get_canonical_url($dom) {
-        $links = $dom->getElementsByTagName('link');
-        foreach ($links as $link) {
-            if ($link->getAttribute('rel') === 'canonical') {
-                return $link->getAttribute('href');
-            }
-        }
-        return '';
-    }
-
-    private function get_favicon($dom, $url) {
-        $icons = $dom->getElementsByTagName('link');
-        foreach ($icons as $icon) {
-            if (in_array($icon->getAttribute('rel'), ['icon', 'shortcut icon'])) {
-                return $this->resolve_url($icon->getAttribute('href'), $url);
-            }
-        }
-        return '';
-    }
-
-    private function resolve_url($relative_url, $base_url) {
-        return filter_var($relative_url, FILTER_VALIDATE_URL) ? $relative_url : rtrim($base_url, '/') . '/' . ltrim($relative_url, '/');
     }
 
     private function get_emails($html, $dom) {
@@ -201,6 +155,50 @@ class Metadata {
         }
 
         return $address;
+    }
+
+    private function get_tag_content($dom, $tag) {
+        $element = $dom->getElementsByTagName($tag)->item(0);
+        return $element ? trim($element->textContent) : '';
+    }
+
+    private function get_meta_tag($dom, $name) {
+        $meta_tags = $dom->getElementsByTagName('meta');
+        foreach ($meta_tags as $meta) {
+            if ($meta->getAttribute('name') === $name || $meta->getAttribute('property') === $name) {
+                return trim($meta->getAttribute('content'));
+            }
+        }
+        return '';
+    }
+
+    private function get_language($dom) {
+        $html_tag = $dom->getElementsByTagName('html')->item(0);
+        return $html_tag ? $html_tag->getAttribute('lang') : '';
+    }
+
+    private function get_canonical_url($dom) {
+        $links = $dom->getElementsByTagName('link');
+        foreach ($links as $link) {
+            if ($link->getAttribute('rel') === 'canonical') {
+                return $link->getAttribute('href');
+            }
+        }
+        return '';
+    }
+
+    private function get_favicon($dom, $url) {
+        $icons = $dom->getElementsByTagName('link');
+        foreach ($icons as $icon) {
+            if (in_array($icon->getAttribute('rel'), ['icon', 'shortcut icon'])) {
+                return $this->resolve_url($icon->getAttribute('href'), $url);
+            }
+        }
+        return '';
+    }
+
+    private function resolve_url($relative_url, $base_url) {
+        return filter_var($relative_url, FILTER_VALIDATE_URL) ? $relative_url : rtrim($base_url, '/') . '/' . ltrim($relative_url, '/');
     }
 
     private function get_server_location($url) {

@@ -2,6 +2,8 @@
 namespace HSZ;
 
 class Security {
+    private $cache_key_prefix = 'hsz_api_cache_';
+
     public function get_ssl_info($url) {
         $ssl_info = [];
 
@@ -30,11 +32,16 @@ class Security {
     }
 
     public function get_security_analysis($url, $virustotal_api_key) {
-        $security_analysis = [];
+        $cache_key = $this->cache_key_prefix . 'virustotal_' . md5($url);
+        $cached_data = get_transient($cache_key);
 
-        // Validate API key
+        if ($cached_data) {
+            return $cached_data; // Return cached data if available
+        }
+
         if (empty($virustotal_api_key)) {
-            return ['error' => __('VirusTotal API key is missing.', 'hellaz-sitez-analyzer')];
+            $this->add_admin_notice(__('VirusTotal API key is missing.', 'hellaz-sitez-analyzer'));
+            return ['error' => __('Security analysis unavailable.', 'hellaz-sitez-analyzer')];
         }
 
         // Extract hostname from URL
@@ -54,15 +61,18 @@ class Security {
         );
 
         if (is_wp_error($response)) {
-            return ['error' => __('Failed to connect to VirusTotal API.', 'hellaz-sitez-analyzer')];
+            $this->add_admin_notice(__('Failed to connect to VirusTotal API.', 'hellaz-sitez-analyzer'));
+            return ['error' => __('Security analysis unavailable.', 'hellaz-sitez-analyzer')];
         }
 
         $body = json_decode(wp_remote_retrieve_body($response), true);
         if (isset($body['error'])) {
-            return ['error' => sprintf(__('VirusTotal API Error: %s', 'hellaz-sitez-analyzer'), $body['error']['message'])];
+            $this->add_admin_notice(sprintf(__('VirusTotal API Error: %s', 'hellaz-sitez-analyzer'), $body['error']['message']));
+            return ['error' => __('Security analysis unavailable.', 'hellaz-sitez-analyzer')];
         }
 
         // Parse response
+        $security_analysis = [];
         if (isset($body['data']['attributes'])) {
             $attributes = $body['data']['attributes'];
             $security_analysis['malicious'] = isset($attributes['last_analysis_stats']['malicious'])
@@ -76,15 +86,23 @@ class Security {
                 : 0;
         }
 
+        // Cache the response for 24 hours
+        set_transient($cache_key, $security_analysis, DAY_IN_SECONDS);
+
         return $security_analysis;
     }
 
     public function get_technology_stack($url, $builtwith_api_key) {
-        $technology_stack = [];
+        $cache_key = $this->cache_key_prefix . 'builtwith_' . md5($url);
+        $cached_data = get_transient($cache_key);
 
-        // Validate API key
+        if ($cached_data) {
+            return $cached_data; // Return cached data if available
+        }
+
         if (empty($builtwith_api_key)) {
-            return ['error' => __('BuiltWith API key is missing.', 'hellaz-sitez-analyzer')];
+            $this->add_admin_notice(__('BuiltWith API key is missing.', 'hellaz-sitez-analyzer'));
+            return ['error' => __('Technology stack detection unavailable.', 'hellaz-sitez-analyzer')];
         }
 
         // Extract hostname from URL
@@ -99,15 +117,19 @@ class Security {
         );
 
         if (is_wp_error($response)) {
-            return ['error' => __('Failed to connect to BuiltWith API.', 'hellaz-sitez-analyzer')];
+            $this->add_admin_notice(__('Failed to connect to BuiltWith API.', 'hellaz-sitez-analyzer'));
+            return ['error' => __('Technology stack detection unavailable.', 'hellaz-sitez-analyzer')];
         }
 
         $body = json_decode(wp_remote_retrieve_body($response), true);
+
         if (isset($body['Errors'])) {
-            return ['error' => sprintf(__('BuiltWith API Error: %s', 'hellaz-sitez-analyzer'), $body['Errors'][0]['Message'])];
+            $this->add_admin_notice(sprintf(__('BuiltWith API Error: %s', 'hellaz-sitez-analyzer'), $body['Errors'][0]['Message']));
+            return ['error' => __('Technology stack detection unavailable.', 'hellaz-sitez-analyzer')];
         }
 
         // Parse response
+        $technology_stack = [];
         if (isset($body['Results'][0]['Result']['Paths'])) {
             foreach ($body['Results'][0]['Result']['Paths'] as $path) {
                 if (isset($path['Technologies'])) {
@@ -118,6 +140,15 @@ class Security {
             }
         }
 
-        return $technology_stack;
+        // Cache the response for 24 hours
+        set_transient($cache_key, $technology_stack, DAY_IN_SECONDS);
+
+        return $technology_stack ?: ['error' => __('No technology stack detected.', 'hellaz-sitez-analyzer')];
+    }
+
+    private function add_admin_notice($message) {
+        add_action('admin_notices', function () use ($message) {
+            echo '<div class="notice notice-error"><p>' . esc_html($message) . '</p></div>';
+        });
     }
 }

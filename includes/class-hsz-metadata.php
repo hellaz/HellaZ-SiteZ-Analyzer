@@ -94,32 +94,103 @@ class Metadata {
         return array_unique($emails);
     }
 
-    private function get_contact_forms($html, $dom) {
+    private function get_contact_forms($url, $html, $dom) {
         $forms = [];
-        $keywords = ['contact', 'kontakt', 'contato', '聯絡', '連絡', 'contacto']; // Add more languages as needed
-
-        // Extract forms by <form> tags
+        $contact_keywords = ['contact', 'kontakt', 'contato', '聯絡', '連絡', 'contacto']; // Add more languages as needed
+    
+        // Extract forms by <form> tags on the main page
         $form_tags = $dom->getElementsByTagName('form');
         foreach ($form_tags as $form) {
             $action = $form->getAttribute('action');
             if (!empty($action)) {
-                $forms[] = $action;
+                $resolved_url = $this->normalize_and_validate_url($action, $url);
+                if ($resolved_url && $this->is_valid_contact_form_url($resolved_url)) {
+                    $forms[] = $resolved_url;
+                }
             }
         }
-
+    
         // Extract links with contact-related keywords
         $links = $dom->getElementsByTagName('a');
         foreach ($links as $link) {
             $href = $link->getAttribute('href');
             $text = strtolower(trim($link->textContent));
-            foreach ($keywords as $keyword) {
-                if (strpos($text, $keyword) !== false && filter_var($href, FILTER_VALIDATE_URL)) {
-                    $forms[] = $href;
+            foreach ($contact_keywords as $keyword) {
+                if (strpos($text, $keyword) !== false) {
+                    $resolved_url = $this->normalize_and_validate_url($href, $url);
+                    if ($resolved_url && $this->is_valid_contact_form_url($resolved_url)) {
+                        $forms[] = $resolved_url;
+                    }
                 }
             }
         }
-
+    
+        // Follow common contact page URLs and extract forms
+        $common_contact_paths = ['/contact/', '/kontakt/', '/contato/', '/contact-us/', '/contacto/'];
+        foreach ($common_contact_paths as $path) {
+            $contact_url = rtrim($url, '/') . $path;
+            $contact_response = wp_remote_get($contact_url);
+            if (!is_wp_error($contact_response) && wp_remote_retrieve_response_code($contact_response) === 200) {
+                $contact_html = wp_remote_retrieve_body($contact_response);
+                libxml_use_internal_errors(true);
+                $contact_dom = new \DOMDocument();
+                @$contact_dom->loadHTML($contact_html);
+                libxml_clear_errors();
+    
+                $contact_forms = $contact_dom->getElementsByTagName('form');
+                foreach ($contact_forms as $form) {
+                    $action = $form->getAttribute('action');
+                    if (!empty($action)) {
+                        $resolved_url = $this->normalize_and_validate_url($action, $contact_url);
+                        if ($resolved_url && $this->is_valid_contact_form_url($resolved_url)) {
+                            $forms[] = $resolved_url;
+                        }
+                    }
+                }
+            }
+        }
+    
         return array_unique($forms);
+    }
+    
+    private function normalize_and_validate_url($url, $base_url) {
+        // Resolve relative URLs
+        $resolved_url = $this->resolve_url($url, $base_url);
+    
+        // Remove redundant hostnames (e.g., https://example.com/example.com)
+        $parsed_base = parse_url($base_url);
+        $parsed_resolved = parse_url($resolved_url);
+        if (isset($parsed_base['host']) && isset($parsed_resolved['host'])) {
+            if (strpos($resolved_url, $parsed_base['host'] . '/' . $parsed_base['host']) !== false) {
+                $resolved_url = str_replace($parsed_base['host'] . '/' . $parsed_base['host'], $parsed_base['host'], $resolved_url);
+            }
+        }
+    
+        // Validate the final URL
+        return filter_var($resolved_url, FILTER_VALIDATE_URL) ? $resolved_url : null;
+    }
+    
+    private function is_valid_contact_form_url($url) {
+        // Exclude URLs with query strings that are unlikely to be contact forms
+        $excluded_keywords = ['search', 'login', 'logout', 'register', 'cart', 'checkout'];
+        foreach ($excluded_keywords as $keyword) {
+            if (stripos($url, $keyword) !== false) {
+                return false;
+            }
+        }
+    
+        // Ensure the URL points to a valid contact form path
+        $valid_paths = ['/contact', '/kontakt', '/contato', '/contact-us', '/contacto'];
+        $parsed_url = parse_url($url);
+        if (isset($parsed_url['path'])) {
+            foreach ($valid_paths as $path) {
+                if (stripos($parsed_url['path'], $path) !== false) {
+                    return true;
+                }
+            }
+        }
+    
+        return false;
     }
 
     private function get_address($dom) {

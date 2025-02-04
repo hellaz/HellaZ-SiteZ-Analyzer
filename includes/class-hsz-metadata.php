@@ -120,16 +120,87 @@ class Metadata {
         return filter_var($relative_url, FILTER_VALIDATE_URL) ? $relative_url : rtrim($base_url, '/') . '/' . ltrim($relative_url, '/');
     }
 
-    private function get_emails($html) {
+    private function get_emails($html, $dom) {
+        $emails = [];
+
+        // Extract emails from plain text
         preg_match_all('/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/', $html, $matches);
-        return array_unique($matches[0]);
+        $emails = array_unique(array_merge($emails, $matches[0]));
+
+        // Extract emails from mailto: links
+        $links = $dom->getElementsByTagName('a');
+        foreach ($links as $link) {
+            $href = $link->getAttribute('href');
+            if (strpos($href, 'mailto:') === 0) {
+                $email = substr($href, 7);
+                $emails[] = $email;
+            }
+        }
+
+        return array_unique($emails);
     }
 
-    private function get_contact_forms($html) {
-        preg_match_all('/<form[^>]*>.*?<\/form>/is', $html, $matches);
-        return array_map(function ($form) {
-            return strip_tags($form);
-        }, $matches[0]);
+    private function get_contact_forms($html, $dom) {
+        $forms = [];
+        $keywords = ['contact', 'kontakt', 'contato', '聯絡', '連絡', 'contacto']; // Add more languages as needed
+
+        // Extract forms by <form> tags
+        $form_tags = $dom->getElementsByTagName('form');
+        foreach ($form_tags as $form) {
+            $action = $form->getAttribute('action');
+            if (!empty($action)) {
+                $forms[] = $action;
+            }
+        }
+
+        // Extract links with contact-related keywords
+        $links = $dom->getElementsByTagName('a');
+        foreach ($links as $link) {
+            $href = $link->getAttribute('href');
+            $text = strtolower(trim($link->textContent));
+            foreach ($keywords as $keyword) {
+                if (strpos($text, $keyword) !== false && filter_var($href, FILTER_VALIDATE_URL)) {
+                    $forms[] = $href;
+                }
+            }
+        }
+
+        return array_unique($forms);
+    }
+
+    private function get_address($dom) {
+        $address = '';
+
+        // Extract address from JSON-LD structured data
+        $scripts = $dom->getElementsByTagName('script');
+        foreach ($scripts as $script) {
+            if ($script->getAttribute('type') === 'application/ld+json') {
+                $json = json_decode($script->textContent, true);
+                if (isset($json['@type']) && $json['@type'] === 'Organization' && isset($json['address'])) {
+                    $address = is_array($json['address']) ? implode(', ', $json['address']) : $json['address'];
+                    break;
+                }
+            }
+        }
+
+        // Fallback: Extract address-like patterns
+        if (empty($address)) {
+            $body = $dom->getElementsByTagName('body')->item(0)->textContent;
+            $patterns = [
+                '/\b\d{1,5}\s+\w+\s+(?:street|st|avenue|ave|road|rd|boulevard|blvd)\b/i',
+                '/\b(?:city|town|village)\b\s*:\s*\w+/i',
+                '/\bzip\s*:\s*\d{5}/i',
+                '/\bcountry\s*:\s*\w+/i',
+            ];
+            foreach ($patterns as $pattern) {
+                if (preg_match($pattern, $body, $match)) {
+                    $address .= $match[0] . ', ';
+                }
+            }
+            $address = rtrim($address, ', ');
+        }
+
+        return $address;
     }
 
     private function get_server_location($url) {

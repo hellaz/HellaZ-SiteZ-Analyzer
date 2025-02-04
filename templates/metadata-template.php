@@ -79,6 +79,7 @@ $disclaimer_message = get_option('hsz_disclaimer_message', __('This is a default
     </div>
 
     <!-- Server Information (Combined Server Location + SSL/TLS Info) -->
+    <!-- Server Information -->
     <div class="hsz-section hsz-server-info">
         <h4><?php _e('Server Information', 'hellaz-sitez-analyzer'); ?></h4>
         <ul>
@@ -101,36 +102,34 @@ $disclaimer_message = get_option('hsz_disclaimer_message', __('This is a default
             <?php endif; ?>
         </ul>
     
-        <!-- Server Information Security and Technology Stack in Columns -->
-        <div class="hsz-columns">
-            <div class="hsz-column">
-                <h5><?php _e('Security Analysis (VirusTotal)', 'hellaz-sitez-analyzer'); ?></h5>
-                <ul>
-                    <?php if (!empty($security_analysis) && !isset($security_analysis['error'])) : ?>
+        <!-- Subsections in Columns -->
+        <?php if (!empty($security_analysis) && !isset($security_analysis['error'])) : ?>
+            <div class="hsz-columns">
+                <div class="hsz-column">
+                    <h5><?php _e('Security Analysis (VirusTotal)', 'hellaz-sitez-analyzer'); ?></h5>
+                    <ul>
                         <li><?php printf(__('Malicious Detections: %d (Sites flagged as harmful)', 'hellaz-sitez-analyzer'), $security_analysis['malicious']); ?></li>
                         <li><?php printf(__('Suspicious Detections: %d (Sites flagged as potentially harmful)', 'hellaz-sitez-analyzer'), $security_analysis['suspicious']); ?></li>
                         <li><?php printf(__('Harmless Detections: %d (Sites flagged as safe)', 'hellaz-sitez-analyzer'), $security_analysis['harmless']); ?></li>
                         <li><?php printf(__('Last Updated: %s', 'hellaz-sitez-analyzer'), date('Y-m-d H:i:s')); ?></li>
-                    <?php else : ?>
-                        <li><?php _e('Security analysis unavailable.', 'hellaz-sitez-analyzer'); ?></li>
-                    <?php endif; ?>
-                </ul>
+                    </ul>
+                </div>
             </div>
+        <?php endif; ?>
     
-            <div class="hsz-column">
-                <h5><?php _e('Technology Stack (BuiltWith)', 'hellaz-sitez-analyzer'); ?></h5>
-                <ul>
-                    <?php if (!empty($technology_stack) && !isset($technology_stack['error'])) : ?>
+        <?php if (!empty($technology_stack) && !isset($technology_stack['error'])) : ?>
+            <div class="hsz-columns">
+                <div class="hsz-column">
+                    <h5><?php _e('Technology Stack (BuiltWith)', 'hellaz-sitez-analyzer'); ?></h5>
+                    <ul>
                         <?php foreach ($technology_stack as $tech) : ?>
                             <li><?php echo esc_html($tech); ?></li>
                         <?php endforeach; ?>
                         <li><?php printf(__('Last Updated: %s', 'hellaz-sitez-analyzer'), date('Y-m-d H:i:s')); ?></li>
-                    <?php else : ?>
-                        <li><?php _e('Technology stack detection unavailable.', 'hellaz-sitez-analyzer'); ?></li>
-                    <?php endif; ?>
-                </ul>
+                    </ul>
+                </div>
             </div>
-        </div>
+        <?php endif; ?>
     </div>
 
     <!-- Social Media Profiles -->

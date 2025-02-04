@@ -152,7 +152,7 @@ $disclaimer_message = get_option('hsz_disclaimer_message', __('This is a default
                     <?php foreach ($profiles as $profile) : ?>
                         <li>
                             <a href="<?php echo esc_url($profile['url']); ?>" target="<?php echo esc_attr($link_target); ?>" rel="noopener noreferrer">
-                                <i class="fab fa-<?php echo esc_attr($platform); ?>"></i> <?php echo esc_html($profile['username']); ?>
+                                <i class="fa-brands fa-<?php echo esc_attr($platform); ?>"></i> <?php echo esc_html($profile['username']); ?>
                             </a>
                         </li>
                     <?php endforeach; ?>

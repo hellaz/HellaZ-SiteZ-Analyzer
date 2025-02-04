@@ -132,6 +132,17 @@ $disclaimer_message = get_option('hsz_disclaimer_message', __('This is a default
         <?php endif; ?>
     </div>
 
+    <?php if (!empty($urlscan_analysis) && !isset($urlscan_analysis['error'])) : ?>
+        <div class="hsz-section hsz-urlscan-analysis">
+            <h4><?php _e('URLScan.io Analysis', 'hellaz-sitez-analyzer'); ?></h4>
+            <p>
+                <a href="<?php echo esc_url($urlscan_analysis); ?>" target="_blank" rel="noopener noreferrer">
+                    <?php _e('View Report on URLScan.io', 'hellaz-sitez-analyzer'); ?>
+                </a>
+            </p>
+        </div>
+
+    <?php endif; ?>
     <!-- Social Media Profiles -->
     <div class="hsz-section hsz-social-media">
         <h4><?php _e('Social Media Profiles', 'hellaz-sitez-analyzer'); ?></h4>

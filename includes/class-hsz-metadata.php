@@ -12,20 +12,24 @@ class Metadata {
         $cache_key = 'hsz_metadata_' . md5($url);
         $cached_data = get_transient($cache_key);
     
-        if ($cached_data) {
-            return $cached_data; // Return cached results if available
-        }
-    
         // Fetch remote content
-        $response = wp_remote_get($url);
+        $response = wp_remote_get($url, ['timeout' => 5]); // Set a timeout of 5 seconds
         if (is_wp_error($response)) {
-            return ['error' => __('Failed to fetch remote content.', 'hellaz-sitez-analyzer')];
+            // Log the error for admins
+            $this->log_admin_notice(__('Failed to fetch remote content.', 'hellaz-sitez-analyzer'));
+    
+            // Return cached data if available, otherwise hide the section
+            return $cached_data ?: [];
         }
     
         // Check HTTP response code
         $response_code = wp_remote_retrieve_response_code($response);
         if ($response_code !== 200) {
-            return ['error' => sprintf(__('HTTP Error: %d', 'hellaz-sitez-analyzer'), $response_code)];
+            // Log the error for admins
+            $this->log_admin_notice(sprintf(__('HTTP Error: %d', 'hellaz-sitez-analyzer'), $response_code));
+    
+            // Return cached data if available, otherwise hide the section
+            return $cached_data ?: [];
         }
     
         // Parse HTML content
@@ -36,9 +40,6 @@ class Metadata {
         $dom = new \DOMDocument();
         @$dom->loadHTML($html);
         libxml_clear_errors();
-    
-        // Initialize Security class
-        $security = new Security();
     
         // Extract standard metadata
         $metadata = [
@@ -57,7 +58,7 @@ class Metadata {
             'address' => $this->get_address($dom, $url),
             'rss_feeds' => (new RSS())->detect_rss_feeds($html),
             'social_media' => (new SocialMedia())->detect_social_media_links($html),
-            'ssl_info' => $security->get_ssl_info($url),
+            'ssl_info' => (new Security())->get_ssl_info($url),
         ];
     
         // Free APIs
@@ -66,17 +67,29 @@ class Metadata {
         // Premium APIs
         $virustotal_api_key = get_option('hsz_virustotal_api_key', '');
         if (!empty($virustotal_api_key)) {
-            $metadata['security_analysis'] = $security->get_security_analysis($url, $virustotal_api_key);
+            try {
+                $metadata['security_analysis'] = (new Security())->get_security_analysis($url, $virustotal_api_key);
+            } catch (\Exception $e) {
+                $this->log_admin_notice(__('VirusTotal API Error:', 'hellaz-sitez-analyzer') . ' ' . $e->getMessage());
+            }
         }
     
         $urlscan_api_key = get_option('hsz_urlscan_api_key', '');
         if (!empty($urlscan_api_key)) {
-            $metadata['urlscan_analysis'] = $security->get_urlscan_analysis($url, $urlscan_api_key);
+            try {
+                $metadata['urlscan_analysis'] = (new Security())->get_urlscan_analysis($url, $urlscan_api_key);
+            } catch (\Exception $e) {
+                $this->log_admin_notice(__('URLScan.io API Error:', 'hellaz-sitez-analyzer') . ' ' . $e->getMessage());
+            }
         }
     
         $builtwith_api_key = get_option('hsz_builtwith_api_key', '');
         if (!empty($builtwith_api_key)) {
-            $metadata['technology_stack'] = $security->get_technology_stack($url, $builtwith_api_key);
+            try {
+                $metadata['technology_stack'] = (new Security())->get_technology_stack($url, $builtwith_api_key);
+            } catch (\Exception $e) {
+                $this->log_admin_notice(__('BuiltWith API Error:', 'hellaz-sitez-analyzer') . ' ' . $e->getMessage());
+            }
         }
     
         // Cache the results for 24 hours

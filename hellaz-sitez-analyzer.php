@@ -61,3 +61,13 @@ add_action('plugins_loaded', function () {
         });
     }
 });
+
+add_action('enqueue_block_editor_assets', function () {
+    wp_enqueue_script(
+        'hsz-gutenberg-block',
+        plugins_url('assets/js/scripts.js', __FILE__),
+        ['wp-blocks', 'wp-components', 'wp-element', 'wp-editor'],
+        filemtime(plugin_dir_path(__FILE__) . 'assets/js/scripts.js'),
+        true
+    );
+});

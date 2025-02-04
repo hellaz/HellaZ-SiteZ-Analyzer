@@ -164,6 +164,7 @@ $disclaimer_message = get_option('hsz_disclaimer_message', __('This is a default
     </div>
 
     <!-- Contact Information (Emails + Contact Forms in 2 Columns) -->
+    <!-- Contact Information -->
     <div class="hsz-section hsz-contact-info">
         <h4><?php _e('Contact Information', 'hellaz-sitez-analyzer'); ?></h4>
         <div class="hsz-columns">
@@ -179,13 +180,13 @@ $disclaimer_message = get_option('hsz_disclaimer_message', __('This is a default
                     <?php endif; ?>
                 </ul>
             </div>
-
+    
             <div class="hsz-column">
                 <h5><?php _e('Contact Forms', 'hellaz-sitez-analyzer'); ?></h5>
                 <ul>
                     <?php if (!empty($contact_forms)) : ?>
                         <?php foreach ($contact_forms as $form) : ?>
-                            <li><a href="<?php echo esc_url($form); ?>" target="<?php echo esc_attr($link_target); ?>"><?php echo esc_html($form); ?></a></li>
+                            <li><a href="<?php echo esc_url($form); ?>" target="_blank"><?php echo esc_html($form); ?></a></li>
                         <?php endforeach; ?>
                     <?php else : ?>
                         <li><?php _e('No contact forms detected.', 'hellaz-sitez-analyzer'); ?></li>
@@ -193,6 +194,13 @@ $disclaimer_message = get_option('hsz_disclaimer_message', __('This is a default
                 </ul>
             </div>
         </div>
+    
+        <?php if (!empty($address)) : ?>
+            <div class="hsz-section hsz-address">
+                <h5><?php _e('Address', 'hellaz-sitez-analyzer'); ?></h5>
+                <p><?php echo esc_html($address); ?></p>
+            </div>
+        <?php endif; ?>
     </div>
 
     <!-- RSS Feeds -->

@@ -5,7 +5,7 @@ class Metadata {
     private $api_manager;
 
     public function __construct() {
-        $this->api_manager = new API_Manager();
+        $this->api_manager = new APIManager();
     }
 
     /**

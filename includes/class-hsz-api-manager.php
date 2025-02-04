@@ -21,4 +21,14 @@ class API_Manager {
         }
         return [];
     }
+
+    private function log_admin_notice($message) {
+        // Add an admin notice
+        add_action('admin_notices', function () use ($message) {
+            echo '<div class="notice notice-error"><p>' . esc_html($message) . '</p></div>';
+        });
+    
+        // Optionally log the error to the debug log
+        error_log('[HellaZ SiteZ Analyzer] ' . $message);
+    }
 }

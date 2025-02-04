@@ -146,6 +146,52 @@ class Security {
         return $technology_stack ?: ['error' => __('No technology stack detected.', 'hellaz-sitez-analyzer')];
     }
 
+    public function get_urlscan_analysis($url, $api_key) {
+        $cache_key = $this->cache_key_prefix . 'urlscan_' . md5($url);
+        $cached_data = get_transient($cache_key);
+    
+        if ($cached_data) {
+            return $cached_data; // Return cached data if available
+        }
+    
+        if (empty($api_key)) {
+            $this->add_admin_notice(__('URLScan.io API key is missing.', 'hellaz-sitez-analyzer'));
+            return ['error' => __('URLScan.io analysis unavailable.', 'hellaz-sitez-analyzer')];
+        }
+    
+        // Make API request to URLScan.io
+        $response = wp_remote_post(
+            'https://urlscan.io/api/v1/scan/',
+            [
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'API-Key' => $api_key,
+                ],
+                'body' => json_encode(['url' => $url]),
+            ]
+        );
+    
+        if (is_wp_error($response)) {
+            $this->add_admin_notice(__('Failed to connect to URLScan.io API.', 'hellaz-sitez-analyzer'));
+            return ['error' => __('URLScan.io analysis unavailable.', 'hellaz-sitez-analyzer')];
+        }
+    
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+    
+        if (isset($body['message'])) {
+            $this->add_admin_notice(sprintf(__('URLScan.io API Error: %s', 'hellaz-sitez-analyzer'), $body['message']));
+            return ['error' => __('URLScan.io analysis unavailable.', 'hellaz-sitez-analyzer')];
+        }
+    
+        // Parse response
+        $result_url = isset($body['result']) ? $body['result'] : '';
+    
+        // Cache the response for 24 hours
+        set_transient($cache_key, $result_url, DAY_IN_SECONDS);
+    
+        return $result_url;
+    }
+    
     private function add_admin_notice($message) {
         add_action('admin_notices', function () use ($message) {
             echo '<div class="notice notice-error"><p>' . esc_html($message) . '</p></div>';

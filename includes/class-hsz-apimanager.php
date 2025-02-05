@@ -23,7 +23,7 @@ class APIManager {
 
         // Default arguments
         $default_args = [
-            'timeout' => 5,
+            'timeout' => 5, // Add a 5-second timeout
             'headers' => [],
         ];
         $args = array_merge($default_args, $args);
@@ -32,13 +32,13 @@ class APIManager {
         $response = wp_remote_get($url, $args);
 
         if (is_wp_error($response)) {
-            $this->log_admin_notice(__('API Request Failed:', 'hellaz-sitez-analyzer') . ' ' . $response->get_error_message());
+            Utils::log_admin_notice(__('API Request Failed:', 'hellaz-sitez-analyzer') . ' ' . $response->get_error_message());
             return !empty($cache_key) ? get_transient($cache_key) : [];
         }
 
         $response_code = wp_remote_retrieve_response_code($response);
         if ($response_code !== 200) {
-            $this->log_admin_notice(sprintf(__('API HTTP Error: %d', 'hellaz-sitez-analyzer'), $response_code));
+            Utils::log_admin_notice(sprintf(__('API HTTP Error: %d', 'hellaz-sitez-analyzer'), $response_code));
             return !empty($cache_key) ? get_transient($cache_key) : [];
         }
 

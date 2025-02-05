@@ -3,6 +3,8 @@ namespace HSZ;
 
 class Core {
     public static function init() {
+        // Initialize Gutenberg block using the singleton pattern
+        Gutenberg::get_instance();
         // Initialize all plugin components
         new Metadata();
         new SocialMedia();
@@ -10,7 +12,7 @@ class Core {
         new Security();
         new Cache();
         new Shortcode();
-        new Gutenberg();
+//        new Gutenberg();
         new Settings();
         new Hooks();
         new Fallbacks();

@@ -39,7 +39,7 @@ class Security {
     private function get_ssl_info_from_ssllabs($host) {
         $cache_key = 'hsz_ssl_info_' . md5($host);
 
-        $response = $this->api_manager->make_api_request(
+        $response = $this->apimanager->make_api_request(
             "https://api.ssllabs.com/api/v3/analyze?host=$host",
             [],
             $cache_key,
@@ -94,7 +94,7 @@ class Security {
 
         $cache_key = 'hsz_virustotal_' . md5($url);
 
-        $response = $this->api_manager->make_api_request(
+        $response = $this->apimanager->make_api_request(
             "https://www.virustotal.com/api/v3/urls/$url",
             ['headers' => ['x-apikey' => $api_key]],
             $cache_key,
@@ -129,7 +129,7 @@ class Security {
 
         $cache_key = 'hsz_builtwith_' . md5($url);
 
-        $response = $this->api_manager->make_api_request(
+        $response = $this->apimanager->make_api_request(
             "https://api.builtwith.com/v19/api.json?KEY=$api_key&LOOKUP=$url",
             [],
             $cache_key,
@@ -164,7 +164,7 @@ class Security {
 
         $cache_key = 'hsz_urlscan_' . md5($url);
 
-        $response = $this->api_manager->make_api_request(
+        $response = $this->apimanager->make_api_request(
             "https://urlscan.io/api/v1/search/?q=domain:$url",
             ['headers' => ['API-Key' => $api_key]],
             $cache_key,

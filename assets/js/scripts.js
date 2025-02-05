@@ -24,13 +24,16 @@ registerBlockType('hsz/metadata-block', {
                 label: __('Enter URL', 'hellaz-sitez-analyzer'),
                 value: attributes.url,
                 onChange: (value) => {
-                    // Save the URL attribute immediately
                     setAttributes({ url: value });
                 },
                 onBlur: (event) => {
-                    const value = event.target.value;
+                    const value = event.target.value.trim();
+                    if (!value) {
+                        alert(__('URL cannot be empty.', 'hellaz-sitez-analyzer'));
+                        return;
+                    }
                     if (!value.match(/^https?:\/\/[^\s]+$/)) {
-                        console.error(__('Invalid URL format:', 'hellaz-sitez-analyzer'), value);
+                        alert(__('Invalid URL format:', 'hellaz-sitez-analyzer') + ' ' + value);
                     }
                 },
                 placeholder: __('https://example.com', 'hellaz-sitez-analyzer'),

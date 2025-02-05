@@ -20,6 +20,9 @@ class Gutenberg {
         return self::$instance;
     }
 
+    /**
+     * Private constructor to enforce singleton pattern.
+     */
     private function __construct() {
         // Hook into WordPress initialization to register the block
         add_action('init', [$this, 'register_block']);
@@ -84,12 +87,4 @@ class Gutenberg {
             return '<p>' . __('An error occurred while processing the URL.', 'hellaz-sitez-analyzer') . '</p>';
         }
     }
-}
-
-// Ensure the file is included only once
-if (!function_exists('hsz_register_gutenberg_block')) {
-    function hsz_register_gutenberg_block() {
-        Gutenberg::get_instance();
-    }
-    add_action('plugins_loaded', 'hsz_register_gutenberg_block');
 }

@@ -17,30 +17,28 @@ registerBlockType('hsz/metadata-block', {
         const { attributes, setAttributes } = props;
         const blockProps = useBlockProps();
 
-        // Debugging: Log attributes to the console
-        console.log('Block Attributes:', attributes);
-
-        return (
-            <div {...blockProps}>
-                <TextControl
-                    label={__('Enter URL', 'hellaz-sitez-analyzer')}
-                    value={attributes.url}
-                    onChange={(value) => {
-                        // Validate URL format
-                        if (!value || value.match(/^https?:\/\/[^\s]+$/)) {
-                            console.log('Setting URL attribute:', value); // Debugging
-                            setAttributes({ url: value });
-                        } else {
-                            console.error(__('Invalid URL format:', 'hellaz-sitez-analyzer'), value);
-                        }
-                    }}
-                    placeholder={__('https://example.com', 'hellaz-sitez-analyzer')}
-                />
-            </div>
+        return wp.element.createElement(
+            'div',
+            blockProps,
+            wp.element.createElement(TextControl, {
+                label: __('Enter URL', 'hellaz-sitez-analyzer'),
+                value: attributes.url,
+                onChange: (value) => {
+                    // Save the URL attribute immediately
+                    setAttributes({ url: value });
+                },
+                onBlur: (event) => {
+                    const value = event.target.value;
+                    if (!value.match(/^https?:\/\/[^\s]+$/)) {
+                        console.error(__('Invalid URL format:', 'hellaz-sitez-analyzer'), value);
+                    }
+                },
+                placeholder: __('https://example.com', 'hellaz-sitez-analyzer'),
+                __nextHasNoMarginBottom: true,
+            })
         );
     },
     save: () => {
-        // Server-side rendering is handled by PHP, so return null here.
-        return null;
+        return null; // Server-side rendering is handled by PHP
     },
 });

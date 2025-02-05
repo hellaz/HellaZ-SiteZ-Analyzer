@@ -1,11 +1,15 @@
 <?php
 namespace HSZ;
 
+if (!defined('ABSPATH')) {
+    exit; // Exit if accessed directly
+}
+
 class Security {
     private $apimanager;
 
     public function __construct() {
-        $this->apimanager = new APIManager();
+        $this->apimanager = new APIManager(); // Initialize the APIManager
     }
 
     /**
@@ -23,7 +27,7 @@ class Security {
         // Option 1: Use SSL Labs API for detailed analysis
         $ssl_labs_data = $this->get_ssl_info_from_ssllabs($host);
         if (!empty($ssl_labs_data)) {
-            return $ssl_labs_data;
+            return array_map('sanitize_text_field', $ssl_labs_data); // Sanitize API response
         }
 
         // Option 2: Fallback to direct certificate parsing
@@ -48,10 +52,7 @@ class Security {
 
         // Check if the response contains valid SSL data
         if (isset($response['status']) && $response['status'] === 'READY') {
-            return [
-                'grade' => $response['endpoints'][0]['grade'] ?? __('N/A', 'hellaz-sitez-analyzer'),
-                'details' => $response,
-            ];
+            return array_map('sanitize_text_field', $response); // Sanitize API response
         }
 
         return [];
@@ -77,7 +78,7 @@ class Security {
             }
             fclose($stream);
         }
-        return $ssl_info;
+        return array_map('sanitize_text_field', $ssl_info); // Sanitize certificate data
     }
 
     /**

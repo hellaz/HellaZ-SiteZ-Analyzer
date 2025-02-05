@@ -369,4 +369,67 @@ class Metadata {
         $body = json_decode(wp_remote_retrieve_body($response), true);
         return isset($body['city'], $body['country']) ? "{$body['city']}, {$body['country']}" : '';
     }
+
+        private function get_address($dom, $url) {
+        $address = '';
+
+        // Extract address from JSON-LD structured data
+        $scripts = $dom->getElementsByTagName('script');
+        foreach ($scripts as $script) {
+            if ($script->getAttribute('type') === 'application/ld+json') {
+                $json = json_decode($script->textContent, true);
+                if (isset($json['@type']) && $json['@type'] === 'Organization' && isset($json['address'])) {
+                    $address = is_array($json['address']) ? implode(', ', $json['address']) : $json['address'];
+                    break;
+                }
+            }
+        }
+
+        // Fallback: Extract address-like patterns using multilingual keywords
+        if (empty($address)) {
+            $body = $dom->getElementsByTagName('body')->item(0)->textContent;
+            $patterns = [
+                '/\b(?:address|adresse|dirección|地址|住所)\b\s*:\s*[^\n]+/i', // Multilingual address keywords
+                '/\b\d{1,5}\s+\w+\s+(?:street|st|avenue|ave|road|rd|boulevard|blvd)\b/i',
+                '/\b(?:city|town|village|ville|ciudad|stadt)\b\s*:\s*\w+/i',
+                '/\bzip\s*:\s*\d{5}/i',
+                '/\bcountry\s*:\s*\w+/i',
+            ];
+            foreach ($patterns as $pattern) {
+                if (preg_match($pattern, $body, $match)) {
+                    $address .= $match[0] . ', ';
+                }
+            }
+            $address = rtrim($address, ', ');
+        }
+
+        // Follow common pages like /about/, /about-us/, /contact/ for additional address extraction
+        if (empty($address)) {
+            $common_pages = ['/about/', '/about-us/', '/contact/'];
+            foreach ($common_pages as $path) {
+                $page_url = rtrim($url, '/') . $path;
+                $page_response = wp_remote_get($page_url);
+                if (!is_wp_error($page_response) && wp_remote_retrieve_response_code($page_response) === 200) {
+                    $page_html = wp_remote_retrieve_body($page_response);
+                    libxml_use_internal_errors(true);
+                    $page_dom = new \DOMDocument();
+                    @$page_dom->loadHTML($page_html);
+                    libxml_clear_errors();
+
+                    $scripts = $page_dom->getElementsByTagName('script');
+                    foreach ($scripts as $script) {
+                        if ($script->getAttribute('type') === 'application/ld+json') {
+                            $json = json_decode($script->textContent, true);
+                            if (isset($json['@type']) && $json['@type'] === 'Organization' && isset($json['address'])) {
+                                $address = is_array($json['address']) ? implode(', ', $json['address']) : $json['address'];
+                                break 2; // Exit both loops
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return $address;
+    }
 }

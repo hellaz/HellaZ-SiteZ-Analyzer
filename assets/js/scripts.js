@@ -1,10 +1,10 @@
 const { registerBlockType } = wp.blocks;
 const { TextControl } = wp.components;
 const { useBlockProps } = wp.blockEditor;
-const { __ } = wp.i18n; // Import wp.i18n for translations
+const { __ } = wp.i18n;
 
 registerBlockType('hsz/metadata-block', {
-    title: __('HellaZ SiteZ Analyzer', 'hellaz-sitez-analyzer'), // Translatable title
+    title: __('HellaZ SiteZ Analyzer', 'hellaz-sitez-analyzer'),
     icon: 'admin-site',
     category: 'widgets',
     attributes: {
@@ -23,17 +23,18 @@ registerBlockType('hsz/metadata-block', {
         return (
             <div {...blockProps}>
                 <TextControl
-                    label={__('Enter URL', 'hellaz-sitez-analyzer')} // Translatable label
+                    label={__('Enter URL', 'hellaz-sitez-analyzer')}
                     value={attributes.url}
                     onChange={(value) => {
                         // Validate URL format
                         if (!value || value.match(/^https?:\/\/[^\s]+$/)) {
+                            console.log('Setting URL attribute:', value); // Debugging
                             setAttributes({ url: value });
                         } else {
                             console.error(__('Invalid URL format:', 'hellaz-sitez-analyzer'), value);
                         }
                     }}
-                    placeholder={__('https://example.com', 'hellaz-sitez-analyzer')} // Translatable placeholder
+                    placeholder={__('https://example.com', 'hellaz-sitez-analyzer')}
                 />
             </div>
         );

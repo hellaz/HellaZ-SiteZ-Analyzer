@@ -36,7 +36,6 @@ class Gutenberg {
     public function register_block() {
         if (function_exists('register_block_type') && !WP_Block_Type_Registry::get_instance()->is_registered('hsz/metadata-block')) {
             error_log('Attempting to register Gutenberg block...');
-
             register_block_type('hsz/metadata-block', [
                 'render_callback' => [$this, 'render_block'], // Ensure this points to the render_block method
                 'attributes' => [
@@ -46,7 +45,6 @@ class Gutenberg {
                     ],
                 ],
             ]);
-
             error_log('Gutenberg block registered.');
         } else {
             error_log('Block "hsz/metadata-block" is already registered.');
@@ -63,23 +61,31 @@ class Gutenberg {
         error_log('Rendering block with attributes: ' . print_r($attributes, true));
 
         $url = isset($attributes['url']) ? esc_url_raw($attributes['url']) : '';
-        if (empty($url)) {
-            error_log('No URL provided in block attributes.');
+
+        // Validate the URL
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            error_log('Invalid URL provided: ' . esc_html($url));
             return '<p>' . __('Please enter a valid URL.', 'hellaz-sitez-analyzer') . '</p>';
         }
 
         try {
             // Extract metadata using the Metadata class
             $metadata = (new Metadata())->extract_metadata($url);
-
             if (isset($metadata['error'])) {
                 error_log('Error extracting metadata: ' . $metadata['error']);
                 return '<p>' . esc_html($metadata['error']) . '</p>';
             }
 
+            // Check if the template file exists
+            $template_path = plugin_dir_path(__FILE__) . '../templates/metadata-template.php';
+            if (!file_exists($template_path)) {
+                error_log('Template file not found: ' . esc_html($template_path));
+                return '<p>' . __('Template file is missing.', 'hellaz-sitez-analyzer') . '</p>';
+            }
+
             // Start output buffering and include the template file
             ob_start();
-            include plugin_dir_path(__FILE__) . '../templates/metadata-template.php';
+            include $template_path;
             $output = ob_get_clean();
 
             error_log('Block rendered successfully.');

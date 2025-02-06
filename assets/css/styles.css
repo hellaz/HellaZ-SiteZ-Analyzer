@@ -7,6 +7,49 @@
     line-height: 1.6;
 }
 
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+/* Resets default browser styles to ensure consistency across browsers. */
+
+/* Gutenberg Block Styles */
+.hsz-block {
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px solid #ddd;
+    background-color: #f9f9f9;
+}
+/* Used for the container of the Gutenberg block metadata output. */
+
+.hsz-block h3 {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 10px;
+}
+/* Used for headings within the Gutenberg block. */
+
+/* Widget Styles */
+.hsz-widget {
+    font-size: 14px;
+    color: #333;
+    line-height: 1.5;
+}
+/* Used for the widget displayed in sidebars or widgetized areas. */
+
+.hsz-widget ul {
+    list-style: none;
+    padding: 0;
+}
+/* Removes bullet points from lists in the widget. */
+
+.hsz-widget li {
+    margin-bottom: 5px;
+}
+/* Adds spacing between list items in the widget. */
+
 .hsz-title {
     font-size: 24px;
     margin-bottom: 10px;
@@ -49,21 +92,65 @@
 }
 
 /* Social Media Profiles */
+/* Social Media Links */
 .hsz-social-list {
-    display: flex;
-    gap: 10px;
     list-style: none;
     padding: 0;
-}
-
-.hsz-social-list li a {
     display: flex;
-    align-items: center;
-    gap: 5px;
-    text-decoration: none;
-    color: #333;
+    gap: 10px;
+    flex-wrap: wrap;
 }
+/* Used for displaying social media links extracted from the analyzed URL. */
+
+.hsz-social-list li {
+    display: inline-block;
+    margin-right: 10px;
+}
+/* Adds spacing between individual social media links. */
+
+.hsz-social-list a {
+    text-decoration: none;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 4px;
+}
+/* Styles for social media link anchors. */
 
 .hsz-social-list li a:hover {
     text-decoration: underline;
 }
+
+/* RTL Support */
+body.rtl .hsz-widget {
+    direction: rtl;
+    text-align: right;
+}
+/* Ensures proper alignment for RTL languages. */
+
+body.rtl .hsz-social-list {
+    flex-direction: row-reverse;
+}
+/* Reverses the order of social media links for RTL languages. */
+
+/* Admin Settings Page Styles */
+.hsz-settings-section {
+    margin-bottom: 20px;
+    padding: 10px;
+    border: 1px solid #eee;
+    background-color: #fafafa;
+}
+/* Used for organizing sections on the admin settings page. */
+
+.hsz-settings-section h2 {
+    font-size: 20px;
+    color: #0073aa;
+    margin-bottom: 10px;
+}
+/* Used for section titles on the admin settings page. */
+
+.hsz-settings-section p {
+    font-size: 14px;
+    color: #555;
+}
+/* Used for descriptive text within the admin settings page. */
+

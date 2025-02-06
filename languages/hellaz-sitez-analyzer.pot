@@ -1,147 +1,175 @@
+# HellaZ SiteZ Analyzer
+# Copyright (C) 2023 Hellaz
+# This file is distributed under the GPLv2 or later license.
 msgid ""
 msgstr ""
-"Project-Id-Version: HellaZ SiteZ Analyzer\n"
+"Project-Id-Version: HellaZ SiteZ Analyzer 1.0\n"
+"Report-Msgid-Bugs-To: https://github.com/hellaz/HellaZ-SiteZ-Analyzer/issues\n"
 "POT-Creation-Date: 2023-10-XX XX:XX+XXXX\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: Your Name <your.email@example.com>\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit X.X\n"
 
-#: hellaz-sitez-analyzer.php:XX
-msgid "HellaZ SiteZ Analyzer"
+#: includes/class-hsz-gutenberg.php:45
+msgid "Enter URL:"
 msgstr ""
+#. translators: This string is used as the label for the URL input field in the Gutenberg block.
 
-#: hellaz-sitez-analyzer.php:XX
-msgid "Analyze websites for metadata, security, and more."
+#: includes/class-hsz-gutenberg.php:60
+msgid "Analyze Metadata"
 msgstr ""
+#. translators: This string is used as the button label for analyzing metadata in the Gutenberg block.
 
-#: includes/class-hsz-settings.php:XX
-msgid "HellaZ SiteZ Analyzer Settings"
+#: includes/class-hsz-gutenberg.php:75
+msgid "Metadata Analysis Results"
 msgstr ""
+#. translators: This string is used as the title for the metadata analysis results in the Gutenberg block.
 
-#: includes/class-hsz-settings.php:XX
-msgid "SiteZ Analyzer"
+#: includes/class-hsz-gutenberg.php:90
+msgid "Social Media Links"
 msgstr ""
+#. translators: This string is used as the subtitle for the social media links section in the Gutenberg block.
 
-#: includes/class-hsz-settings.php:XX
-msgid "VirusTotal API Key"
+#: includes/class-hsz-gutenberg.php:105
+msgid "SSL Certificate Information"
 msgstr ""
+#. translators: This string is used as the subtitle for the SSL certificate information section in the Gutenberg block.
 
-#: includes/class-hsz-settings.php:XX
-msgid "Enter your VirusTotal API key."
+#: includes/class-hsz-gutenberg.php:120
+msgid "Open Graph Tags"
 msgstr ""
+#. translators: This string is used as the subtitle for the Open Graph tags section in the Gutenberg block.
 
-#: includes/class-hsz-settings.php:XX
-msgid "URLScan.io API Key"
+#: includes/class-hsz-widget.php:60
+msgid "No social media links found."
 msgstr ""
+#. translators: This message is displayed when no social media links are detected for the provided URL.
 
-#: includes/class-hsz-settings.php:XX
-msgid "Enter your URLScan.io API key."
+#: includes/class-hsz-widget.php:75
+msgid "Website Metadata"
 msgstr ""
+#. translators: This string is used as the title for the widget displaying website metadata.
 
-#: includes/class-hsz-settings.php:XX
-msgid "BuiltWith API Key"
-msgstr ""
-
-#: includes/class-hsz-settings.php:XX
-msgid "Enter your BuiltWith API key."
-msgstr ""
-
-#: includes/class-hsz-settings.php:XX
-msgid "Enable Disclaimer"
-msgstr ""
-
-#: includes/class-hsz-settings.php:XX
-msgid "Check to enable the disclaimer message."
-msgstr ""
-
-#: includes/class-hsz-settings.php:XX
-msgid "Disclaimer Message"
-msgstr ""
-
-#: includes/class-hsz-settings.php:XX
-msgid "Enter the disclaimer message to display."
-msgstr ""
-
-#: includes/class-hsz-settings.php:XX
-msgid "Link Target"
-msgstr ""
-
-#: includes/class-hsz-settings.php:XX
-msgid "Choose how links should open."
-msgstr ""
-
-#: templates/metadata-template.php:XX
-msgid "Basic Metadata"
-msgstr ""
-
-#: templates/metadata-template.php:XX
-msgid "Author:"
-msgstr ""
-
-#: templates/metadata-template.php:XX
-msgid "Keywords:"
-msgstr ""
-
-#: templates/metadata-template.php:XX
-msgid "Referrer:"
-msgstr ""
-
-#: templates/metadata-template.php:XX
-msgid "Language:"
-msgstr ""
-
-#: templates/metadata-template.php:XX
-msgid "Canonical URL:"
-msgstr ""
-
-#: templates/metadata-template.php:XX
-msgid "Server Information"
-msgstr ""
-
-#: templates/metadata-template.php:XX
-msgid "Server Location:"
-msgstr ""
-
-#: templates/metadata-template.php:XX
-msgid "SSL Valid From:"
-msgstr ""
-
-#: templates/metadata-template.php:XX
-msgid "SSL Valid To:"
-msgstr ""
-
-#: templates/metadata-template.php:XX
-msgid "SSL Issuer:"
-msgstr ""
-
-#: templates/metadata-template.php:XX
+#: includes/class-hsz-widget.php:90
 msgid "Social Media Profiles"
 msgstr ""
+#. translators: This string is used as the subtitle for the social media profiles section in the widget.
 
-#: templates/metadata-template.php:XX
-msgid "No social media profiles detected."
+#: includes/class-hsz-widget.php:105
+msgid "Security Details"
 msgstr ""
+#. translators: This string is used as the subtitle for the security details section in the widget.
 
-#: templates/metadata-template.php:XX
-msgid "Contact Information"
+#: includes/class-hsz-shortcode.php:40
+msgid "Shortcode Usage"
 msgstr ""
+#. translators: This string is used as the heading for shortcode usage instructions.
 
-#: templates/metadata-template.php:XX
-msgid "Emails"
+#: includes/class-hsz-shortcode.php:55
+msgid "Use the following shortcode to display metadata:"
 msgstr ""
+#. translators: This string provides instructions for using the shortcode.
 
-#: templates/metadata-template.php:XX
-msgid "Contact Forms"
+#: includes/class-hsz-shortcode.php:70
+msgid "Website Analysis"
 msgstr ""
+#. translators: This string is used as the title for the metadata analysis results displayed via the shortcode.
 
-#: templates/metadata-template.php:XX
-msgid "RSS Feeds"
+#: includes/class-hsz-shortcode.php:85
+msgid "Social Media Connections"
 msgstr ""
+#. translators: This string is used as the subtitle for the social media connections section in the shortcode output.
 
-#: templates/metadata-template.php:XX
-msgid "No RSS feeds detected."
+#: includes/class-hsz-shortcode.php:100
+msgid "SSL Certificate Status"
 msgstr ""
+#. translators: This string is used as the subtitle for the SSL certificate status section in the shortcode output.
+
+#: includes/class-hsz-shortcode.php:115
+msgid "Open Graph Data"
+msgstr ""
+#. translators: This string is used as the subtitle for the Open Graph data section in the shortcode output.
+
+#: includes/class-hsz-settings.php:80
+msgid "API Key"
+msgstr ""
+#. translators: This string is used as the label for the API key input field on the admin settings page.
+
+#: includes/class-hsz-settings.php:95
+msgid "Cache Duration (in seconds)"
+msgstr ""
+#. translators: This string is used as the label for the cache duration setting on the admin settings page.
+
+#: includes/class-hsz-settings.php:110
+msgid "Save Changes"
+msgstr ""
+#. translators: This string is used as the label for the save button on the admin settings page.
+
+#: includes/class-hsz-metadata.php:120
+msgid "Invalid URL entered."
+msgstr ""
+#. translators: This error message is displayed when the user enters an invalid URL.
+
+#: includes/class-hsz-metadata.php:135
+msgid "Metadata Extraction Failed"
+msgstr ""
+#. translators: This error message is displayed when metadata extraction fails.
+
+#: includes/class-hsz-utils.php:90
+msgid "An error occurred while retrieving SSL information."
+msgstr ""
+#. translators: This error message is displayed when SSL certificate retrieval fails.
+
+#: includes/class-hsz-utils.php:105
+msgid "Debug Log"
+msgstr ""
+#. translators: This string is used as the heading for the debug log section.
+
+#: includes/class-hsz-social-media.php:75
+msgid "Social Media Links"
+msgstr ""
+#. translators: This string is used as a heading for the section displaying social media links.
+
+#: includes/class-hsz-fallbacks.php:30
+msgid "No metadata found for this URL."
+msgstr ""
+#. translators: This message is displayed when no metadata is extracted for the provided URL.
+
+#: includes/class-hsz-fallbacks.php:45
+msgid "Please enter a valid URL."
+msgstr ""
+#. translators: This message is displayed when the user does not provide a valid URL.
+
+#: includes/class-hsz-apimanager.php:50
+msgid "API Request Failed"
+msgstr ""
+#. translators: This error message is displayed when an API request fails.
+
+#: includes/class-hsz-apimanager.php:65
+msgid "Retry API Request"
+msgstr ""
+#. translators: This string is used as the label for retrying a failed API request.
+
+#: includes/class-hsz-core.php:30
+msgid "HellaZ SiteZ Analyzer Initialized"
+msgstr ""
+#. translators: This message is logged when the plugin is successfully initialized.
+
+#: includes/class-hsz-core.php:45
+msgid "Error initializing plugin components."
+msgstr ""
+#. translators: This error message is displayed when plugin initialization fails.
+
+#: uninstall.php:20
+msgid "Plugin data has been successfully removed."
+msgstr ""
+#. translators: This message is displayed when plugin data is removed during uninstallation.
+
+#: uninstall.php:30
+msgid "Failed to remove plugin data."
+msgstr ""
+#. translators: This error message is displayed when plugin data removal fails during uninstallation.

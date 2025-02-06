@@ -16,7 +16,7 @@ Requires at least: Wordpress 5.0 - Tested up to: 6.7.1
 - **Metadata Detection**:  Extracts metadata, title, favicon, keywords, author, open graph tags from remote website.
 - **Social Media Detection**: Extracts links for Facebook, Twitter/X, LinkedIn, YouTube, Instagram, WhatsApp, TikTok, Pinterest, Reddit, and Telegram.
 - **Contact Info Detection**: Extracts emails, contact forms, address from target website
-- **RSS Detection**: Retrieves RSS/Atom Feeds
+- **Feed Detection**: Retrieves RSS/Atom Feeds
 - **Server & Security Info**: Retrieves Server location, Security & SSL details using APIs or direct parsing.
 - **Caching**: Reduces server load by caching API responses.
 - **Localization**: Supports multilingual websites with `.pot` files and translation functions.

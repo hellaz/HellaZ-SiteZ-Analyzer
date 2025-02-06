@@ -5,6 +5,7 @@ class Settings {
     public function __construct() {
         add_action('admin_menu', [$this, 'add_settings_page']);
         add_action('admin_init', [$this, 'register_settings']);
+        add_action('wp_ajax_hsz_clear_cache', [$this, 'clear_cache_ajax']);
     }
 
     public function add_settings_page() {
@@ -36,6 +37,9 @@ class Settings {
 
         // Register link target setting
         register_setting('hsz-settings-group', 'hsz_link_target');
+
+        // Register icon library setting
+        register_setting('hsz-settings-group', 'hsz_icon_library');
     }
 
     public function render_settings_page() {
@@ -50,7 +54,6 @@ class Settings {
                 <?php
                 // Add nonce field for security.
                 wp_nonce_field('hsz_settings_nonce', 'hsz_nonce');
-
                 // Output settings fields and sections.
                 settings_fields('hsz-settings-group');
                 do_settings_sections('hsz-settings-group');
@@ -64,6 +67,7 @@ class Settings {
                             <p class="description"><?php _e('Enter your VirusTotal API key.', 'hellaz-sitez-analyzer'); ?></p>
                         </td>
                     </tr>
+
                     <!-- URLScan.io API Key -->
                     <tr>
                         <th scope="row"><label for="hsz_urlscan_api_key"><?php _e('URLScan.io API Key', 'hellaz-sitez-analyzer'); ?></label></th>
@@ -72,6 +76,7 @@ class Settings {
                             <p class="description"><?php _e('Enter your URLScan.io API key.', 'hellaz-sitez-analyzer'); ?></p>
                         </td>
                     </tr>
+
                     <!-- BuiltWith API Key -->
                     <tr>
                         <th scope="row"><label for="hsz_builtwith_api_key"><?php _e('BuiltWith API Key', 'hellaz-sitez-analyzer'); ?></label></th>
@@ -80,6 +85,7 @@ class Settings {
                             <p class="description"><?php _e('Enter your BuiltWith API key.', 'hellaz-sitez-analyzer'); ?></p>
                         </td>
                     </tr>
+
                     <!-- Fallback Image -->
                     <tr>
                         <th scope="row"><label for="hsz_fallback_image"><?php _e('Fallback Image URL', 'hellaz-sitez-analyzer'); ?></label></th>
@@ -88,6 +94,7 @@ class Settings {
                             <p class="description"><?php _e('Enter the URL of the fallback image to use when no favicon is found.', 'hellaz-sitez-analyzer'); ?></p>
                         </td>
                     </tr>
+
                     <!-- Enable Disclaimer -->
                     <tr>
                         <th scope="row"><label for="hsz_enable_disclaimer"><?php _e('Enable Disclaimer', 'hellaz-sitez-analyzer'); ?></label></th>
@@ -96,6 +103,7 @@ class Settings {
                             <p class="description"><?php _e('Check to enable the disclaimer message.', 'hellaz-sitez-analyzer'); ?></p>
                         </td>
                     </tr>
+
                     <!-- Disclaimer Message -->
                     <tr>
                         <th scope="row"><label for="hsz_disclaimer_message"><?php _e('Disclaimer Message', 'hellaz-sitez-analyzer'); ?></label></th>
@@ -104,6 +112,7 @@ class Settings {
                             <p class="description"><?php _e('Enter the disclaimer message to display.', 'hellaz-sitez-analyzer'); ?></p>
                         </td>
                     </tr>
+
                     <!-- Link Target -->
                     <tr>
                         <th scope="row"><label for="hsz_link_target"><?php _e('Link Target', 'hellaz-sitez-analyzer'); ?></label></th>
@@ -115,10 +124,58 @@ class Settings {
                             <p class="description"><?php _e('Choose how links should open.', 'hellaz-sitez-analyzer'); ?></p>
                         </td>
                     </tr>
+
+                    <!-- Icon Library -->
+                    <tr>
+                        <th scope="row"><label for="hsz_icon_library"><?php _e('Icon Library', 'hellaz-sitez-analyzer'); ?></label></th>
+                        <td>
+                            <select id="hsz_icon_library" name="hsz_icon_library">
+                                <option value="font-awesome" <?php selected(get_option('hsz_icon_library'), 'font-awesome'); ?>><?php _e('Font Awesome', 'hellaz-sitez-analyzer'); ?></option>
+                                <option value="custom-icons" <?php selected(get_option('hsz_icon_library'), 'custom-icons'); ?>><?php _e('Custom Icons', 'hellaz-sitez-analyzer'); ?></option>
+                            </select>
+                            <p class="description"><?php _e('Select the icon library to use for social media icons.', 'hellaz-sitez-analyzer'); ?></p>
+                        </td>
+                    </tr>
                 </table>
                 <?php submit_button(); ?>
             </form>
+
+            <!-- Cache Clearing Section -->
+            <h2><?php _e('Clear Cache', 'hellaz-sitez-analyzer'); ?></h2>
+            <p><?php _e('Click the button below to clear all cached data.', 'hellaz-sitez-analyzer'); ?></p>
+            <button id="hsz-clear-cache-button" class="button button-primary"><?php _e('Clear Cache', 'hellaz-sitez-analyzer'); ?></button>
+            <div id="hsz-clear-cache-message" style="display: none;"></div>
+
+            <script>
+                jQuery(document).ready(function($) {
+                    $('#hsz-clear-cache-button').on('click', function(e) {
+                        e.preventDefault();
+                        $.ajax({
+                            url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                            type: 'POST',
+                            data: {
+                                action: 'hsz_clear_cache'
+                            },
+                            success: function(response) {
+                                $('#hsz-clear-cache-message').html('<div class="notice notice-success"><p>' + response.message + '</p></div>').show();
+                            },
+                            error: function() {
+                                $('#hsz-clear-cache-message').html('<div class="notice notice-error"><p><?php _e('An error occurred while clearing the cache.', 'hellaz-sitez-analyzer'); ?></p></div>').show();
+                            }
+                        });
+                    });
+                });
+            </script>
         </div>
         <?php
+    }
+
+    /**
+     * Clear all transients via AJAX.
+     */
+    public function clear_cache_ajax() {
+        global $wpdb;
+        $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_hsz_%'");
+        wp_send_json_success(['message' => __('Cache cleared successfully.', 'hellaz-sitez-analyzer')]);
     }
 }

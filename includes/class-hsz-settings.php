@@ -130,10 +130,25 @@ class Settings {
                         <th scope="row"><label for="hsz_icon_library"><?php _e('Icon Library', 'hellaz-sitez-analyzer'); ?></label></th>
                         <td>
                             <select id="hsz_icon_library" name="hsz_icon_library">
-                                <option value="font-awesome" <?php selected(get_option('hsz_icon_library'), 'font-awesome'); ?>><?php _e('Font Awesome', 'hellaz-sitez-analyzer'); ?></option>
+                                <option value="font-awesome" <?php selected(get_option('hsz_icon_library'), 'font-awesome'); ?>><?php _e('Font Awesome (CDN)', 'hellaz-sitez-analyzer'); ?></option>
+                                <option value="material-icons" <?php selected(get_option('hsz_icon_library'), 'material-icons'); ?>><?php _e('Material Icons (CDN)', 'hellaz-sitez-analyzer'); ?></option>
+                                <option value="bootstrap-icons" <?php selected(get_option('hsz_icon_library'), 'bootstrap-icons'); ?>><?php _e('Bootstrap Icons (CDN)', 'hellaz-sitez-analyzer'); ?></option>
+                                <?php
+                                // Detect locally installed icon libraries
+                                $local_libraries = $this->detect_local_icon_libraries();
+                                foreach ($local_libraries as $library_name => $library_path) {
+                                    echo '<option value="' . esc_attr($library_path) . '" ' . selected(get_option('hsz_icon_library'), $library_path, false) . '>' . esc_html($library_name . ' (Local: ' . $library_path . ')') . '</option>';
+                                }
+                                ?>
                                 <option value="custom-icons" <?php selected(get_option('hsz_icon_library'), 'custom-icons'); ?>><?php _e('Custom Icons', 'hellaz-sitez-analyzer'); ?></option>
                             </select>
                             <p class="description"><?php _e('Select the icon library to use for social media icons.', 'hellaz-sitez-analyzer'); ?></p>
+
+                            <!-- Custom Icon Path Field -->
+                            <div id="hsz-custom-icon-path-field" style="display: <?php echo get_option('hsz_icon_library') === 'custom-icons' ? 'block' : 'none'; ?>;">
+                                <input type="text" id="hsz_custom_icon_path" name="hsz_custom_icon_path" value="<?php echo esc_attr(get_option('hsz_custom_icon_path')); ?>" class="regular-text">
+                                <p class="description"><?php _e('Enter the URL or file path to your custom icon set.', 'hellaz-sitez-analyzer'); ?></p>
+                            </div>
                         </td>
                     </tr>
                 </table>
@@ -167,9 +182,59 @@ class Settings {
                 });
             </script>
         </div>
+        <script>
+            jQuery(document).ready(function($) {
+                const iconLibrarySelect = $('#hsz_icon_library');
+                const customIconPathField = $('#hsz-custom-icon-path-field');
+
+                // Toggle visibility of custom icon path field
+                function toggleCustomIconPathField() {
+                    if (iconLibrarySelect.val() === 'custom-icons') {
+                        customIconPathField.show();
+                    } else {
+                        customIconPathField.hide();
+                    }
+                }
+
+                // Initial toggle
+                toggleCustomIconPathField();
+
+                // Listen for changes
+                iconLibrarySelect.on('change', function() {
+                    toggleCustomIconPathField();
+                });
+            });
+        </script>
         <?php
     }
 
+    /**
+     * Detect locally installed icon libraries.
+     *
+     * @return array An associative array of library names and their paths.
+     */
+    private function detect_local_icon_libraries() {
+        $libraries = [];
+        $theme_dir = get_template_directory();
+        $plugin_dir = WP_PLUGIN_DIR;
+
+        // Check for Font Awesome
+        if (file_exists($theme_dir . '/font-awesome.min.css')) {
+            $libraries['Font Awesome'] = get_template_directory_uri() . '/font-awesome.min.css';
+        } elseif (file_exists($plugin_dir . '/font-awesome/font-awesome.min.css')) {
+            $libraries['Font Awesome'] = plugins_url('font-awesome/font-awesome.min.css');
+        }
+
+        // Check for Dashicons
+        if (wp_style_is('dashicons', 'registered')) {
+            $libraries['Dashicons'] = includes_url('css/dashicons.min.css');
+        }
+
+        // Add more checks for other libraries here...
+
+        return $libraries;
+    }
+    
     /**
      * Clear all transients via AJAX.
      */

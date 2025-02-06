@@ -8,7 +8,7 @@ class SocialMedia {
         // Define social media platforms and their patterns
         $platforms = [
             'facebook' => '/https?:\/\/(www\.)?facebook\.com\/([a-zA-Z0-9._-]+)/',
-            'twitter' => '/https?:\/\/(www\.)?(x|twitter)\.com\/([a-zA-Z0-9_]+)/',
+            'twitter' => '/https?:\/\/(?:www\.)?(?:twitter\.com|x\.com)\/(?:@|#!\/)?([a-zA-Z0-9_]{1,15})/',
             'instagram' => '/https?:\/\/(www\.)?instagram\.com\/([a-zA-Z0-9._-]+)/',
             'linkedin' => '/https?:\/\/(www\.)?linkedin\.com\/(company|in)\/([a-zA-Z0-9_-]+)/',
             'youtube' => '/https?:\/\/(www\.)?youtube\.com\/(user\/[a-zA-Z0-9_-]+|channel\/[a-zA-Z0-9_-]+|c\/[a-zA-Z0-9_-]+)/', // Updated YouTube pattern

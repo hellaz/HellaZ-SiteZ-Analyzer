@@ -35,6 +35,14 @@ class Settings {
     }
 
     public function render_settings_page() {
+            // Verify nonce for form submission.
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['hsz_nonce'])) {
+            check_admin_referer('hsz_settings_nonce', 'hsz_nonce');
+
+            // Save settings.
+            update_option('hsz_api_key', sanitize_text_field($_POST['hsz_api_key']));
+            update_option('hsz_cache_duration', absint($_POST['hsz_cache_duration']));
+        }
         ?>
         <div class="wrap">
             <h1><?php _e('HellaZ SiteZ Analyzer Settings', 'hellaz-sitez-analyzer'); ?></h1>

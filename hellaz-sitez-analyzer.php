@@ -1,10 +1,16 @@
 <?php
 /**
  * Plugin Name: HellaZ SiteZ Analyzer
- * Description: Analyze websites for metadata, security, and technology stack.
- * Version: 1.0.0
+ * Description: Analyze websites for metadata, open graph, server, security, technology stack, social media, rss fees, contact information and more.
+ * Version: 1.0
+ * Requires at least: 5.0
+ * Requires PHP: 7.4
  * Author: Hellaz
- * License: GPL-2.0+
+ * Author URI: https://github.com/hellaz
+ * License: GPLv2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain: hellaz-sitez-analyzer
+ * Domain Path: /languages
  */
 
 // Exit if accessed directly

@@ -11,7 +11,7 @@ Requires at least: Wordpress 5.0 - Tested up to: 6.7.1
 - **Gutenberg Block**: Add a block to analyze metadata for any URL.
 - **Shortcode Support**: Use `[hsz_metadata url="https://example.com"]` for backward compatibility.
 - **Widget Support**: Display metadata in sidebars or widgetized areas.
--**Metadata Detection**:  Extracts metadata, title, favicon, keywords, author, open graph tags from remote website.
+- **Metadata Detection**:  Extracts metadata, title, favicon, keywords, author, open graph tags from remote website.
 - **Social Media Detection**: Extracts links for Facebook, Twitter/X, LinkedIn, YouTube, Instagram, WhatsApp, TikTok, Pinterest, Reddit, and Telegram.
 - **Contact Info Detection **: Extracts emails, contact forms, address from target website
 - **RSS Detection **: Retrieves RSS/Atom Feeds
@@ -60,9 +60,9 @@ For support, please visit the [GitHub repository](https://github.com/hellaz/Hell
 ### Contributing
 Contributions are welcome! If you'd like to contribute, please follow these steps:
 
- - Fork the repository. 
- - Create a new branch for your feature or bug fix.
- - Submit a pull request with a detailed description of your changes.
+1. Fork the repository. 
+2. Create a new branch for your feature or bug fix.
+3. Submit a pull request with a detailed description of your changes.
 
 ### License
 This plugin is released under the GPLv2 or later license.

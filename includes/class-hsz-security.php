@@ -19,6 +19,11 @@ class Security {
      * @return array SSL information or an empty array if the request fails.
      */
     public function get_ssl_info($url) {
+        // Validate input
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            return [];
+        }
+
         $host = parse_url($url, PHP_URL_HOST);
         if (!$host) {
             return [];
@@ -42,7 +47,6 @@ class Security {
      */
     private function get_ssl_info_from_ssllabs($host) {
         $cache_key = 'hsz_ssl_info_' . md5($host);
-
         $response = $this->apimanager->make_api_request(
             "https://api.ssllabs.com/api/v3/analyze?host=$host",
             [],
@@ -55,6 +59,7 @@ class Security {
             return array_map('sanitize_text_field', $response); // Sanitize API response
         }
 
+        error_log('[HellaZ SiteZ Analyzer] Failed to fetch SSL information from SSL Labs for ' . esc_html($host));
         return [];
     }
 
@@ -68,6 +73,7 @@ class Security {
         $ssl_info = [];
         $context = stream_context_create(["ssl" => ["capture_peer_cert" => true]]);
         $stream = @stream_socket_client("ssl://$host:443", $errno, $errstr, 30, STREAM_CLIENT_CONNECT, $context);
+
         if ($stream) {
             $params = stream_context_get_params($stream);
             $cert = openssl_x509_parse($params['options']['ssl']['peer_certificate']);
@@ -78,6 +84,7 @@ class Security {
             }
             fclose($stream);
         }
+
         return array_map('sanitize_text_field', $ssl_info); // Sanitize certificate data
     }
 
@@ -89,10 +96,12 @@ class Security {
      * @return array Security analysis data or an empty array if the request fails.
      */
     public function get_security_analysis($url, $api_key) {
-        if (empty($api_key)) {
+        // Validate input
+        if (!filter_var($url, FILTER_VALIDATE_URL) || empty($api_key)) {
             return [];
         }
 
+        $api_key = sanitize_text_field($api_key);
         $cache_key = 'hsz_virustotal_' . md5($url);
 
         $response = $this->apimanager->make_api_request(
@@ -113,6 +122,7 @@ class Security {
             ];
         }
 
+        error_log('[HellaZ SiteZ Analyzer] Failed to fetch security analysis from VirusTotal for ' . esc_url($url));
         return [];
     }
 
@@ -124,10 +134,12 @@ class Security {
      * @return array Technology stack data or an empty array if the request fails.
      */
     public function get_technology_stack($url, $api_key) {
-        if (empty($api_key)) {
+        // Validate input
+        if (!filter_var($url, FILTER_VALIDATE_URL) || empty($api_key)) {
             return [];
         }
 
+        $api_key = sanitize_text_field($api_key);
         $cache_key = 'hsz_builtwith_' . md5($url);
 
         $response = $this->apimanager->make_api_request(
@@ -148,6 +160,7 @@ class Security {
             return array_unique($technologies);
         }
 
+        error_log('[HellaZ SiteZ Analyzer] Failed to fetch technology stack from BuiltWith for ' . esc_url($url));
         return [];
     }
 
@@ -159,10 +172,12 @@ class Security {
      * @return array URLScan.io data or an empty array if the request fails.
      */
     public function get_urlscan_analysis($url, $api_key) {
-        if (empty($api_key)) {
+        // Validate input
+        if (!filter_var($url, FILTER_VALIDATE_URL) || empty($api_key)) {
             return [];
         }
 
+        $api_key = sanitize_text_field($api_key);
         $cache_key = 'hsz_urlscan_' . md5($url);
 
         $response = $this->apimanager->make_api_request(
@@ -185,6 +200,7 @@ class Security {
             return $results;
         }
 
+        error_log('[HellaZ SiteZ Analyzer] Failed to fetch URLScan.io analysis for ' . esc_url($url));
         return [];
     }
 }

@@ -5,6 +5,8 @@ if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
 
+use WP_Block_Type_Registry; // Import the core WP_Block_Type_Registry class
+
 class Gutenberg {
     private static $instance = null; // Singleton pattern
 

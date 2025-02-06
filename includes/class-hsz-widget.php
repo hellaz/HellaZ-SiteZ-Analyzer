@@ -16,17 +16,36 @@ class Widget extends \WP_Widget {
         $title = !empty($instance['title']) ? apply_filters('widget_title', $instance['title']) : '';
         $url = !empty($instance['url']) ? esc_url($instance['url']) : '';
 
+        // Validate the URL
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            echo '<p>' . __('Please provide a valid URL.', 'hellaz-sitez-analyzer') . '</p>';
+            echo $args['after_widget'];
+            return;
+        }
+
         if (!empty($title)) {
             echo $args['before_title'] . $title . $args['after_title'];
         }
 
-        if (empty($url)) {
-            echo '<p>' . __('Please provide a valid URL.', 'hellaz-sitez-analyzer') . '</p>';
-        } else {
+        // Check if the template file exists
+        $template_path = HSZ_PLUGIN_PATH . 'templates/metadata-template.php';
+        if (!file_exists($template_path)) {
+            echo '<p>' . __('Template file is missing.', 'hellaz-sitez-analyzer') . '</p>';
+            echo $args['after_widget'];
+            return;
+        }
+
+        try {
+            // Extract metadata using the Metadata class
             $metadata = (new Metadata())->extract_metadata($url);
+
+            // Start output buffering and include the template file
             ob_start();
-            include HSZ_PLUGIN_PATH . 'templates/metadata-template.php';
+            include $template_path;
             echo ob_get_clean();
+        } catch (\Exception $e) {
+            error_log('[HellaZ SiteZ Analyzer] Failed to extract metadata for URL: ' . esc_url($url));
+            echo '<p>' . __('An error occurred while processing the URL.', 'hellaz-sitez-analyzer') . '</p>';
         }
 
         echo $args['after_widget'];

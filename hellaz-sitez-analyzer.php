@@ -19,8 +19,9 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('HSZ_PLUGIN_PATH', plugin_dir_path(__FILE__));
-define('HSZ_PLUGIN_URL', plugin_dir_url(__FILE__));
+define('HSZ_PLUGIN_PATH', plugin_dir_path(__FILE__)); // Absolute server path to the plugin directory
+define('HSZ_PLUGIN_URL', plugin_dir_url(__FILE__));   // URL to the plugin directory
+define('HSZ_PLUGIN_DIR', HSZ_PLUGIN_PATH);           // Alias for HSZ_PLUGIN_PATH (for backward compatibility)
 
 // Autoload classes
 spl_autoload_register(function ($class) {

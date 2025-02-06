@@ -37,7 +37,7 @@ Use [hsz_metadata url="https://example.com"] in your posts or pages.
 == Frequently Asked Questions ==
 
 = How do I use the Gutenberg block? =
-Add the "SiteZ Metadata" block to your post or page and enter the URL of the website you want to analyze.
+Add the "HellaZ SiteZ Analyzer" block to your post or page and enter the URL of the website you want to analyze.
 
 = Can I customize the fallback image? =
 Yes, you can upload a custom fallback image via the plugin settings page.

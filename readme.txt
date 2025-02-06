@@ -8,21 +8,24 @@ Stable tag: 1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-A comprehensive remote website analysis plugin for WordPress. Analyze website metadata, including social media links, SSL info, and Open Graph tags.
+A comprehensive remote website analysis plugin for WordPress. Analyze website metadata and Open Graph tags, including social media links & RSS feeds, Server & SSL certificate information, Contact information and more .
 
 == Description ==
 
-HellaZ SiteZ Analyzer extracts metadata, detects social media profiles, RSS feeds, emails, contact forms, technology stack, and security information from remote websites. It ensures performance, security, and extensibility while adhering to WordPress best practices. Its a WordPress plugin to analyze website metadata, including social media links, SSL certificate information, and Open Graph tags. It provides a Gutenberg block and shortcode for seamless integration.
+HellaZ SiteZ Analyzer extracts metadata, detects social media profiles, RSS feeds, emails, contact forms, technology stack, and security information from remote websites. It ensures performance, security, and extensibility while adhering to WordPress best practices. 
 
 **Features:**
 - **Gutenberg Block**: Add a block to analyze metadata for any URL.
 - **Shortcode Support**: Use `[hsz_metadata url="https://example.com"]` for backward compatibility.
+- **Widget Support**: Display metadata in sidebars or widgetized areas.
+- **Metadata Detection**: Extracts metadata, title, favicon, keywords, author, open graph tags from remote website.
 - **Social Media Detection**: Extracts links for Facebook, Twitter/X, LinkedIn, YouTube, Instagram, WhatsApp, TikTok, Pinterest, Reddit, and Telegram.
-- **SSL Certificate Info**: Retrieves SSL details using APIs or direct parsing.
+- **Server & SSL Certificate Info**: Retrieves SSL details using APIs or direct parsing.
+- **Feed Detection**: Retrieves RSS/Atom Feeds
 - **Caching**: Reduces server load by caching API responses.
 - **Localization**: Supports multilingual websites with `.pot` files and translation functions.
 - **Admin Settings Page**: Configure plugin options like API keys and caching duration.
-- **Widget Support**: Display metadata in sidebars or widgetized areas.
+
 
 == Installation ==
 

@@ -1,10 +1,11 @@
-
-
 # HellaZ-SiteZ-Analyzer
 
 **Plugin Name : HellaZ SiteZ Analyzer**
+
 **Description:** A WordPress plugin to for a comprehensive website analysis of metadata and Open Graph tags, including social media links & RSS feeds, Server & SSL certificate information, Contact information and more . It provides a Gutenberg block and shortcode for seamless integration.
+
 **Tags:** metadata, social media, ssl, open graph, gutenberg, shortcode, widget, sitez, analysis, remote, fetch, extract, render, 
+
 Requires at least: Wordpress 5.0 - Tested up to: 6.7.1
 
 ## Features

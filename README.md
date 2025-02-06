@@ -1,4 +1,5 @@
 
+
 # HellaZ-SiteZ-Analyzer
 
 **Plugin Name : HellaZ SiteZ Analyzer**
@@ -35,7 +36,8 @@ Requires at least: Wordpress 5.0 - Tested up to: 6.7.1
 
 ### Shortcode
 Use the following shortcode to display metadata:
-[hsz_metadata url="https://example.com"]
+
+    [hsz_metadata url="https://example.com"]
 
 ### Widget
 1. Go to "Appearance > Widgets" in the WordPress admin dashboard.
@@ -47,12 +49,8 @@ Use the following shortcode to display metadata:
 The admin settings page allows you to configure advanced options, such as:
 API keys for external services.
 Caching duration for metadata extraction.
-Export/import settings for easy migration.
-
-### REST API Endpoint
-The plugin exposes a REST API endpoint for external integrations:
-Example:
-curl -X GET "https://example.com/wp-json/hsz/v1/metadata/https://wordpress.org"
+Fallback messages and images.
+Disclaimer Display with custom message.
 
 ### Support
 For support, please visit the [GitHub repository](https://github.com/hellaz/HellaZ-SiteZ-Analyzer/) .
@@ -67,3 +65,5 @@ Contributions are welcome! If you'd like to contribute, please follow these step
 ### License
 This plugin is released under the GPLv2 or later license.
 [Hellaz.Team](https://hellaz.net)  
+
+

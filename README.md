@@ -31,3 +31,32 @@ A WordPress plugin to analyze website metadata, including social media links, SS
 Use the following shortcode to display metadata:
 [hsz_metadata url="https://example.com"]
 
+### Widget
+1. Go to "Appearance > Widgets" in the WordPress admin dashboard.
+2. Add the "HellaZ SiteZ Analyzer" widget to a sidebar.
+3. Configure the widget settings (e.g., URL, font size, color).
+
+### Advanced Features
+#### Admin Settings Page
+The admin settings page allows you to configure advanced options, such as:
+API keys for external services.
+Caching duration for metadata extraction.
+Export/import settings for easy migration.
+
+#### REST API Endpoint
+The plugin exposes a REST API endpoint for external integrations:
+Example:
+curl -X GET "https://example.com/wp-json/hsz/v1/metadata/https://wordpress.org"
+
+### Support
+For support, please visit the GitHub repository .
+
+### Contributing
+Contributions are welcome! If you'd like to contribute, please follow these steps:
+
+### Fork the repository.
+Create a new branch for your feature or bug fix.
+Submit a pull request with a detailed description of your changes.
+
+### License
+This plugin is released under the GPLv2 or later license.

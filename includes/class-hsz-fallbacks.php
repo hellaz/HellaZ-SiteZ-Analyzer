@@ -13,7 +13,10 @@ class Fallbacks {
      * @return string The fallback image URL or an empty string if the image is missing.
      */
     public function get_fallback_image() {
+        // Construct the fallback image path
         $fallback_image_path = HSZ_PLUGIN_DIR . 'assets/images/fallback-image.png';
+
+        // Check if the fallback image exists
         if (file_exists($fallback_image_path)) {
             return HSZ_PLUGIN_URL . 'assets/images/fallback-image.png';
         }

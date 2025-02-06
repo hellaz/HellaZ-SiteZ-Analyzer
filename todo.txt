@@ -1,0 +1,98 @@
+TODO List for Next Version
+
+=====
+High Priority
+These are critical improvements that address functionality gaps, security concerns, or usability issues. They should be addressed first.
+
+Expand Social Media Platform Support :
+Add support for TikTok (tiktok.com), Pinterest (pinterest.com), Reddit (reddit.com), and Telegram (t.me).
+Effort : Medium (requires updating XPath queries and regular expressions).
+Impact : High (enhances plugin versatility).
+Cache Invalidation :
+Implement logic to invalidate the cache when the source website changes.
+Effort : Medium (requires detecting changes in metadata or providing manual refresh options).
+Impact : High (prevents outdated data from being displayed).
+CSRF Protection :
+Add nonce verification for admin settings and AJAX requests.
+Effort : Low (simple implementation using WordPress functions like check_admin_referer()).
+Impact : High (improves security).
+Error Handling Enhancements :
+Introduce granular error levels (e.g., info, warning, error) and persistent notifications for critical issues.
+Effort : Medium (requires modifying error handling logic and adding UI elements).
+Impact : High (improves user experience and troubleshooting).
+Retry Logic for API Requests :
+Implement retry logic for transient API failures.
+Effort : Medium (requires modifying API request handling).
+Impact : High (reduces errors caused by temporary API issues).
+Encrypt Sensitive Data :
+Encrypt sensitive data like API keys before storing them in the database.
+Effort : Medium (requires encryption/decryption logic).
+Impact : High (improves security).
+
+=====
+Medium Priority
+These improvements enhance usability, performance, and maintainability but are not as critical as high-priority items.
+
+Live Preview in Gutenberg Block :
+Add a live preview feature in the Gutenberg editor to display metadata without saving or publishing.
+Effort : Medium (requires JavaScript integration with the block editor).
+Impact : Medium (improves user experience).
+Export/Import Settings :
+Allow users to export and import settings for easier migration between environments.
+Effort : Medium (requires implementing file handling and JSON serialization).
+Impact : Medium (useful for power users).
+Tabbed Interface for Admin Settings :
+Organize settings into tabs (e.g., "General", "API", "Advanced") for better usability.
+Effort : Medium (requires restructuring the admin settings page).
+Impact : Medium (improves admin interface usability).
+Log Rotation :
+Implement log rotation to prevent the debug log from growing indefinitely.
+Effort : Low (simple file size check and cleanup logic).
+Impact : Medium (prevents excessive log file sizes).
+Pluralization and Contextual Translations :
+Use _n() for pluralized strings and esc_html_x() for contextual translations.
+Effort : Low (requires minor updates to translation functions).
+Impact : Medium (improves localization support).
+Focus Management for Accessibility :
+Ensure focus is managed correctly for interactive elements (e.g., buttons, dropdowns).
+Effort : Medium (requires JavaScript and ARIA attribute updates).
+Impact : Medium (improves accessibility).
+Customizable Widget Appearance :
+Allow users to customize the widget’s appearance (e.g., font size, colors) via the widget settings.
+Effort : Medium (requires adding new fields and CSS handling).
+Impact : Medium (enhances widget flexibility).
+
+=====
+Low Priority
+These improvements are optional enhancements that provide additional value but are less critical.
+
+Add Skip Links for Accessibility :
+Add skip links for users to bypass repetitive content (e.g., navigation menus).
+Effort : Low (requires minimal HTML and CSS updates).
+Impact : Low (improves accessibility for screen reader users).
+RTL Support :
+Add RTL (Right-to-Left) language support by including an RTL stylesheet.
+Effort : Medium (requires creating and testing RTL styles).
+Impact : Low (benefits RTL language users).
+REST API Endpoint Enhancements :
+Expand the REST API endpoint to include additional metadata types or filtering options.
+Effort : Medium (requires extending existing API logic).
+Impact : Low (useful for developers integrating with external systems).
+Dynamic Attributes for Shortcode :
+Add parameters to the shortcode to allow users to filter metadata types (e.g., display="social" for social media links only).
+Effort : Low (requires minor updates to shortcode parsing logic).
+Impact : Low (enhances shortcode flexibility).
+SEO Analysis Features :
+Add features to analyze SEO-related metadata (e.g., meta descriptions, keywords).
+Effort : High (requires significant updates to metadata extraction logic).
+Impact : Low (useful for SEO-focused users).
+Performance Metrics :
+Include performance metrics (e.g., page load time, image optimization).
+Effort : High (requires additional APIs or tools for analysis).
+Impact : Low (useful for performance-focused users).
+
+=====
+Prioritization Summary
+High Priority : Address critical functionality gaps, security concerns, and usability issues first.
+Medium Priority : Focus on usability, performance, and maintainability improvements next.
+Low Priority : Implement optional enhancements that provide additional value but are less critical.

@@ -45,6 +45,7 @@ Export/import settings for easy migration.
 
 #### REST API Endpoint
 The plugin exposes a REST API endpoint for external integrations:
+
 Example:
 curl -X GET "https://example.com/wp-json/hsz/v1/metadata/https://wordpress.org"
 

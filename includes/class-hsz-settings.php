@@ -27,29 +27,34 @@ class Settings {
         register_setting('hsz-settings-group', 'hsz_enable_disclaimer');
         register_setting('hsz-settings-group', 'hsz_disclaimer_message');
 
-        // Register fallback image setting
-        register_setting('hsz-settings-group', 'hsz_fallback_image');
+        // Register fallback image setting with custom sanitization
+        register_setting('hsz-settings-group', 'hsz_fallback_image', [
+            'sanitize_callback' => function ($value) {
+                return esc_url_raw($value);
+            },
+        ]);
 
         // Register link target setting
         register_setting('hsz-settings-group', 'hsz_link_target');
     }
 
     public function render_settings_page() {
-            // Verify nonce for form submission.
+        // Verify nonce for form submission.
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['hsz_nonce'])) {
             check_admin_referer('hsz_settings_nonce', 'hsz_nonce');
-
-            // Save settings.
-            update_option('hsz_api_key', sanitize_text_field($_POST['hsz_api_key']));
-            update_option('hsz_cache_duration', absint($_POST['hsz_cache_duration']));
         }
         ?>
         <div class="wrap">
             <h1><?php _e('HellaZ SiteZ Analyzer Settings', 'hellaz-sitez-analyzer'); ?></h1>
             <form method="post" action="options.php">
-                <?php settings_fields('hsz-settings-group'); ?>
-                <?php do_settings_sections('hsz-settings-group'); ?>
+                <?php
+                // Add nonce field for security.
+                wp_nonce_field('hsz_settings_nonce', 'hsz_nonce');
 
+                // Output settings fields and sections.
+                settings_fields('hsz-settings-group');
+                do_settings_sections('hsz-settings-group');
+                ?>
                 <table class="form-table">
                     <!-- VirusTotal API Key -->
                     <tr>
@@ -59,7 +64,6 @@ class Settings {
                             <p class="description"><?php _e('Enter your VirusTotal API key.', 'hellaz-sitez-analyzer'); ?></p>
                         </td>
                     </tr>
-
                     <!-- URLScan.io API Key -->
                     <tr>
                         <th scope="row"><label for="hsz_urlscan_api_key"><?php _e('URLScan.io API Key', 'hellaz-sitez-analyzer'); ?></label></th>
@@ -68,7 +72,6 @@ class Settings {
                             <p class="description"><?php _e('Enter your URLScan.io API key.', 'hellaz-sitez-analyzer'); ?></p>
                         </td>
                     </tr>
-
                     <!-- BuiltWith API Key -->
                     <tr>
                         <th scope="row"><label for="hsz_builtwith_api_key"><?php _e('BuiltWith API Key', 'hellaz-sitez-analyzer'); ?></label></th>
@@ -77,7 +80,6 @@ class Settings {
                             <p class="description"><?php _e('Enter your BuiltWith API key.', 'hellaz-sitez-analyzer'); ?></p>
                         </td>
                     </tr>
-
                     <!-- Fallback Image -->
                     <tr>
                         <th scope="row"><label for="hsz_fallback_image"><?php _e('Fallback Image URL', 'hellaz-sitez-analyzer'); ?></label></th>
@@ -86,7 +88,6 @@ class Settings {
                             <p class="description"><?php _e('Enter the URL of the fallback image to use when no favicon is found.', 'hellaz-sitez-analyzer'); ?></p>
                         </td>
                     </tr>
-
                     <!-- Enable Disclaimer -->
                     <tr>
                         <th scope="row"><label for="hsz_enable_disclaimer"><?php _e('Enable Disclaimer', 'hellaz-sitez-analyzer'); ?></label></th>
@@ -95,7 +96,6 @@ class Settings {
                             <p class="description"><?php _e('Check to enable the disclaimer message.', 'hellaz-sitez-analyzer'); ?></p>
                         </td>
                     </tr>
-
                     <!-- Disclaimer Message -->
                     <tr>
                         <th scope="row"><label for="hsz_disclaimer_message"><?php _e('Disclaimer Message', 'hellaz-sitez-analyzer'); ?></label></th>
@@ -104,7 +104,6 @@ class Settings {
                             <p class="description"><?php _e('Enter the disclaimer message to display.', 'hellaz-sitez-analyzer'); ?></p>
                         </td>
                     </tr>
-
                     <!-- Link Target -->
                     <tr>
                         <th scope="row"><label for="hsz_link_target"><?php _e('Link Target', 'hellaz-sitez-analyzer'); ?></label></th>
@@ -117,7 +116,6 @@ class Settings {
                         </td>
                     </tr>
                 </table>
-
                 <?php submit_button(); ?>
             </form>
         </div>

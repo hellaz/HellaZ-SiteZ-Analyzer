@@ -32,6 +32,8 @@ $link_target = get_option('hsz_link_target', '_blank');
 // Disclaimer settings
 $enable_disclaimer = get_option('hsz_enable_disclaimer', false);
 $disclaimer_message = get_option('hsz_disclaimer_message', __('This is a default disclaimer message.', 'hellaz-sitez-analyzer'));
+// Detect or use selected icon library
+$icon_library = get_option('hsz_icon_library', 'font-awesome');
 ?>
 <div class="hsz-metadata-container">
     <!-- Favicon -->
@@ -136,7 +138,7 @@ $disclaimer_message = get_option('hsz_disclaimer_message', __('This is a default
     </div>
 <?php endif; ?>
 
-
+        
     <!-- Social Media Profiles -->
     <div class="hsz-section hsz-social-media">
         <h4><?php _e('Social Media Profiles', 'hellaz-sitez-analyzer'); ?></h4>
@@ -146,7 +148,12 @@ $disclaimer_message = get_option('hsz_disclaimer_message', __('This is a default
                     <?php foreach ($profiles as $profile) : ?>
                         <li>
                             <a href="<?php echo esc_url($profile['url']); ?>" target="<?php echo esc_attr($link_target); ?>" rel="noopener noreferrer">
-                                <i class="fa-brands fa-<?php echo esc_attr($platform); ?>"></i> <?php echo esc_html($profile['username']); ?>
+                                <?php if ($icon_library === 'font-awesome') : ?>
+                                    <i class="fa-brands fa-<?php echo esc_attr($platform); ?>"></i>
+                                <?php else : ?>
+                                    <img src="<?php echo esc_url(plugin_dir_url(__FILE__) . '../assets/icons/' . $platform . '.png'); ?>" alt="<?php echo esc_attr($platform); ?>" width="16" height="16">
+                                <?php endif; ?>
+                                <?php echo esc_html($profile['username']); ?>
                             </a>
                         </li>
                     <?php endforeach; ?>

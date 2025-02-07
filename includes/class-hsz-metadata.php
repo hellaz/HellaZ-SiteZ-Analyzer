@@ -69,6 +69,8 @@ class Metadata {
             'rss_feeds' => (new RSS())->detect_rss_feeds($html),
             'social_media' => (new SocialMedia())->detect_social_media_links($html),
             'ssl_info' => (new Security())->get_ssl_info($url),
+            'response_code' => $response_code, // Add HTTP response code
+
         ];
 
         // Free APIs

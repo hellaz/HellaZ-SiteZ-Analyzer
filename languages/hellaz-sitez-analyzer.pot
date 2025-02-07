@@ -94,30 +94,241 @@ msgid "Open Graph Data"
 msgstr ""
 #. translators: This string is used as the subtitle for the Open Graph data section in the shortcode output.
 
-#: includes/class-hsz-settings.php:80
-msgid "API Key"
+#: hellaz-sitez-analyzer.php:4
+msgid "HellaZ SiteZ Analyzer"
 msgstr ""
-#. translators: This string is used as the label for the API key input field on the admin settings page.
+
+#: hellaz-sitez-analyzer.php:5
+msgid "Analyze websites for metadata, open graph, server, security, technology stack, social media, rss feeds, contact information and more."
+msgstr ""
+
+#: includes/class-hsz-fallbacks.php:19
+msgid "Fallback image not found at"
+msgstr ""
+
+#: includes/class-hsz-fallbacks.php:30
+msgid "No description available."
+msgstr ""
+
+#: includes/class-hsz-settings.php:45
+msgid "%s API Key"
+msgstr ""
+
+#: includes/class-hsz-settings.php:46
+msgid "Enter your %s API key."
+msgstr ""
+
+#: includes/class-hsz-settings.php:55
+msgid "Fallback Image URL"
+msgstr ""
+
+#: includes/class-hsz-settings.php:56
+msgid "Enter the URL of the fallback image to use when no favicon is found."
+msgstr ""
+
+#: includes/class-hsz-settings.php:63
+msgid "Enable Disclaimer"
+msgstr ""
+
+#: includes/class-hsz-settings.php:64
+msgid "Check to enable the disclaimer message."
+msgstr ""
+
+#: includes/class-hsz-settings.php:71
+msgid "Disclaimer Message"
+msgstr ""
+
+#: includes/class-hsz-settings.php:72
+msgid "Enter the disclaimer message to display."
+msgstr ""
+
+#: includes/class-hsz-settings.php:79
+msgid "Link Target"
+msgstr ""
+
+#: includes/class-hsz-settings.php:80
+msgid "Choose how links should open."
+msgstr ""
+
+#: includes/class-hsz-settings.php:87
+msgid "Open in New Window"
+msgstr ""
+
+#: includes/class-hsz-settings.php:88
+msgid "Open in Same Window"
+msgstr ""
 
 #: includes/class-hsz-settings.php:95
-msgid "Cache Duration (in seconds)"
+msgid "Icon Library"
 msgstr ""
-#. translators: This string is used as the label for the cache duration setting on the admin settings page.
 
-#: includes/class-hsz-settings.php:110
-msgid "Save Changes"
+#: includes/class-hsz-settings.php:96
+msgid "Select the icon library to use for social media icons."
 msgstr ""
-#. translators: This string is used as the label for the save button on the admin settings page.
 
-#: includes/class-hsz-metadata.php:120
-msgid "Invalid URL entered."
+#: includes/class-hsz-settings.php:103
+msgid "Font Awesome (CDN)"
 msgstr ""
-#. translators: This error message is displayed when the user enters an invalid URL.
 
-#: includes/class-hsz-metadata.php:135
-msgid "Metadata Extraction Failed"
+#: includes/class-hsz-settings.php:104
+msgid "Material Icons (CDN)"
 msgstr ""
-#. translators: This error message is displayed when metadata extraction fails.
+
+#: includes/class-hsz-settings.php:105
+msgid "Bootstrap Icons (CDN)"
+msgstr ""
+
+#: includes/class-hsz-settings.php:106
+msgid "Custom Icons"
+msgstr ""
+
+#: includes/class-hsz-settings.php:113
+msgid "Upload Custom Icons"
+msgstr ""
+
+#: includes/class-hsz-settings.php:114
+msgid "Upload custom icons for social media platforms."
+msgstr ""
+
+#: includes/class-hsz-settings.php:121
+msgid "Clear Cache"
+msgstr ""
+
+#: includes/class-hsz-settings.php:122
+msgid "Click the button below to clear all cached data."
+msgstr ""
+
+#: includes/class-hsz-settings.php:123
+msgid "Cache cleared successfully."
+msgstr ""
+
+#: includes/class-hsz-settings.php:124
+msgid "An error occurred while clearing the cache."
+msgstr ""
+
+#: templates/metadata-template.php:15
+msgid "Untitled"
+msgstr ""
+
+#: templates/metadata-template.php:20
+msgid "This is a default description."
+msgstr ""
+
+#: templates/metadata-template.php:40
+msgid "Basic Metadata"
+msgstr ""
+
+#: templates/metadata-template.php:45
+msgid "Author:"
+msgstr ""
+
+#: templates/metadata-template.php:50
+msgid "Keywords:"
+msgstr ""
+
+#: templates/metadata-template.php:55
+msgid "Referrer:"
+msgstr ""
+
+#: templates/metadata-template.php:60
+msgid "Language:"
+msgstr ""
+
+#: templates/metadata-template.php:65
+msgid "Canonical URL:"
+msgstr ""
+
+#: templates/metadata-template.php:80
+msgid "Server Information"
+msgstr ""
+
+#: templates/metadata-template.php:85
+msgid "Server Location:"
+msgstr ""
+
+#: templates/metadata-template.php:90
+msgid "SSL Valid From:"
+msgstr ""
+
+#: templates/metadata-template.php:95
+msgid "SSL Valid To:"
+msgstr ""
+
+#: templates/metadata-template.php:100
+msgid "SSL Issuer:"
+msgstr ""
+
+#: templates/metadata-template.php:105
+msgid "SSL/TLS information unavailable."
+msgstr ""
+
+#: templates/metadata-template.php:115
+msgid "Security Analysis"
+msgstr ""
+
+#: templates/metadata-template.php:120
+msgid "%s Detections:"
+msgstr ""
+
+#: templates/metadata-template.php:135
+msgid "Last Updated:"
+msgstr ""
+
+#: templates/metadata-template.php:145
+msgid "Technology Stack"
+msgstr ""
+
+#: templates/metadata-template.php:155
+msgid "URLScan.io Analysis"
+msgstr ""
+
+#: templates/metadata-template.php:160
+msgid "View Report on URLScan.io"
+msgstr ""
+
+#: templates/metadata-template.php:170
+msgid "Social Media Profiles"
+msgstr ""
+
+#: templates/metadata-template.php:185
+msgid "No %s detected."
+msgstr ""
+
+#: templates/metadata-template.php:195
+msgid "Contact Information"
+msgstr ""
+
+#: templates/metadata-template.php:200
+msgid "Emails"
+msgstr ""
+
+#: templates/metadata-template.php:210
+msgid "No email addresses detected."
+msgstr ""
+
+#: templates/metadata-template.php:220
+msgid "Contact Forms"
+msgstr ""
+
+#: templates/metadata-template.php:230
+msgid "No contact forms detected."
+msgstr ""
+
+#: templates/metadata-template.php:240
+msgid "Address"
+msgstr ""
+
+#: templates/metadata-template.php:250
+msgid "RSS Feeds"
+msgstr ""
+
+#: templates/metadata-template.php:260
+msgid "No RSS feeds detected."
+msgstr ""
+
+#: templates/metadata-template.php:270
+msgid "This is a default disclaimer message."
+msgstr ""
 
 #: includes/class-hsz-utils.php:90
 msgid "An error occurred while retrieving SSL information."

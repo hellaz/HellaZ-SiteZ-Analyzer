@@ -9,3 +9,11 @@
 .tab-content-active {
     display: block;
 }
+
+#hsz-clear-cache-button {
+    margin-top: 10px;
+}
+
+.notice {
+    margin-top: 10px;
+}

@@ -1,0 +1,11 @@
+.nav-tab-wrapper {
+    margin-bottom: 20px;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content-active {
+    display: block;
+}

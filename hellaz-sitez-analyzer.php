@@ -69,6 +69,7 @@ add_action('plugins_loaded', function () {
     }
 });
 
+// Enqueue block editor assets
 add_action('enqueue_block_editor_assets', function () {
     wp_enqueue_script(
         'hsz-gutenberg-block',
@@ -77,7 +78,16 @@ add_action('enqueue_block_editor_assets', function () {
         filemtime(plugin_dir_path(__FILE__) . 'assets/js/scripts.js'),
         true
     );
-
     // Add script translation support
     wp_set_script_translations('hsz-gutenberg-block', 'hellaz-sitez-analyzer');
+});
+
+// Enqueue admin styles
+add_action('admin_enqueue_scripts', function () {
+    wp_enqueue_style(
+        'hsz-admin-styles', // Handle for the stylesheet
+        plugins_url('assets/css/admin-styles.css', __FILE__), // Path to the CSS file
+        [], // Dependencies (none in this case)
+        filemtime(plugin_dir_path(__FILE__) . 'assets/css/admin-styles.css') // Version (file modification time)
+    );
 });

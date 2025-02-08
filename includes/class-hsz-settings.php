@@ -26,9 +26,21 @@ class Settings {
      */
     public function register_settings() {
         // Register API key settings dynamically
-        $api_services = ['VirusTotal', 'URLScan.io', 'BuiltWith'];
-        foreach ($api_services as $service) {
-            register_setting('hsz-settings-group', 'hsz_' . strtolower(str_replace('.', '_', $service)) . '_api_key');
+        $api_services = [
+            'Server Information' => ['URLScan.io'],
+            'Security Analysis' => ['VirusTotal'],
+            'Technology Information' => ['BuiltWith'],
+            'Social Info' => [],
+            'Content Analysis' => [],
+            'Other' => [],
+        ];
+
+        foreach ($api_services as $category => $services) {
+            foreach ($services as $service) {
+                register_setting('hsz-settings-group', 'hsz_' . strtolower(str_replace('.', '_', $service)) . '_api_key', [
+                    'sanitize_callback' => [$this, 'encrypt_api_key'], // Encrypt API keys before saving
+                ]);
+            }
         }
 
         // Register general settings
@@ -59,7 +71,7 @@ class Settings {
             <!-- Tab Navigation -->
             <nav class="nav-tab-wrapper">
                 <a href="#general" class="nav-tab nav-tab-active"><?php _e('General', 'hellaz-sitez-analyzer'); ?></a>
-                <a href="#api-keys" class="nav-tab"><?php _e('API Keys', 'hellaz-sitez-analyzer'); ?></a>
+                <a href="#apis" class="nav-tab"><?php _e('API Keys', 'hellaz-sitez-analyzer'); ?></a>
                 <a href="#about" class="nav-tab"><?php _e('About Hellaz.Team', 'hellaz-sitez-analyzer'); ?></a>
             </nav>
 
@@ -140,16 +152,21 @@ class Settings {
             </div>
 
             <!-- API Keys Tab -->
-            <div id="api-keys" class="tab-content">
+            <div id="apis" class="tab-content">
                 <form method="post" action="options.php">
                     <?php
                     settings_fields('hsz-settings-group');
                     do_settings_sections('hsz-settings-group');
                     ?>
                     <table class="form-table">
+                        <!-- Server Information -->
+                        <tr>
+                            <th scope="row"><strong><?php _e('Server Information', 'hellaz-sitez-analyzer'); ?></strong></th>
+                            <td></td>
+                        </tr>
                         <?php
-                        $api_services = ['VirusTotal', 'URLScan.io', 'BuiltWith'];
-                        foreach ($api_services as $service) :
+                        $server_info_apis = ['URLScan.io'];
+                        foreach ($server_info_apis as $service) :
                             $option_name = 'hsz_' . strtolower(str_replace('.', '_', $service)) . '_api_key';
                             ?>
                             <tr>
@@ -160,13 +177,92 @@ class Settings {
                                 </th>
                                 <td>
                                     <input type="text" id="<?php echo esc_attr($option_name); ?>" name="<?php echo esc_attr($option_name); ?>"
-                                           value="<?php echo esc_attr(get_option($option_name)); ?>" class="regular-text">
+                                           value="<?php echo esc_attr($this->decrypt_api_key(get_option($option_name))); ?>" class="regular-text">
                                     <p class="description">
                                         <?php echo sprintf(__('Enter your %s API key.', 'hellaz-sitez-analyzer'), $service); ?>
                                     </p>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
+
+                        <!-- Security Analysis -->
+                        <tr>
+                            <th scope="row"><strong><?php _e('Security Analysis', 'hellaz-sitez-analyzer'); ?></strong></th>
+                            <td></td>
+                        </tr>
+                        <?php
+                        $security_analysis_apis = ['VirusTotal'];
+                        foreach ($security_analysis_apis as $service) :
+                            $option_name = 'hsz_' . strtolower(str_replace('.', '_', $service)) . '_api_key';
+                            ?>
+                            <tr>
+                                <th scope="row">
+                                    <label for="<?php echo esc_attr($option_name); ?>">
+                                        <?php echo sprintf(__('%s API Key', 'hellaz-sitez-analyzer'), $service); ?>
+                                    </label>
+                                </th>
+                                <td>
+                                    <input type="text" id="<?php echo esc_attr($option_name); ?>" name="<?php echo esc_attr($option_name); ?>"
+                                           value="<?php echo esc_attr($this->decrypt_api_key(get_option($option_name))); ?>" class="regular-text">
+                                    <p class="description">
+                                        <?php echo sprintf(__('Enter your %s API key.', 'hellaz-sitez-analyzer'), $service); ?>
+                                    </p>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+
+                        <!-- Technology Information -->
+                        <tr>
+                            <th scope="row"><strong><?php _e('Technology Information', 'hellaz-sitez-analyzer'); ?></strong></th>
+                            <td></td>
+                        </tr>
+                        <?php
+                        $technology_info_apis = ['BuiltWith'];
+                        foreach ($technology_info_apis as $service) :
+                            $option_name = 'hsz_' . strtolower(str_replace('.', '_', $service)) . '_api_key';
+                            ?>
+                            <tr>
+                                <th scope="row">
+                                    <label for="<?php echo esc_attr($option_name); ?>">
+                                        <?php echo sprintf(__('%s API Key', 'hellaz-sitez-analyzer'), $service); ?>
+                                    </label>
+                                </th>
+                                <td>
+                                    <input type="text" id="<?php echo esc_attr($option_name); ?>" name="<?php echo esc_attr($option_name); ?>"
+                                           value="<?php echo esc_attr($this->decrypt_api_key(get_option($option_name))); ?>" class="regular-text">
+                                    <p class="description">
+                                        <?php echo sprintf(__('Enter your %s API key.', 'hellaz-sitez-analyzer'), $service); ?>
+                                    </p>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+
+                        <!-- Social Info -->
+                        <tr>
+                            <th scope="row"><strong><?php _e('Social Info', 'hellaz-sitez-analyzer'); ?></strong></th>
+                            <td></td>
+                        </tr>
+
+                        <!-- Content Analysis -->
+                        <tr>
+                            <th scope="row"><strong><?php _e('Content Analysis', 'hellaz-sitez-analyzer'); ?></strong></th>
+                            <td></td>
+                        </tr>
+
+                        <!-- Other -->
+                        <tr>
+                            <th scope="row"><strong><?php _e('Other', 'hellaz-sitez-analyzer'); ?></strong></th>
+                            <td></td>
+                        </tr>
+
+                        <!-- Clear Cache Section -->
+                        <tr>
+                            <th scope="row"><strong><?php _e('Clear Cache', 'hellaz-sitez-analyzer'); ?></strong></th>
+                            <td>
+                                <button id="hsz-clear-cache-button" class="button button-primary"><?php _e('Clear Cache', 'hellaz-sitez-analyzer'); ?></button>
+                                <div id="hsz-clear-cache-message" style="display: none;"></div>
+                            </td>
+                        </tr>
                     </table>
                     <?php submit_button(); ?>
                 </form>
@@ -186,12 +282,7 @@ class Settings {
                 </div>
             </div>
 
-            <!-- Cache Clearing Section -->
-            <h2><?php _e('Clear Cache', 'hellaz-sitez-analyzer'); ?></h2>
-            <p><?php _e('Click the button below to clear all cached data.', 'hellaz-sitez-analyzer'); ?></p>
-            <button id="hsz-clear-cache-button" class="button button-primary"><?php _e('Clear Cache', 'hellaz-sitez-analyzer'); ?></button>
-            <div id="hsz-clear-cache-message" style="display: none;"></div>
-
+            <!-- JavaScript for Tabs -->
             <script>
                 jQuery(document).ready(function($) {
                     const tabs = $('.nav-tab');
@@ -234,32 +325,38 @@ class Settings {
     }
 
     /**
-     * Detect locally installed icon libraries.
+     * Encrypt an API key before storing it in the database.
      *
-     * @return array An associative array of library names and their paths.
+     * @param string $api_key The API key to encrypt.
+     * @return string The encrypted API key.
      */
-    private function detect_local_icon_libraries() {
-        $libraries = [];
-        $theme_dir = get_template_directory();
-        $plugin_dir = WP_PLUGIN_DIR;
-
-        // Check for Font Awesome
-        if (file_exists($theme_dir . '/font-awesome.min.css')) {
-            $libraries['Font Awesome'] = get_template_directory_uri() . '/font-awesome.min.css';
-        } elseif (file_exists($plugin_dir . '/font-awesome/font-awesome.min.css')) {
-            $libraries['Font Awesome'] = plugins_url('font-awesome/font-awesome.min.css');
+    public function encrypt_api_key($api_key) {
+        if (empty($api_key)) {
+            return '';
         }
-
-        // Check for Dashicons
-        if (wp_style_is('dashicons', 'registered')) {
-            $libraries['Dashicons'] = includes_url('css/dashicons.min.css');
-        }
-
-        // Add more checks for other libraries here...
-
-        return $libraries;
+        $method = 'AES-256-CBC';
+        $key = hash('sha256', AUTH_KEY); // Use WordPress AUTH_KEY for encryption
+        $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length($method));
+        $encrypted = openssl_encrypt($api_key, $method, $key, 0, $iv);
+        return base64_encode($encrypted . '::' . $iv);
     }
 
+    /**
+     * Decrypt an API key stored in the database.
+     *
+     * @param string $encrypted_api_key The encrypted API key.
+     * @return string The decrypted API key.
+     */
+    public function decrypt_api_key($encrypted_api_key) {
+        if (empty($encrypted_api_key)) {
+            return '';
+        }
+        $method = 'AES-256-CBC';
+        $key = hash('sha256', AUTH_KEY); // Use WordPress AUTH_KEY for decryption
+        list($encrypted_data, $iv) = explode('::', base64_decode($encrypted_api_key), 2);
+        return openssl_decrypt($encrypted_data, $method, $key, 0, $iv);
+    }
+    
     /**
      * Clear all transients via AJAX.
      */
@@ -268,4 +365,4 @@ class Settings {
         $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_hsz_%'");
         wp_send_json_success(['message' => __('Cache cleared successfully.', 'hellaz-sitez-analyzer')]);
     }
-}
+    }

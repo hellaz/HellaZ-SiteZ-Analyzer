@@ -65,6 +65,7 @@ class SocialMedia {
     private function extract_username_from_url($platform, $url) {
         switch ($platform) {
             case 'facebook':
+            case 'twitter':				
             case 'instagram':
             case 'tiktok':
             case 'reddit':
@@ -82,6 +83,7 @@ class SocialMedia {
             case 'github':
             case 'gitlab':
             case 'bitbucket':
+            case 'slack':				
             case 'patreon':
             case 'etsy':
             case 'amazon':
@@ -98,6 +100,11 @@ class SocialMedia {
                 $path = parse_url($url, PHP_URL_PATH);
                 $segments = explode('/', trim($path, '/'));
                 return isset($segments[1]) ? $segments[1] : '';
+			case 'pinterest': // New
+				// Extract subdomain or username
+				$host = parse_url($url, PHP_URL_HOST);
+				$subdomain = explode('.', $host)[0];
+				return $subdomain ?: basename($url);				
             case 'tumblr':
                 // Extract subdomain from Tumblr URLs
                 $host = parse_url($url, PHP_URL_HOST);

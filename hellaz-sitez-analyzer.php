@@ -70,24 +70,12 @@ add_action('plugins_loaded', function () {
 });
 
 // Enqueue block editor assets
-// add_action('enqueue_block_editor_assets', function () {
-//    wp_enqueue_script(
-//        'hsz-gutenberg-block',
-//        plugins_url('assets/js/scripts.js', __FILE__),
-//        ['wp-blocks', 'wp-components', 'wp-element', 'wp-editor', 'wp-i18n'],
-//        filemtime(plugin_dir_path(__FILE__) . 'assets/js/scripts.js'),
-//        true
-//    );
-//    // Add script translation support
-//    wp_set_script_translations('hsz-gutenberg-block', 'hellaz-sitez-analyzer');
-// });
-
 add_action('enqueue_block_editor_assets', function () {
     wp_enqueue_script(
         'hsz-gutenberg-block',
-        plugins_url('assets/js/gutenberg-block.js', __FILE__),
+        plugins_url('assets/js/scripts.js', __FILE__),
         ['wp-blocks', 'wp-components', 'wp-element', 'wp-editor', 'wp-i18n'],
-        filemtime(plugin_dir_path(__FILE__) . 'assets/js/gutenberg-block.js'),
+        filemtime(plugin_dir_path(__FILE__) . 'assets/js/scripts.js'),
         true
     );
     // Add script translation support

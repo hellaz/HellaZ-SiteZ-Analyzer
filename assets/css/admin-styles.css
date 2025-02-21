@@ -11,9 +11,56 @@
 }
 
 #hsz-clear-cache-button {
-    margin-top: 10px;
+    margin-top: 20px; /* Increased spacing for better separation */
 }
 
 .notice {
     margin-top: 10px;
+}
+
+/* Additional styles for the tabbed interface */
+.tab-content-inner {
+    padding: 20px;
+    border: 1px solid #ddd;
+    background-color: #fff;
+    margin-top: 20px;
+}
+
+.about-section {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+}
+
+.about-section h2 {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.about-section p {
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 20px;
+}
+
+.about-section ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.about-section li {
+    margin-bottom: 10px;
+}
+
+.about-section a {
+    text-decoration: none;
+    color: #0073aa;
+}
+
+.about-section a:hover {
+    text-decoration: underline;
 }

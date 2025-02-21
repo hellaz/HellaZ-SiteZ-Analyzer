@@ -68,7 +68,7 @@ class Metadata {
             'address' => $this->get_address($dom, $url),
             'rss_feeds' => (new RSS())->detect_rss_feeds($html),
             'social_media' => (new SocialMedia())->detect_social_media_links($html),
-            'ssl_info' => (new Security())->get_ssl_info($url),
+            'ssl_info' => (new APIAnalysis())->get_ssl_info($url),
             'response_code' => $response_code, // Add HTTP response code
 
         ];
@@ -79,17 +79,17 @@ class Metadata {
         // Premium APIs
         $virustotal_api_key = get_option('hsz_virustotal_api_key', '');
         if (!empty($virustotal_api_key)) {
-            $metadata['security_analysis'] = (new Security())->get_security_analysis($url, $virustotal_api_key);
+            $metadata['security_analysis'] = (new APIAnalysis())->get_virustotal_analysis($url, $virustotal_api_key);
         }
 
         $urlscan_api_key = get_option('hsz_urlscan_api_key', '');
         if (!empty($urlscan_api_key)) {
-            $metadata['urlscan_analysis'] = (new Security())->get_urlscan_analysis($url, $urlscan_api_key);
+            $metadata['urlscan_analysis'] = (new APIAnalysis())->get_urlscan_analysis($url, $urlscan_api_key);
         }
 
         $builtwith_api_key = get_option('hsz_builtwith_api_key', '');
         if (!empty($builtwith_api_key)) {
-            $metadata['technology_stack'] = (new Security())->get_technology_stack($url, $builtwith_api_key);
+            $metadata['technology_stack'] = (new APIAnalysis())->get_buildwith_analysis($url, $builtwith_api_key);
         }
 
         // Cache the results for 24 hours

@@ -9,7 +9,7 @@ class Core {
         new Metadata();
         new SocialMedia();
         new RSS();
-        new Security();
+        new APIAnalysis();
         new Cache();
         new Shortcode();
 //        new Gutenberg();

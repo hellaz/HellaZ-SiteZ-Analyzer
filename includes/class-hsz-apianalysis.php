@@ -5,7 +5,7 @@ if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
 
-class Security {
+class APIAnalysis {
     private $apimanager;
 
     public function __construct() {
@@ -95,7 +95,7 @@ class Security {
      * @param string $api_key The VirusTotal API key.
      * @return array Security analysis data or an empty array if the request fails.
      */
-    public function get_security_analysis($url, $api_key) {
+    public function get_virustotal_analysis($url, $api_key) {
         // Validate input
         if (!filter_var($url, FILTER_VALIDATE_URL) || empty($api_key)) {
             return [];
@@ -133,7 +133,7 @@ class Security {
      * @param string $api_key The BuiltWith API key.
      * @return array Technology stack data or an empty array if the request fails.
      */
-    public function get_technology_stack($url, $api_key) {
+    public function get_buildwith_analyis($url, $api_key) {
         // Validate input
         if (!filter_var($url, FILTER_VALIDATE_URL) || empty($api_key)) {
             return [];

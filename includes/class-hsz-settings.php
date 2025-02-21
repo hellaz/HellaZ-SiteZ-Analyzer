@@ -251,7 +251,7 @@ class Settings {
             <div class="about-section">
                 <h2><?php _e('About Hellaz.Team', 'hellaz-sitez-analyzer'); ?></h2>
                 <p><?php _e('HellaZ.SiteZ.Analyzer is a powerful WordPress plugin designed to analyze websites for metadata, security, technology stack, and more.', 'hellaz-sitez-analyzer'); ?></p>
-                <p><?php _e('For more information, visit our website:', 'hellaz-sitez-analyzer'); ?> <a href="https://hellaz.team" target="_blank">https://hellaz.net</a></p>
+                <p><?php _e('For more information, visit our website:', 'hellaz-sitez-analyzer'); ?> <a href="https://hellaz.net" target="_blank">https://hellaz.net</a></p>
                 <p><?php _e('Follow us on social media:', 'hellaz-sitez-analyzer'); ?></p>
                 <ul>
                     <li><a href="https://twitter.com/hellazteam" target="_blank">Twitter</a></li>

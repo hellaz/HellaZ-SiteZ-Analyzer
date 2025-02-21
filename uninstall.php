@@ -8,16 +8,14 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
     exit; // Exit if accessed directly
 }
 
-global $wpdb;
-
 // Delete plugin options
-$wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", 'hsz_%'));
+delete_option('hsz_enable_disclaimer');
 
-// Delete transients
-$wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", '_transient_hsz_%'));
-$wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", '_transient_timeout_hsz_%'));
+// Delete transients (cached data)
+global $wpdb;
+$wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE 'hsz_%'");
 
-// Delete custom post meta
+// Delete custom post meta (if applicable)
 $posts = get_posts([
     'post_type' => 'any',
     'meta_key'  => '_hsz_metadata',

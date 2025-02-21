@@ -133,7 +133,7 @@ class APIAnalysis {
      * @param string $api_key The BuiltWith API key.
      * @return array Technology stack data or an empty array if the request fails.
      */
-    public function get_buildwith_analyis($url, $api_key) {
+    public function get_buildwith_analysis($url, $api_key) {
         // Validate input
         if (!filter_var($url, FILTER_VALIDATE_URL) || empty($api_key)) {
             return [];

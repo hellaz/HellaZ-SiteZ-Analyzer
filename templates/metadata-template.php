@@ -16,7 +16,7 @@ $twitter_title = isset($metadata['twitter:title']) ? esc_html($metadata['twitter
 $rss_feeds = isset($metadata['rss_feeds']) && is_array($metadata['rss_feeds']) ? $metadata['rss_feeds'] : [];
 $emails = isset($metadata['emails']) && is_array($metadata['emails']) ? $metadata['emails'] : [];
 $contact_forms = isset($metadata['contact_forms']) && is_array($metadata['contact_forms']) ? $metadata['contact_forms'] : [];
-$technology_stack = isset($metadata['technology_stack']) && is_array($metadata['technology_stack']) ? $metadata['technology_stack'] : [];
+$technology_stack = isset($metadata['buildwith_analysis']) && is_array($metadata['buildwith_analysis']) ? $metadata['buildwith_analysis'] : [];
 $social_media = isset($metadata['social_media']) && is_array($metadata['social_media']) ? $metadata['social_media'] : [];
 $ssl_info = isset($metadata['ssl_info']) && is_array($metadata['ssl_info']) ? $metadata['ssl_info'] : [];
 $author = isset($metadata['author']) ? $metadata['author'] : '';
@@ -24,7 +24,7 @@ $keywords = isset($metadata['keywords']) ? $metadata['keywords'] : '';
 $referrer = isset($metadata['referrer']) ? $metadata['referrer'] : '';
 $language = isset($metadata['language']) ? $metadata['language'] : '';
 $server_location = isset($metadata['server_location']) ? $metadata['server_location'] : '';
-$security_analysis = isset($metadata['security_analysis']) && is_array($metadata['security_analysis']) ? $metadata['security_analysis'] : [];
+$security_analysis = isset($metadata['virustotal_analysis']) && is_array($metadata['virustotal_analysis']) ? $metadata['virustotal_analysis'] : [];
 $urlscan_api_key = get_option('hsz_urlscan_api_key', '');
 $urlscan_analysis = isset($metadata['urlscan_analysis']) && !empty($urlscan_api_key) ? $metadata['urlscan_analysis'] : '';
 // Link target option from plugin settings

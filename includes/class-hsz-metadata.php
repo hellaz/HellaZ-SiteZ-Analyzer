@@ -79,7 +79,7 @@ class Metadata {
         // Premium APIs
         $virustotal_api_key = get_option('hsz_virustotal_api_key', '');
         if (!empty($virustotal_api_key)) {
-            $metadata['security_analysis'] = (new APIAnalysis())->get_virustotal_analysis($url, $virustotal_api_key);
+            $metadata['virustotal_analysis'] = (new APIAnalysis())->get_virustotal_analysis($url, $virustotal_api_key);
         }
 
         $urlscan_api_key = get_option('hsz_urlscan_api_key', '');
@@ -89,7 +89,7 @@ class Metadata {
 
         $builtwith_api_key = get_option('hsz_builtwith_api_key', '');
         if (!empty($builtwith_api_key)) {
-            $metadata['technology_stack'] = (new APIAnalysis())->get_buildwith_analysis($url, $builtwith_api_key);
+            $metadata['buildwith_analysis'] = (new APIAnalysis())->get_buildwith_analysis($url, $builtwith_api_key);
         }
 
         // Cache the results for 24 hours

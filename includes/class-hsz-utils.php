@@ -21,4 +21,30 @@ class Utils {
         // Log the error to the debug log
         error_log('[HellaZ SiteZ Analyzer] Error: ' . $message);
     }
+    
+    /**
+     * Encrypt API keys before saving.
+     *
+     * @param string $api_key The API key to encrypt.
+     * @return string Encrypted API key.
+     */
+    public function encrypt_api_key($api_key) {
+        if (!empty($api_key)) {
+            return base64_encode(openssl_encrypt($api_key, 'AES-256-CBC', AUTH_KEY, 0, substr(AUTH_SALT, 0, 16)));
+        }
+        return '';
+    }
+
+    /**
+     * Decrypt API keys when retrieving.
+     *
+     * @param string $encrypted_key The encrypted API key.
+     * @return string Decrypted API key.
+     */
+    public function decrypt_api_key($encrypted_key) {
+        if (!empty($encrypted_key)) {
+            return openssl_decrypt(base64_decode($encrypted_key), 'AES-256-CBC', AUTH_KEY, 0, substr(AUTH_SALT, 0, 16));
+        }
+        return '';
+    }    
 }

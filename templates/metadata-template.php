@@ -3,30 +3,38 @@
  * Template for displaying metadata.
  */
 // Extract metadata (ensure it's sanitized)
-$title = isset($metadata['title']) ? esc_html($metadata['title']) : __('Untitled', 'hellaz-sitez-analyzer');
-$description = isset($metadata['description']) ? esc_html($metadata['description']) : apply_filters('hsz_fallback_description', '');
-$fallback_image = get_option('hsz_fallback_image', apply_filters('hsz_fallback_image', ''));
 $favicon = isset($metadata['favicon']) ? esc_url($metadata['favicon']) : '';
 if (empty($favicon)) {
     $favicon = !empty($fallback_image) ? esc_url($fallback_image) : '';
 }
-$canonical_url = isset($metadata['canonical_url']) ? esc_url($metadata['canonical_url']) : '';
+$title = isset($metadata['title']) ? esc_html($metadata['title']) : __('Untitled', 'hellaz-sitez-analyzer');
+$description = isset($metadata['description']) ? esc_html($metadata['description']) : apply_filters('hsz_fallback_description', '');
+
 $og_title = isset($metadata['og:title']) ? esc_html($metadata['og:title']) : '';
+$og_description = isset($metadata['og:description']) ? esc_html($metadata['og:description']) : '';
 $twitter_title = isset($metadata['twitter:title']) ? esc_html($metadata['twitter:title']) : '';
-$rss_feeds = isset($metadata['rss_feeds']) && is_array($metadata['rss_feeds']) ? $metadata['rss_feeds'] : [];
-$emails = isset($metadata['emails']) && is_array($metadata['emails']) ? $metadata['emails'] : [];
-$contact_forms = isset($metadata['contact_forms']) && is_array($metadata['contact_forms']) ? $metadata['contact_forms'] : [];
-$technology_stack = isset($metadata['buildwith_analysis']) && is_array($metadata['buildwith_analysis']) ? $metadata['buildwith_analysis'] : [];
-$social_media = isset($metadata['social_media']) && is_array($metadata['social_media']) ? $metadata['social_media'] : [];
-$ssl_info = isset($metadata['ssl_info']) && is_array($metadata['ssl_info']) ? $metadata['ssl_info'] : [];
+$twitter_description = isset($metadata['twitter:description']) ? esc_html($metadata['twitter:description']) : '';
+
 $author = isset($metadata['author']) ? $metadata['author'] : '';
 $keywords = isset($metadata['keywords']) ? $metadata['keywords'] : '';
 $referrer = isset($metadata['referrer']) ? $metadata['referrer'] : '';
 $language = isset($metadata['language']) ? $metadata['language'] : '';
+$canonical_url = isset($metadata['canonical_url']) ? esc_url($metadata['canonical_url']) : '';
+
+$rss_feeds = isset($metadata['rss_feeds']) && is_array($metadata['rss_feeds']) ? $metadata['rss_feeds'] : [];
+$emails = isset($metadata['emails']) && is_array($metadata['emails']) ? $metadata['emails'] : [];
+$contact_forms = isset($metadata['contact_forms']) && is_array($metadata['contact_forms']) ? $metadata['contact_forms'] : [];
+$social_media = isset($metadata['social_media']) && is_array($metadata['social_media']) ? $metadata['social_media'] : [];
+$ssl_info = isset($metadata['ssl_info']) && is_array($metadata['ssl_info']) ? $metadata['ssl_info'] : [];
+
 $server_location = isset($metadata['server_location']) ? $metadata['server_location'] : '';
+$technology_stack = isset($metadata['buildwith_analysis']) && is_array($metadata['buildwith_analysis']) ? $metadata['buildwith_analysis'] : [];
 $security_analysis = isset($metadata['virustotal_analysis']) && is_array($metadata['virustotal_analysis']) ? $metadata['virustotal_analysis'] : [];
 $urlscan_api_key = get_option('hsz_urlscan_api_key', '');
 $urlscan_analysis = isset($metadata['urlscan_analysis']) && !empty($urlscan_api_key) ? $metadata['urlscan_analysis'] : '';
+
+// Fallback image from plugin settings
+$fallback_image = get_option('hsz_fallback_image', apply_filters('hsz_fallback_image', ''));
 // Link target option from plugin settings
 $link_target = get_option('hsz_link_target', '_blank');
 // Disclaimer settings
@@ -34,6 +42,7 @@ $enable_disclaimer = get_option('hsz_enable_disclaimer', false);
 $disclaimer_message = get_option('hsz_disclaimer_message', __('This is a default disclaimer message.', 'hellaz-sitez-analyzer'));
 // Detect or use selected icon library
 $icon_library = get_option('hsz_icon_library', 'font-awesome');
+
 ?>
 <div class="hsz-metadata-container">
     <!-- Favicon -->
@@ -54,11 +63,11 @@ $icon_library = get_option('hsz_icon_library', 'font-awesome');
     <div class="hsz-section hsz-basic-metadata">
         <h4><?php _e('Basic Metadata', 'hellaz-sitez-analyzer'); ?></h4>
         <ul>
-            <?php if (!empty($author)) : ?>
-                <li><strong><?php _e('Author:', 'hellaz-sitez-analyzer'); ?></strong> <?php echo esc_html($author); ?></li>
-            <?php endif; ?>
             <?php if (!empty($keywords)) : ?>
                 <li><strong><?php _e('Keywords:', 'hellaz-sitez-analyzer'); ?></strong> <?php echo esc_html($keywords); ?></li>
+            <?php endif; ?>            
+            <?php if (!empty($author)) : ?>
+                <li><strong><?php _e('Author:', 'hellaz-sitez-analyzer'); ?></strong> <?php echo esc_html($author); ?></li>
             <?php endif; ?>
             <?php if (!empty($referrer)) : ?>
                 <li><strong><?php _e('Referrer:', 'hellaz-sitez-analyzer'); ?></strong> <?php echo esc_html($referrer); ?></li>
@@ -76,7 +85,7 @@ $icon_library = get_option('hsz_icon_library', 'font-awesome');
 </div>
 
     <!-- Server Information (Combined Server Location + SSL/TLS Info) -->
-<!-- Server Information -->
+
 <div class="hsz-section hsz-server-info">
     <h4><?php _e('Server Information', 'hellaz-sitez-analyzer'); ?></h4>
     <ul>

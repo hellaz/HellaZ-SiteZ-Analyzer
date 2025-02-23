@@ -12,7 +12,6 @@ class Core {
         new APIAnalysis();
         new Cache();
         new Shortcode();
-//        new Gutenberg();
         new Settings();
         new Hooks();
         new Fallbacks();

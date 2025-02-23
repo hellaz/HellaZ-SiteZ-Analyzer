@@ -46,5 +46,27 @@ class Utils {
             return openssl_decrypt(base64_decode($encrypted_key), 'AES-256-CBC', AUTH_KEY, 0, substr(AUTH_SALT, 0, 16));
         }
         return '';
-    }    
+    }
+    
+    public static function validate_url($url) {
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            self::log_admin_notice(__('Invalid URL:', 'hellaz-sitez-analyzer') . ' ' . $url);
+            return false;
+        }
+        return true;
+    }
+
+    public static function validate_input($input, $type) {
+        switch ($type) {
+            case 'url':
+                return self::validate_url($input);
+            case 'email':
+                return filter_var($input, FILTER_VALIDATE_EMAIL) !== false;
+            case 'int':
+                return filter_var($input, FILTER_VALIDATE_INT) !== false;
+            case 'non_empty':
+                return !empty($input);
+            default:
+                return false;
+        }    
 }

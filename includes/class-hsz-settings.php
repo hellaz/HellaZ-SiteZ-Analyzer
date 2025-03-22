@@ -186,7 +186,7 @@ class Settings {
                         <tr>
                             <th scope="row"><label for="hsz_<?php echo strtolower(str_replace('.', '_', $service)); ?>_api_key"><?php printf(__('%s API Key', 'hellaz-sitez-analyzer'), $service); ?></label></th>
                             <td>
-                                <input type="password" id="hsz_<?php echo strtolower(str_replace('.', '_', $service)); ?>_api_key" name="hsz_<?php echo strtolower(str_replace('.', '_', $service)); ?>_api_key" value="<?php echo esc_attr($this->decrypt_api_key(get_option('hsz_' . strtolower(str_replace('.', '_', $service)) . '_api_key'))); ?>" class="regular-text">
+                                <input type="password" id="hsz_<?php echo strtolower(str_replace('.', '_', $service)); ?>_api_key" name="hsz_<?php echo strtolower(str_replace('.', '_', $service)); ?>_api_key" value="<?php echo esc_attr(\HSZ\Utils::decrypt_api_key(get_option('hsz_' . strtolower(str_replace('.', '_', $service)) . '_api_key'))); ?>" class="regular-text">
                                 <p class="description"><?php printf(__('Enter your %s API key.', 'hellaz-sitez-analyzer'), $service); ?></p>
                             </td>
                         </tr>

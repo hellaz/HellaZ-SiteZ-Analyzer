@@ -68,5 +68,6 @@ class Utils {
                 return !empty($input);
             default:
                 return false;
-        }    
+        }
+    }  
 }

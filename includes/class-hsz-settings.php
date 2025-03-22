@@ -40,12 +40,16 @@ class Settings {
 
         foreach ($api_services as $category => $services) {
             foreach ($services as $service) {
-                register_setting('hsz-settings-group', 'hsz_' . strtolower(str_replace('.', '_', $service)) . '_api_key', [
-                    'sanitize_callback' => [$this, 'encrypt_api_key'], // Encrypt API keys before saving
-                ]);
+                register_setting(
+                    'hsz-settings-group',
+                    'hsz_' . strtolower(str_replace('.', '_', $service)) . '_api_key',
+                    [
+                        'sanitize_callback' => ['\HSZ\Utils', 'encrypt_api_key'], // Encrypt API keys before saving
+                    ]
+                );
             }
         }
-
+        
         // Cache Settings
         register_setting('hsz-settings-group', 'hsz_cache_duration', ['sanitize_callback' => 'absint']);
     }

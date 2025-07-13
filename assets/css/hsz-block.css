@@ -1,0 +1,147 @@
+/* HellaZ SiteZ Analyzer Block Styles */
+.hsz-analyzer-block {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.hsz-block-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.hsz-metadata h4 {
+    margin: 0 0 10px 0;
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #333;
+}
+
+.hsz-metadata p {
+    margin: 0 0 10px 0;
+    color: #666;
+    line-height: 1.5;
+}
+
+.hsz-favicon {
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.hsz-social-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.hsz-social-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 10px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #333;
+    font-size: 0.9em;
+    transition: background-color 0.2s;
+}
+
+.hsz-social-link:hover {
+    background: #e0e0e0;
+    color: #333;
+}
+
+.hsz-block-footer {
+    border-top: 1px solid #eee;
+    padding-top: 10px;
+    margin-top: 10px;
+}
+
+.hsz-block-footer small {
+    color: #888;
+    font-size: 0.85em;
+}
+
+.hsz-block-footer a {
+    color: #0073aa;
+    text-decoration: none;
+}
+
+.hsz-block-footer a:hover {
+    text-decoration: underline;
+}
+
+.hsz-error {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px solid #f5c6cb;
+}
+
+/* Editor Styles */
+.hsz-block-editor {
+    min-height: 100px;
+    border: 1px dashed #ddd;
+    padding: 20px;
+    border-radius: 4px;
+    background: #fafafa;
+}
+
+.hsz-placeholder {
+    text-align: center;
+    color: #666;
+    font-style: italic;
+}
+
+.hsz-loading {
+    text-align: center;
+    padding: 20px;
+}
+
+.hsz-loading .components-spinner {
+    margin: 0 auto 10px;
+}
+
+.hsz-preview {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+}
+
+.hsz-preview h4 {
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+.hsz-preview p {
+    margin: 0 0 10px 0;
+    color: #666;
+}
+
+.hsz-preview small a {
+    color: #0073aa;
+    text-decoration: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .hsz-analyzer-block {
+        padding: 15px;
+    }
+    
+    .hsz-social-links {
+        flex-direction: column;
+    }
+    
+    .hsz-social-link {
+        justify-content: center;
+    }
+}

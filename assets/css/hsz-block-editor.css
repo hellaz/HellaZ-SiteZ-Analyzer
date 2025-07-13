@@ -1,0 +1,119 @@
+/* HellaZ SiteZ Analyzer Block Editor Styles */
+.hsz-block-editor .components-panel__body {
+    border: none;
+}
+
+.hsz-block-editor .components-base-control {
+    margin-bottom: 16px;
+}
+
+.hsz-block-editor .components-base-control__label {
+    font-weight: 600;
+    color: #1e1e1e;
+    margin-bottom: 8px;
+}
+
+.hsz-block-editor .components-text-control__input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #949494;
+    border-radius: 2px;
+    background: #fff;
+    color: #1e1e1e;
+}
+
+.hsz-block-editor .components-text-control__input:focus {
+    border-color: #007cba;
+    box-shadow: 0 0 0 1px #007cba;
+}
+
+.hsz-block-editor .components-select-control__input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #949494;
+    border-radius: 2px;
+    background: #fff;
+    color: #1e1e1e;
+}
+
+.hsz-block-editor .components-button.is-primary {
+    background: #007cba;
+    border-color: #007cba;
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 2px;
+    font-weight: 600;
+}
+
+.hsz-block-editor .components-button.is-primary:hover {
+    background: #005a87;
+    border-color: #005a87;
+}
+
+.hsz-block-editor .components-button.is-primary:disabled {
+    background: #e0e0e0;
+    border-color: #e0e0e0;
+    color: #757575;
+    cursor: not-allowed;
+}
+
+/* Inspector Controls */
+.block-editor-block-inspector .hsz-block-editor .components-panel__body-title {
+    font-weight: 600;
+    color: #1e1e1e;
+}
+
+.block-editor-block-inspector .hsz-block-editor .components-panel__body-toggle {
+    padding: 16px;
+}
+
+/* Preview styles in editor */
+.hsz-block-editor .hsz-preview {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 16px;
+    margin: 16px 0;
+}
+
+.hsz-block-editor .hsz-preview h4 {
+    margin: 0 0 12px 0;
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #1e1e1e;
+}
+
+.hsz-block-editor .hsz-preview p {
+    margin: 0 0 12px 0;
+    color: #757575;
+    line-height: 1.4;
+}
+
+.hsz-block-editor .hsz-placeholder {
+    text-align: center;
+    color: #757575;
+    font-style: italic;
+    padding: 32px 16px;
+}
+
+.hsz-block-editor .hsz-loading {
+    text-align: center;
+    padding: 32px 16px;
+    color: #757575;
+}
+
+.hsz-block-editor .hsz-error {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 12px;
+    border-radius: 4px;
+    border: 1px solid #f5c6cb;
+    margin: 16px 0;
+}
+
+/* Responsive adjustments for editor */
+@media (max-width: 1080px) {
+    .hsz-block-editor .hsz-preview {
+        padding: 12px;
+    }
+}

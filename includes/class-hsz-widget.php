@@ -1,7 +1,12 @@
 <?php
 namespace HSZ;
 
+if (!defined('ABSPATH')) {
+    exit;
+}
+
 class Widget extends \WP_Widget {
+    
     public function __construct() {
         parent::__construct(
             'hsz_widget',
@@ -39,6 +44,13 @@ class Widget extends \WP_Widget {
             // Extract metadata using the Metadata class
             $metadata = (new Metadata())->extract_metadata($url);
 
+            // Check for errors
+            if (isset($metadata['error'])) {
+                echo '<p>' . esc_html($metadata['error']) . '</p>';
+                echo $args['after_widget'];
+                return;
+            }
+
             // Start output buffering and include the template file
             ob_start();
             include $template_path;
@@ -61,7 +73,7 @@ class Widget extends \WP_Widget {
         </p>
         <p>
             <label for="<?php echo esc_attr($this->get_field_id('url')); ?>"><?php _e('Website URL:', 'hellaz-sitez-analyzer'); ?></label>
-            <input class="widefat" id="<?php echo esc_attr($this->get_field_id('url')); ?>" name="<?php echo esc_attr($this->get_field_name('url')); ?>" type="text" value="<?php echo esc_attr($url); ?>">
+            <input class="widefat" id="<?php echo esc_attr($this->get_field_id('url')); ?>" name="<?php echo esc_attr($this->get_field_name('url')); ?>" type="url" value="<?php echo esc_attr($url); ?>">
         </p>
         <?php
     }

@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: HellaZ SiteZ Analyzer
- * Description: Analyze websites for metadata, open graph, server, security, technology stack, social media, rss fees, contact information and more.
- * Version: 1.0
+ * Description: Analyze websites for metadata, open graph, server, security, technology stack, social media, rss feeds, contact information and more.
+ * Version: 1.0.1
  * Requires at least: 5.0
  * Requires PHP: 7.4
  * Author: Hellaz
@@ -11,6 +11,7 @@
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: hellaz-sitez-analyzer
  * Domain Path: /languages
+ * Network: true
  */
 
 // Exit if accessed directly
@@ -19,9 +20,11 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('HSZ_PLUGIN_PATH', plugin_dir_path(__FILE__)); // Absolute server path to the plugin directory
-define('HSZ_PLUGIN_URL', plugin_dir_url(__FILE__));   // URL to the plugin directory
-define('HSZ_PLUGIN_DIR', HSZ_PLUGIN_PATH);           // Alias for HSZ_PLUGIN_PATH (for backward compatibility)
+define('HSZ_PLUGIN_VERSION', '1.0.1');
+define('HSZ_PLUGIN_PATH', plugin_dir_path(__FILE__));
+define('HSZ_PLUGIN_URL', plugin_dir_url(__FILE__));
+define('HSZ_PLUGIN_DIR', HSZ_PLUGIN_PATH);
+define('HSZ_PLUGIN_BASENAME', plugin_basename(__FILE__));
 
 // Autoload classes
 spl_autoload_register(function ($class) {
@@ -31,7 +34,7 @@ spl_autoload_register(function ($class) {
 
     // Check if the class belongs to the HSZ namespace
     if (strncmp($prefix, $class, $len) !== 0) {
-        return; // Not a class in the HSZ namespace
+        return;
     }
 
     // Remove the namespace prefix
@@ -46,8 +49,6 @@ spl_autoload_register(function ($class) {
     // If the file exists, require it
     if (file_exists($file)) {
         require_once $file;
-    } else {
-        error_log("Class file not found: $file"); // Debugging
     }
 });
 
@@ -60,13 +61,26 @@ add_action('plugins_loaded', function () {
         add_action('admin_notices', function () use ($e) {
             ?>
             <div class="notice notice-error">
-                <p>
-                    <?php echo esc_html__('HellaZ SiteZ Analyzer failed to initialize. Error: ', 'hellaz-sitez-analyzer') . esc_html($e->getMessage()); ?>
-                </p>
+                <p><?php echo esc_html__('HellaZ SiteZ Analyzer failed to initialize. Error: ', 'hellaz-sitez-analyzer') . esc_html($e->getMessage()); ?></p>
             </div>
             <?php
         });
     }
+});
+
+// Activation hook
+register_activation_hook(__FILE__, function() {
+    // Create any necessary database tables or options
+    add_option('hsz_plugin_version', HSZ_PLUGIN_VERSION);
+    
+    // Flush rewrite rules
+    flush_rewrite_rules();
+});
+
+// Deactivation hook
+register_deactivation_hook(__FILE__, function() {
+    // Clean up temporary data
+    wp_cache_flush();
 });
 
 // Enqueue block editor assets
@@ -75,7 +89,7 @@ add_action('enqueue_block_editor_assets', function () {
         'hsz-gutenberg-block',
         plugins_url('assets/js/scripts.js', __FILE__),
         ['wp-blocks', 'wp-components', 'wp-element', 'wp-editor', 'wp-i18n'],
-        filemtime(plugin_dir_path(__FILE__) . 'assets/js/scripts.js'),
+        HSZ_PLUGIN_VERSION,
         true
     );
     // Add script translation support
@@ -85,9 +99,19 @@ add_action('enqueue_block_editor_assets', function () {
 // Enqueue admin styles
 add_action('admin_enqueue_scripts', function () {
     wp_enqueue_style(
-        'hsz-admin-styles', // Handle for the stylesheet
-        plugins_url('assets/css/admin-styles.css', __FILE__), // Path to the CSS file
-        [], // Dependencies (none in this case)
-        filemtime(plugin_dir_path(__FILE__) . 'assets/css/admin-styles.css') // Version (file modification time)
+        'hsz-admin-styles',
+        plugins_url('assets/css/admin-styles.css', __FILE__),
+        [],
+        HSZ_PLUGIN_VERSION
+    );
+});
+
+// Enqueue frontend styles
+add_action('wp_enqueue_scripts', function () {
+    wp_enqueue_style(
+        'hsz-frontend-styles',
+        plugins_url('assets/css/styles.css', __FILE__),
+        [],
+        HSZ_PLUGIN_VERSION
     );
 });

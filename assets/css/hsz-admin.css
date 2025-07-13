@@ -1,0 +1,6 @@
+.hsz-admin-container { max-width:600px; margin:30px auto; background:#fff; border:1px solid #eee; padding:24px; border-radius:6px; }
+#hsz-analyze-form, #hsz-bulk-form { margin-bottom:20px; }
+#hsz-analyze-form input[type="text"], #hsz-bulk-form input[type="text"], #hsz-bulk-form textarea { width:100%; margin-bottom:12px; padding:8px; border:1px solid #ccc; border-radius:4px; }
+#hsz-analyze-form input[type="submit"], #hsz-bulk-form input[type="submit"] { background:#0073aa; color:#fff; border:none; padding:10px 20px; border-radius:4px; cursor:pointer; }
+#hsz-analyze-form input[type="submit"]:hover, #hsz-bulk-form input[type="submit"]:hover { background:#005177; }
+#hsz-analysis-result, #hsz-bulk-status { margin-top:16px; }

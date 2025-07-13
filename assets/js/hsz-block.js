@@ -1,19 +1,21 @@
-(function(blocks, element, editor, components, i18n) {
+(function(blocks, element, blockEditor, components, i18n) {
     const { registerBlockType } = blocks;
     const { createElement } = element;
-    const { RichText, InspectorControls, PanelColorSettings } = editor;
-    const { PanelBody, TextControl, SelectControl, Button, Spinner } = components;
+    const { InspectorControls, useBlockProps } = blockEditor;
+    const { PanelBody, TextControl, SelectControl, Button, Spinner, Notice } = components;
     const { __ } = i18n;
+    const { useState, useEffect } = element;
 
     registerBlockType('hsz/analyzer-block', {
         title: __('HellaZ SiteZ Analyzer', 'hellaz-sitez-analyzer'),
-        description: __('Display website metadata analysis', 'hellaz-sitez-analyzer'),
+        description: __('Analyze and display website metadata, social links, and security information', 'hellaz-sitez-analyzer'),
         icon: 'search',
         category: 'widgets',
         keywords: [
             __('website', 'hellaz-sitez-analyzer'),
             __('metadata', 'hellaz-sitez-analyzer'),
-            __('analyze', 'hellaz-sitez-analyzer')
+            __('analyze', 'hellaz-sitez-analyzer'),
+            __('social', 'hellaz-sitez-analyzer')
         ],
         attributes: {
             url: {
@@ -24,44 +26,121 @@
                 type: 'string',
                 default: 'full'
             },
-            previewData: {
+            analysisData: {
                 type: 'object',
                 default: null
+            },
+            isLoading: {
+                type: 'boolean',
+                default: false
+            },
+            error: {
+                type: 'string',
+                default: ''
             }
         },
         edit: function(props) {
             const { attributes, setAttributes } = props;
-            const { url, displayType, previewData } = attributes;
+            const { url, displayType, analysisData, isLoading, error } = attributes;
+            const blockProps = useBlockProps();
+
+            const analyzeUrl = function() {
+                if (!url || !url.trim()) {
+                    setAttributes({ error: __('Please enter a URL', 'hellaz-sitez-analyzer') });
+                    return;
+                }
+
+                // Basic URL validation
+                const urlPattern = /^https?:\/\/.+/i;
+                if (!urlPattern.test(url.trim())) {
+                    setAttributes({ error: __('Please enter a valid URL starting with http:// or https://', 'hellaz-sitez-analyzer') });
+                    return;
+                }
+
+                setAttributes({ 
+                    isLoading: true, 
+                    error: '',
+                    analysisData: null 
+                });
+
+                // Make AJAX request
+                wp.ajax.post('hsz_analyze_url', {
+                    url: url.trim(),
+                    nonce: hsz_block_params?.nonce || ''
+                }).done(function(response) {
+                    setAttributes({
+                        analysisData: response,
+                        isLoading: false,
+                        error: ''
+                    });
+                }).fail(function(xhr) {
+                    let errorMessage = __('Failed to analyze URL', 'hellaz-sitez-analyzer');
+                    
+                    if (xhr.responseJSON && xhr.responseJSON.data) {
+                        errorMessage = xhr.responseJSON.data;
+                    } else if (xhr.responseText) {
+                        errorMessage = xhr.responseText;
+                    }
+                    
+                    setAttributes({
+                        isLoading: false,
+                        error: errorMessage,
+                        analysisData: null
+                    });
+                });
+            };
 
             const onChangeUrl = function(newUrl) {
-                setAttributes({ url: newUrl, previewData: null });
+                setAttributes({ 
+                    url: newUrl,
+                    analysisData: null,
+                    error: ''
+                });
             };
 
             const onChangeDisplayType = function(newType) {
                 setAttributes({ displayType: newType });
             };
 
-            const analyzeUrl = function() {
-                if (!url) return;
+            const renderPreview = function() {
+                if (isLoading) {
+                    return createElement('div', { className: 'hsz-loading' },
+                        createElement(Spinner),
+                        createElement('p', null, __('Analyzing URL...', 'hellaz-sitez-analyzer'))
+                    );
+                }
 
-                setAttributes({ previewData: { loading: true } });
+                if (error) {
+                    return createElement(Notice, {
+                        status: 'error',
+                        isDismissible: false
+                    }, error);
+                }
 
-                wp.ajax.post('hsz_analyze_url', {
-                    url: url,
-                    nonce: hsz_block_params.nonce
-                }).done(function(response) {
-                    setAttributes({ previewData: response });
-                }).fail(function(response) {
-                    setAttributes({ 
-                        previewData: { 
-                            error: response.responseText || __('Analysis failed', 'hellaz-sitez-analyzer') 
-                        } 
-                    });
-                });
+                if (!analysisData) {
+                    return createElement('div', { className: 'hsz-placeholder' },
+                        createElement('p', null, __('Enter a URL and click "Analyze" to see the preview', 'hellaz-sitez-analyzer'))
+                    );
+                }
+
+                return createElement('div', { className: 'hsz-preview' },
+                    analysisData.title && createElement('h4', null, analysisData.title),
+                    analysisData.description && createElement('p', null, analysisData.description),
+                    analysisData.favicon && createElement('img', {
+                        src: analysisData.favicon,
+                        alt: 'Favicon',
+                        className: 'hsz-favicon'
+                    }),
+                    analysisData.social_media && Object.keys(analysisData.social_media).length > 0 &&
+                    createElement('div', { className: 'hsz-social-preview' },
+                        createElement('strong', null, __('Social Media:', 'hellaz-sitez-analyzer') + ' '),
+                        Object.keys(analysisData.social_media).join(', ')
+                    )
+                );
             };
 
             return [
-                createElement(InspectorControls, null,
+                createElement(InspectorControls, { key: 'inspector' },
                     createElement(PanelBody, {
                         title: __('Analyzer Settings', 'hellaz-sitez-analyzer'),
                         initialOpen: true
@@ -70,7 +149,8 @@
                             label: __('Website URL', 'hellaz-sitez-analyzer'),
                             value: url,
                             onChange: onChangeUrl,
-                            placeholder: __('Enter website URL...', 'hellaz-sitez-analyzer')
+                            placeholder: __('https://example.com', 'hellaz-sitez-analyzer'),
+                            help: __('Enter the URL you want to analyze', 'hellaz-sitez-analyzer')
                         }),
                         createElement(SelectControl, {
                             label: __('Display Type', 'hellaz-sitez-analyzer'),
@@ -78,42 +158,30 @@
                             options: [
                                 { label: __('Full Analysis', 'hellaz-sitez-analyzer'), value: 'full' },
                                 { label: __('Metadata Only', 'hellaz-sitez-analyzer'), value: 'metadata' },
-                                { label: __('Social Links Only', 'hellaz-sitez-analyzer'), value: 'social' }
+                                { label: __('Social Media Only', 'hellaz-sitez-analyzer'), value: 'social' },
+                                { label: __('Security Info Only', 'hellaz-sitez-analyzer'), value: 'security' }
                             ],
-                            onChange: onChangeDisplayType
+                            onChange: onChangeDisplayType,
+                            help: __('Choose what information to display', 'hellaz-sitez-analyzer')
                         }),
                         createElement(Button, {
                             isPrimary: true,
                             onClick: analyzeUrl,
-                            disabled: !url
-                        }, __('Analyze URL', 'hellaz-sitez-analyzer'))
+                            disabled: !url || isLoading,
+                            isBusy: isLoading
+                        }, isLoading ? __('Analyzing...', 'hellaz-sitez-analyzer') : __('Analyze URL', 'hellaz-sitez-analyzer'))
                     )
                 ),
-                createElement('div', { className: 'hsz-block-editor' },
-                    !url ? 
-                        createElement('div', { className: 'hsz-placeholder' },
-                            createElement('p', null, __('Enter a URL in the sidebar to analyze a website.', 'hellaz-sitez-analyzer'))
-                        ) :
-                        previewData && previewData.loading ?
-                            createElement('div', { className: 'hsz-loading' },
-                                createElement(Spinner),
-                                createElement('p', null, __('Analyzing website...', 'hellaz-sitez-analyzer'))
-                            ) :
-                            previewData && previewData.error ?
-                                createElement('div', { className: 'hsz-error' },
-                                    createElement('p', null, previewData.error)
-                                ) :
-                                previewData ?
-                                    createElement('div', { className: 'hsz-preview' },
-                                        createElement('h4', null, previewData.title || url),
-                                        previewData.description && createElement('p', null, previewData.description),
-                                        createElement('small', null, 
-                                            createElement('a', { href: url, target: '_blank' }, url)
-                                        )
-                                    ) :
-                                    createElement('div', { className: 'hsz-placeholder' },
-                                        createElement('p', null, __('Click "Analyze URL" to preview the website analysis.', 'hellaz-sitez-analyzer'))
-                                    )
+                createElement('div', Object.assign({ key: 'block' }, blockProps),
+                    createElement('div', { className: 'hsz-block-editor' },
+                        createElement('div', { className: 'hsz-block-header' },
+                            createElement('h3', null, __('HellaZ SiteZ Analyzer', 'hellaz-sitez-analyzer')),
+                            url && createElement('p', { className: 'hsz-current-url' }, 
+                                __('URL:', 'hellaz-sitez-analyzer') + ' ' + url
+                            )
+                        ),
+                        renderPreview()
+                    )
                 )
             ];
         },
@@ -124,7 +192,7 @@
 })(
     window.wp.blocks,
     window.wp.element,
-    window.wp.editor,
+    window.wp.blockEditor,
     window.wp.components,
     window.wp.i18n
 );

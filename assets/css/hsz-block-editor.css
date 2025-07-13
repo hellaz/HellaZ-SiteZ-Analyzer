@@ -1,119 +1,286 @@
 /* HellaZ SiteZ Analyzer Block Editor Styles */
-.hsz-block-editor .components-panel__body {
-    border: none;
+.hsz-block-editor {
+    min-height: 120px;
+    border: 2px dashed #e0e0e0;
+    border-radius: 8px;
+    padding: 24px;
+    background: #fafafa;
+    transition: all 0.3s ease;
 }
 
-.hsz-block-editor .components-base-control {
+.hsz-block-editor:hover {
+    border-color: #0073aa;
+    background: #f8f9fa;
+}
+
+.hsz-block-header {
     margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e0e0e0;
 }
 
-.hsz-block-editor .components-base-control__label {
-    font-weight: 600;
-    color: #1e1e1e;
-    margin-bottom: 8px;
-}
-
-.hsz-block-editor .components-text-control__input {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid #949494;
-    border-radius: 2px;
-    background: #fff;
-    color: #1e1e1e;
-}
-
-.hsz-block-editor .components-text-control__input:focus {
-    border-color: #007cba;
-    box-shadow: 0 0 0 1px #007cba;
-}
-
-.hsz-block-editor .components-select-control__input {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid #949494;
-    border-radius: 2px;
-    background: #fff;
-    color: #1e1e1e;
-}
-
-.hsz-block-editor .components-button.is-primary {
-    background: #007cba;
-    border-color: #007cba;
-    color: #fff;
-    padding: 8px 16px;
-    border-radius: 2px;
-    font-weight: 600;
-}
-
-.hsz-block-editor .components-button.is-primary:hover {
-    background: #005a87;
-    border-color: #005a87;
-}
-
-.hsz-block-editor .components-button.is-primary:disabled {
-    background: #e0e0e0;
-    border-color: #e0e0e0;
-    color: #757575;
-    cursor: not-allowed;
-}
-
-/* Inspector Controls */
-.block-editor-block-inspector .hsz-block-editor .components-panel__body-title {
-    font-weight: 600;
-    color: #1e1e1e;
-}
-
-.block-editor-block-inspector .hsz-block-editor .components-panel__body-toggle {
-    padding: 16px;
-}
-
-/* Preview styles in editor */
-.hsz-block-editor .hsz-preview {
-    background: #fff;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
-    padding: 16px;
-    margin: 16px 0;
-}
-
-.hsz-block-editor .hsz-preview h4 {
-    margin: 0 0 12px 0;
+.hsz-block-header h3 {
+    margin: 0 0 8px 0;
     font-size: 1.1em;
     font-weight: 600;
     color: #1e1e1e;
 }
 
-.hsz-block-editor .hsz-preview p {
+.hsz-current-url {
+    margin: 0;
+    font-size: 0.875em;
+    color: #757575;
+    word-break: break-all;
+}
+
+.hsz-placeholder {
+    text-align: center;
+    padding: 32px 16px;
+    color: #757575;
+    font-style: italic;
+    line-height: 1.5;
+}
+
+.hsz-loading {
+    text-align: center;
+    padding: 32px 16px;
+    color: #757575;
+}
+
+.hsz-loading .components-spinner {
+    margin: 0 auto 12px;
+    color: #0073aa;
+}
+
+.hsz-preview {
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 20px;
+    margin: 16px 0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.hsz-preview h4 {
+    margin: 0 0 12px 0;
+    font-size: 1.125em;
+    font-weight: 600;
+    color: #1e1e1e;
+    line-height: 1.3;
+}
+
+.hsz-preview p {
     margin: 0 0 12px 0;
     color: #757575;
+    line-height: 1.5;
+}
+
+.hsz-favicon {
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    vertical-align: middle;
+    border-radius: 2px;
+}
+
+.hsz-social-preview {
+    margin-top: 12px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    font-size: 0.875em;
+}
+
+.hsz-social-preview strong {
+    color: #495057;
+}
+
+/* Inspector Controls Styling */
+.block-editor-block-inspector .hsz-analyzer-settings .components-panel__body {
+    border: none;
+}
+
+.block-editor-block-inspector .components-base-control {
+    margin-bottom: 16px;
+}
+
+.block-editor-block-inspector .components-base-control__label {
+    font-weight: 600;
+    color: #1e1e1e;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.block-editor-block-inspector .components-text-control__input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #949494;
+    border-radius: 4px;
+    background: #ffffff;
+    color: #1e1e1e;
+    font-size: 14px;
+}
+
+.block-editor-block-inspector .components-text-control__input:focus {
+    border-color: #0073aa;
+    box-shadow: 0 0 0 1px #0073aa;
+    outline: none;
+}
+
+.block-editor-block-inspector .components-select-control__input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #949494;
+    border-radius: 4px;
+    background: #ffffff;
+    color: #1e1e1e;
+    font-size: 14px;
+}
+
+.block-editor-block-inspector .components-select-control__input:focus {
+    border-color: #0073aa;
+    box-shadow: 0 0 0 1px #0073aa;
+    outline: none;
+}
+
+.block-editor-block-inspector .components-button.is-primary {
+    background: #0073aa;
+    border-color: #0073aa;
+    color: #ffffff;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 14px;
+    height: auto;
+    transition: all 0.2s ease;
+}
+
+.block-editor-block-inspector .components-button.is-primary:hover:not(:disabled) {
+    background: #005a87;
+    border-color: #005a87;
+}
+
+.block-editor-block-inspector .components-button.is-primary:disabled {
+    background: #e0e0e0;
+    border-color: #e0e0e0;
+    color: #757575;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.block-editor-block-inspector .components-button.is-primary.is-busy {
+    background: #0073aa;
+    opacity: 0.8;
+}
+
+.block-editor-block-inspector .components-base-control__help {
+    font-size: 12px;
+    color: #757575;
+    margin-top: 6px;
     line-height: 1.4;
 }
 
-.hsz-block-editor .hsz-placeholder {
-    text-align: center;
-    color: #757575;
-    font-style: italic;
-    padding: 32px 16px;
+/* Notice Styling in Editor */
+.hsz-block-editor .components-notice {
+    margin: 16px 0;
+    padding: 12px 16px;
+    border-radius: 4px;
+    font-size: 14px;
 }
 
-.hsz-block-editor .hsz-loading {
-    text-align: center;
-    padding: 32px 16px;
-    color: #757575;
-}
-
-.hsz-block-editor .hsz-error {
+.hsz-block-editor .components-notice.is-error {
     background: #f8d7da;
     color: #721c24;
-    padding: 12px;
-    border-radius: 4px;
-    border: 1px solid #f5c6cb;
-    margin: 16px 0;
+    border-left: 4px solid #dc3545;
 }
 
-/* Responsive adjustments for editor */
-@media (max-width: 1080px) {
-    .hsz-block-editor .hsz-preview {
+.hsz-block-editor .components-notice.is-warning {
+    background: #fff3cd;
+    color: #856404;
+    border-left: 4px solid #ffc107;
+}
+
+.hsz-block-editor .components-notice.is-success {
+    background: #d4edda;
+    color: #155724;
+    border-left: 4px solid #28a745;
+}
+
+/* Responsive Design for Editor */
+@media (max-width: 1200px) {
+    .hsz-block-editor {
+        padding: 20px;
+    }
+    
+    .hsz-preview {
+        padding: 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    .hsz-block-editor {
+        padding: 16px;
+    }
+    
+    .hsz-placeholder {
+        padding: 24px 12px;
+        font-size: 14px;
+    }
+    
+    .hsz-loading {
+        padding: 24px 12px;
+    }
+    
+    .hsz-preview {
         padding: 12px;
     }
+    
+    .hsz-preview h4 {
+        font-size: 1em;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .hsz-block-editor {
+        background: #1e1e1e;
+        border-color: #3c434a;
+        color: #e0e0e0;
+    }
+    
+    .hsz-block-editor:hover {
+        border-color: #0073aa;
+        background: #2c2c2c;
+    }
+    
+    .hsz-preview {
+        background: #2c2c2c;
+        border-color: #3c434a;
+        color: #e0e0e0;
+    }
+    
+    .hsz-preview h4 {
+        color: #ffffff;
+    }
+    
+    .hsz-social-preview {
+        background: #1e1e1e;
+        color: #e0e0e0;
+    }
+}
+
+/* Focus Management */
+.hsz-block-editor:focus-within {
+    border-color: #0073aa;
+    box-shadow: 0 0 0 1px #0073aa;
+}
+
+/* Animation for Loading State */
+@keyframes hsz-editor-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.hsz-block-editor.hsz-analyzing {
+    animation: hsz-editor-pulse 2s ease-in-out infinite;
 }

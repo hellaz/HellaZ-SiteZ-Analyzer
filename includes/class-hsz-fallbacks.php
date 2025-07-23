@@ -1,37 +1,28 @@
 <?php
 namespace HSZ;
 
+if (!defined('ABSPATH')) exit;
+
+/**
+ * Provides fallback/default values for metadata, images, and output.
+ */
 class Fallbacks {
-    public function __construct() {
-        add_filter('hsz_fallback_image', [$this, 'get_fallback_image']);
-        add_filter('hsz_fallback_description', [$this, 'get_fallback_description']);
+    public static function get_fallback_image() {
+        return get_option('hsz_fallback_image', HSZ_PLUGIN_URL . 'assets/images/default-favicon.png');
     }
 
-    /**
-     * Get the fallback image URL.
-     *
-     * @return string The fallback image URL or an empty string if the image is missing.
-     */
-    public function get_fallback_image() {
-        // Construct the fallback image path
-        $fallback_image_path = HSZ_PLUGIN_DIR . 'assets/images/fallback-image.png';
+    public static function get_fallback_title() {
+        return get_option('hsz_fallback_title', __('No Title', 'hellaz-sitez-analyzer'));
+    }
 
-        // Check if the fallback image exists
-        if (file_exists($fallback_image_path)) {
-            return HSZ_PLUGIN_URL . 'assets/images/fallback-image.png';
+    public static function get_fallback_description() {
+        return get_option('hsz_fallback_description', __('No description available.', 'hellaz-sitez-analyzer'));
+    }
+
+    public static function get_disclaimer() {
+        if (get_option('hsz_disclaimer_enabled')) {
+            return get_option('hsz_disclaimer_message', __('Information is for reference only.', 'hellaz-sitez-analyzer'));
         }
-
-        // Log a debug message if the fallback image is missing
-        error_log('[HellaZ SiteZ Analyzer] Fallback image not found at ' . esc_html($fallback_image_path));
         return '';
-    }
-
-    /**
-     * Get the fallback description.
-     *
-     * @return string The fallback description.
-     */
-    public function get_fallback_description() {
-        return __('No description available.', 'hellaz-sitez-analyzer');
     }
 }

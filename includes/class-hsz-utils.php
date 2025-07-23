@@ -1,8 +1,6 @@
 <?php
 namespace HSZ;
-
 if (!defined('ABSPATH')) exit;
-
 class Utils {
     public static function encrypt_api_key($key) {
         if (empty($key)) return '';
@@ -12,7 +10,6 @@ class Utils {
         $encrypted = openssl_encrypt($key, 'AES-256-CBC', $encryption_key, 0, $iv);
         return base64_encode($iv . $encrypted);
     }
-
     public static function decrypt_api_key($encrypted_key) {
         if (empty($encrypted_key)) return '';
         if (!function_exists('openssl_decrypt')) return base64_decode($encrypted_key);
@@ -22,7 +19,6 @@ class Utils {
         $encryption_key = self::get_encryption_key();
         return openssl_decrypt($encrypted, 'AES-256-CBC', $encryption_key, 0, $iv);
     }
-
     private static function get_encryption_key() {
         $key = get_option('hsz_encryption_key');
         if (!$key) {
@@ -31,7 +27,6 @@ class Utils {
         }
         return $key;
     }
-
     public static function log_error($message, $context = [], $level = 'ERROR') {
         if (!defined('WP_DEBUG') || !WP_DEBUG) return;
         $timestamp = current_time('Y-m-d H:i:s');

@@ -15,7 +15,6 @@ class Admin {
             30
         );
     }
-
     public static function redirect_to_settings() {
         wp_safe_redirect(admin_url('options-general.php?page=hsz-settings'));
         exit;

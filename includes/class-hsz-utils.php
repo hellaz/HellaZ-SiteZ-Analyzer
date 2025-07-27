@@ -36,4 +36,23 @@ class Utils {
         if (!empty($context)) $log_entry .= ' | Context: ' . json_encode($context);
         error_log($log_entry);
     }
+    public static function show_cache_inspector() {
+    global $wpdb;
+    $rows = $wpdb->get_results("SELECT option_name, option_value
+        FROM {$wpdb->options}
+        WHERE option_name LIKE '_transient_hsz_%'
+        LIMIT 50");
+    if (!$rows) { echo '<p>No cache entries found.</p>'; return; }
+    echo '<h4>Currently active HSZ cache entries:</h4><table class="widefat"><thead><tr><th>Key</th><th>Preview</th></tr></thead><tbody>';
+    foreach ($rows as $row) {
+        printf(
+            '<tr><td>%s</td><td><code>%s</code></td></tr>',
+            esc_html($row->option_name),
+            esc_html(substr((string)$row->option_value, 0, 80))
+        );
+    }
+    echo '</tbody></table>';
+}
+
+
 }

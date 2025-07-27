@@ -1,4 +1,23 @@
-TODO List for Next Version
+HellaZ SiteZ Analyzer 
+
+TODO List – July 2025
+
+- [ ] Complete integration testing for all admin pages (tabs, forms, validations).
+- [ ] Unit and integration tests covering Metadata extraction, SocialMedia parsing, and BulkProcessor.
+- [ ] Implement WP Cron support for automated batch processing.
+- [ ] Extend API integrations with dynamic configuration and caching.
+- [ ] Add personalization options for output templates (color, layout).
+- [ ] Implement detailed admin notice center for all plugin-generated events.
+- [ ] Optimize caching for large site datasets; clear stale entries automatically.
+- [ ] Improve accessibility and ARIA roles in all frontend components.
+- [ ] Register translations for all new strings; add po/mo files for major languages.
+- [ ] Monitor plugin performance on multisite under load.
+- [ ] Add REST API endpoints for external integration.
+- [ ] Enhance error logging UI with paging and filtering.
+- [ ] Document plugin APIs for third-party extension.
+- [ ] Develop upgrade/migration scripts for major version changes.
+
+TODO List - April 2025
 
 =====
 High Priority

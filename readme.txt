@@ -1,93 +1,71 @@
-// Plugin documentation
 === HellaZ SiteZ Analyzer ===
 Contributors: hellaz
-Tags: metadata, social media, ssl, open graph, gutenberg, shortcode, widget
+Tags: website analysis, metadata, security, social profiles, feeds
 Requires at least: 5.0
-Tested up to: 6.7.1
-Stable tag: 1.0
+Tested up to: 6.3
+Requires PHP: 7.4
+Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-A comprehensive remote website analysis plugin for WordPress. Analyze website metadata and Open Graph tags, including social media links & RSS feeds, Server & SSL certificate information, Contact information and more .
+HellaZ SiteZ Analyzer is a comprehensive WordPress plugin that extracts and displays detailed website metadata, social media profiles, security info, and technology stack analysis.
 
 == Description ==
 
-HellaZ SiteZ Analyzer extracts metadata, detects social media profiles, RSS feeds, emails, contact forms, technology stack, and security information from remote websites. It ensures performance, security, and extensibility while adhering to WordPress best practices. 
+With HellaZ SiteZ Analyzer, easily analyze any website URL directly from your WordPress site. Extract page titles, descriptions, favicons, social profiles, RSS feeds, technology stack details, and security info from services like VirusTotal and BuiltWith.
 
-**Features:**
-- **Gutenberg Block**: Add a block to analyze metadata for any URL.
-- **Shortcode Support**: Use `[hsz_metadata url="https://example.com"]` for backward compatibility.
-- **Widget Support**: Display metadata in sidebars or widgetized areas.
-- **Metadata Detection**: Extracts metadata, title, favicon, keywords, author, open graph tags from remote website.
-- **Social Media Detection**: Extracts links for Facebook, Twitter/X, LinkedIn, YouTube, Instagram, WhatsApp, TikTok, Pinterest, Reddit, and Telegram.
-- **Server & SSL Certificate Info**: Retrieves SSL details using APIs or direct parsing.
-- **Feed Detection**: Retrieves RSS/Atom Feeds
-- **Caching**: Reduces server load by caching API responses.
-- **Localization**: Supports multilingual websites with `.pot` files and translation functions.
-- **Admin Settings Page**: Configure plugin options like API keys and caching duration.
+Features include:
 
+* Metadata extraction (title, description, favicon)
+* Social media detection across 30+ platforms
+* Bulk processing with progress tracking
+* Fully configurable admin settings with tabs
+* Caching and cache management
+* Multiple output templates for shortcodes, widgets, and blocks
+* Secure AJAX and REST endpoints
+* Error logging and admin log viewer
+* Multisite network compatibility
 
 == Installation ==
 
-1. Upload the plugin to the `/wp-content/plugins/` directory.
-2. Activate the plugin through the "Plugins" menu in WordPress.
-3. Configure settings via the "SiteZ Analyzer" menu in the WordPress admin dashboard.
-
-
-== Usage ==
-
-**Gutenberg Block:**
-1. Add the "HellaZ SiteZ Analyzer" block to your post or page.
-2. Enter a valid URL and publish the post.
-
-**Shortcode:**
-Use the following shortcode to display metadata.
-Use [hsz_metadata url="https://example.com"] in your posts or pages.
-
-**Widget:**
-Go to "Appearance > Widgets" in the WordPress admin dashboard.
-Add the "HellaZ SiteZ Analyzer" widget to a sidebar.
-Configure the widget settings (e.g., URL, font size, color).
-
-== Advanced Features ==
-
-**Admin Settings Page:**
-The admin settings page allows you to configure advanced options, such as:
-*API keys for external services.
-*Caching duration for metadata extraction.
-*Export/import settings for easy migration.
-**REST API Endpoint:**
-The plugin exposes a REST API endpoint for external integrations:
-GET /wp-json/hsz/v1/metadata/{url}
-
-== Support ==
-For support, please visit the GitHub repository .
-
-== Contributing ==
-Contributions are welcome! If you'd like to contribute, please follow these steps:
-
-Fork the repository.
-Create a new branch for your feature or bug fix.
-Submit a pull request with a detailed description of your changes.
-
+1. Upload the plugin folder to `/wp-content/plugins/`.
+2. Activate the plugin via the Plugins menu in WordPress.
+3. Configure your API keys and settings under Settings > SiteZ Analyzer.
+4. Use the shortcode `[hsz_analyzer url="https://example.com"]`, widget, or block to display analysis.
 
 == Frequently Asked Questions ==
 
-= How do I use the Gutenberg block? =
-Add the "HellaZ SiteZ Analyzer" block to your post or page and enter the URL of the website you want to analyze.
+= Do I need API keys? =
 
-= Can I customize the fallback image? =
-Yes, you can upload a custom fallback image via the plugin settings page.
+API keys are optional but required to access enhanced services like VirusTotal, BuiltWith, and URLScan.io.
+
+= Is caching enabled? =
+
+Yes, caching is enabled by default with configurable duration and manual clearing.
+
+= Can I analyze multiple URLs in bulk? =
+
+Yes, the Bulk tab allows queueing multiple URLs and tracking progress.
 
 == Changelog ==
 
 = 1.0.0 =
-* Initial release.
+* Complete restoration and enhancement of plugin features.
+* Added support for 30+ social platforms and comprehensive metadata extraction.
+* Improved caching, bulk processing, AJAX, and admin interfaces.
 
 == Upgrade Notice ==
 
-= 1.0.0 =
-Initial release. No upgrade notes available.
+Upgrade only after backing up your site and database.
+
+== Screenshots ==
+
+1. Settings page with tabbed interface  
+2. SiteZ Analyzer block in Gutenberg  
+3. SiteZ Analyzer widget in sidebar  
+4. Bulk processing status tab  
+5. Admin error log viewer
 
 == License ==
-This plugin is released under the GPLv2 or later license.
+
+This plugin is licensed under the GPLv2 or later.

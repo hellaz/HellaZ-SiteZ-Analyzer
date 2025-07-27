@@ -49,6 +49,10 @@ class Core {
         require_once HSZ_PLUGIN_PATH . 'includes/class-hsz-utils.php';
         require_once HSZ_PLUGIN_PATH . 'includes/class-hsz-metadata.php';
         require_once HSZ_PLUGIN_PATH . 'includes/class-hsz-social-media.php';
+        // Inside load_dependencies()
+        require_once HSZ_PLUGIN_PATH . '/class-hsz-ajax.php';
+        require_once HSZ_PLUGIN_PATH . '/class-hsz-admin-logs.php';
+
         if (file_exists(HSZ_PLUGIN_PATH . 'includes/class-hsz-bulk-processor.php')) {
             require_once HSZ_PLUGIN_PATH . 'includes/class-hsz-bulk-processor.php';
         }
@@ -66,6 +70,7 @@ class Core {
         add_action('widgets_init', ['HSZ\\Widget', 'register_widget']);
         add_action('init', ['HSZ\\Gutenberg', 'get_instance']); // Handles block registration, assets, callback
         // No duplicate settings/admin menus—handled only once for clarity
+        
     }
 
     /**

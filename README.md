@@ -15,9 +15,9 @@ HellaZ SiteZ Analyzer is a powerful WordPress plugin designed to fetch, analyze,
 **Key Features:**
 
 - Extracts rich metadata (titles, descriptions, favicons) reliably.
--     **Gutenberg Block**: Add a block to analyze metadata for any URL.
--     **Shortcode Support**: Use `[hsz_metadata url="https://example.com"]` for backward compatibility.
--     **Widget Support**: Display metadata in sidebars or widgetized areas.
+- **Gutenberg Block**: Add a block to analyze metadata for any URL.
+- **Shortcode Support**: Use `[hsz_metadata url="https://example.com"]` for backward compatibility.
+- **Widget Support**: Display metadata in sidebars or widgetized areas.
 - Detects social media profiles across 30+ major platforms.
 - Integrates with VirusTotal, BuiltWith, URLScan.io via APIs for security and technology data.
 - **Metadata Detection**:  Extracts metadata, title, favicon, keywords, author, open graph tags from remote website.

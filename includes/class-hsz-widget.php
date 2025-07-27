@@ -23,7 +23,6 @@ class Widget extends WP_Widget
     public function widget($args, $instance)
     {
         echo $args['before_widget'];
-
         $title = !empty($instance['title']) ? apply_filters('widget_title', $instance['title']) : '';
         $url = !empty($instance['url']) ? esc_url($instance['url']) : '';
 

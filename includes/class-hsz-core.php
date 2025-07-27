@@ -22,7 +22,7 @@ class Core {
      */
     private function __construct() {
         $this->load_dependencies();
-        $this->settings = new \HSZ\Settings();
+        $this->settings = new \HSZ\Settings(); // Correct way to instantiate Settings
         $this->init_hooks();
     }
 
@@ -48,12 +48,10 @@ class Core {
      * Registers all plugin hooks and filters.
      */
     private function init_hooks() {
-        add_action('admin_menu', array('HSZ\\Admin', 'add_admin_menu'));
+        // Only one menu registration—handled in Settings class!
         add_action('init', array('HSZ\\Shortcode', 'register'));
         add_action('widgets_init', array('HSZ\\Widget', 'register_widget'));
         add_action('init', array('HSZ\\Gutenberg', 'get_instance'));
-        // There is NO line like the following (and none should exist):
-        // add_action('admin_init', array('HSZ\\Settings', '__construct'));
     }
 
     /**

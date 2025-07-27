@@ -4,20 +4,49 @@ namespace HSZ;
 if (!defined('ABSPATH')) exit;
 
 /**
- * Core plugin loader/initializer for SiteZ Analyzer.
+ * Core plugin loader and initializer.
  */
 class Core {
 
+    /**
+     * Singleton instance.
+     *
+     * @var Core|null
+     */
     private static $instance = null;
 
-    /** @var Settings */
+    /**
+     * Settings instance.
+     *
+     * @var Settings
+     */
     private $settings;
-    /** @var BulkProcessor */
+
+    /**
+     * BulkProcessor instance.
+     *
+     * @var BulkProcessor|null
+     */
     private $bulk_processor;
 
     /**
-     * Singleton plugin bootstrapper.
-     * @return self
+     * AjaxHandler instance.
+     *
+     * @var AjaxHandler|null
+     */
+    private $ajax_handler;
+
+    /**
+     * AdminLogs instance.
+     *
+     * @var AdminLogs|null
+     */
+    private $admin_logs;
+
+    /**
+     * Initialize plugin via singleton.
+     *
+     * @return Core
      */
     public static function init() {
         if (self::$instance === null) {
@@ -27,17 +56,21 @@ class Core {
     }
 
     /**
-     * Main constructor.
+     * Constructor loads dependencies and sets up hooks.
      */
     private function __construct() {
         $this->load_dependencies();
+
         $this->settings = new Settings();
         $this->bulk_processor = class_exists('\HSZ\BulkProcessor') ? new BulkProcessor() : null;
+        $this->ajax_handler = class_exists('\HSZ\AjaxHandler') ? new AjaxHandler() : null;
+        $this->admin_logs = class_exists('\HSZ\AdminLogs') ? new AdminLogs() : null;
+
         $this->init_hooks();
     }
 
     /**
-     * Loads all plugin dependencies.
+     * Loads required class dependencies.
      */
     private function load_dependencies() {
         require_once HSZ_PLUGIN_PATH . 'includes/class-hsz-settings.php';
@@ -49,40 +82,46 @@ class Core {
         require_once HSZ_PLUGIN_PATH . 'includes/class-hsz-utils.php';
         require_once HSZ_PLUGIN_PATH . 'includes/class-hsz-metadata.php';
         require_once HSZ_PLUGIN_PATH . 'includes/class-hsz-social-media.php';
-        // Inside load_dependencies()
-        require_once HSZ_PLUGIN_PATH . '/class-hsz-ajax.php';
-        require_once HSZ_PLUGIN_PATH . '/class-hsz-admin-logs.php';
 
         if (file_exists(HSZ_PLUGIN_PATH . 'includes/class-hsz-bulk-processor.php')) {
             require_once HSZ_PLUGIN_PATH . 'includes/class-hsz-bulk-processor.php';
         }
+
         if (file_exists(HSZ_PLUGIN_PATH . 'includes/class-hsz-widget.php')) {
             require_once HSZ_PLUGIN_PATH . 'includes/class-hsz-widget.php';
+        }
+
+        if (file_exists(HSZ_PLUGIN_PATH . 'includes/class-hsz-ajax.php')) {
+            require_once HSZ_PLUGIN_PATH . 'includes/class-hsz-ajax.php';
+        }
+
+        if (file_exists(HSZ_PLUGIN_PATH . 'includes/class-hsz-admin-logs.php')) {
+            require_once HSZ_PLUGIN_PATH . 'includes/class-hsz-admin-logs.php';
         }
     }
 
     /**
-     * Registers all hooks and plugin integrations.
+     * Initialize and register WordPress hooks and filters.
      */
     private function init_hooks() {
-        // Admin settings/menu is now handled in Settings class (under Settings menu only)
-        add_action('init', ['HSZ\\Shortcode', 'register']);
-        add_action('widgets_init', ['HSZ\\Widget', 'register_widget']);
-        add_action('init', ['HSZ\\Gutenberg', 'get_instance']); // Handles block registration, assets, callback
-        // No duplicate settings/admin menus—handled only once for clarity
-        
+        // Settings menu and page initialization are handled inside Settings constructor.
+
+        add_action('init', [ 'HSZ\\Shortcode', 'register' ]);
+        add_action('widgets_init', [ 'HSZ\\Widget', 'register_widget' ]);
+        add_action('init', [ 'HSZ\\Gutenberg', 'get_instance' ]);
+        // AjaxHandler and AdminLogs set up their own hooks in their constructors.
     }
 
     /**
-     * Plugin activation: install database tables and default options.
+     * Plugin activation routine.
      */
     public static function activate() {
         global $wpdb;
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 
-        // Custom tables needed for bulk processing and error logging
         $charset_collate = $wpdb->get_charset_collate();
 
+        // Error log table
         $sql1 = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}hsz_error_log (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             timestamp datetime NOT NULL,
@@ -98,6 +137,7 @@ class Core {
             KEY level (level)
         ) $charset_collate;";
 
+        // Bulk batches table
         $sql2 = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}hsz_bulk_batches (
             id int UNSIGNED NOT NULL AUTO_INCREMENT,
             batch_id varchar(64) NOT NULL,
@@ -115,6 +155,7 @@ class Core {
             KEY batch_id (batch_id)
         ) $charset_collate;";
 
+        // Bulk results table
         $sql3 = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}hsz_bulk_results (
             id int UNSIGNED NOT NULL AUTO_INCREMENT,
             batch_id varchar(64) NOT NULL,
@@ -132,16 +173,16 @@ class Core {
         dbDelta($sql2);
         dbDelta($sql3);
 
-        // Add default setting if not present
+        // Set default cache duration if not set
         if (!get_option('hsz_cache_duration')) {
             update_option('hsz_cache_duration', DAY_IN_SECONDS);
         }
     }
 
     /**
-     * Plugin deactivation: clean scheduled events, preserve DB tables.
+     * Plugin deactivation routine.
      */
     public static function deactivate() {
-        // If using scheduled events or cron, clear them here.
+        // Cleanup tasks if necessary on plugin deactivation.
     }
 }

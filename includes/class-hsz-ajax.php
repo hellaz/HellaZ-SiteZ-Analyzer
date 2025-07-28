@@ -1,40 +1,80 @@
 <?php
+/**
+ * Handles all AJAX requests for the HellaZ SiteZ Analyzer plugin.
+ *
+ * @package HellaZ_SiteZ_Analyzer
+ * @since 1.0.0
+ */
+
 namespace HSZ;
 
-if (!defined('ABSPATH')) exit;
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
-class AjaxHandler
-{
-    public function __construct()
-    {
-        add_action('wp_ajax_hsz_analyze_url', [$this, 'analyze_url']);
-    }
+/**
+ * Class Ajax
+ *
+ * Manages AJAX endpoints, ensuring requests are secure and valid.
+ *
+ * @package HSZ
+ */
+class Ajax {
 
-    public function analyze_url()
-    {
-        check_ajax_referer('hsz_analyze_nonce', 'nonce');
+	/**
+	 * Ajax constructor.
+	 *
+	 * Registers the WordPress AJAX hooks.
+	 */
+	public function __construct() {
+		add_action( 'wp_ajax_hsz_analyze_url', [ $this, 'handle_analyze_url' ] );
+	}
 
-        if (!current_user_can('read')) {
-            wp_send_json_error(['message' => __('Insufficient permissions.', 'hellaz-sitezalyzer')], 403);
-        }
+	/**
+	 * Handles the AJAX request to analyze a URL.
+	 *
+	 * This method verifies the request's validity, checks user permissions,
+	 * sanitizes the input URL, and triggers the metadata extraction process.
+	 */
+	public function handle_analyze_url(): void {
+		// 1. Verify the nonce for security.
+		check_ajax_referer( 'hsz_analyze_url_nonce', '_wpnonce' );
 
-        $url = isset($_POST['url']) ? esc_url_raw(wp_unslash($_POST['url'])) : '';
+		// 2. Check user capabilities.
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( [ 'message' => __( 'You do not have sufficient permissions to perform this action.', 'hellaz-sitez-analyzer' ) ], 403 );
+		}
 
-        if (!$url || !filter_var($url, FILTER_VALIDATE_URL)) {
-            wp_send_json_error(['message' => __('Invalid URL.', 'hellaz-sitezalyzer')], 400);
-        }
+		// 3. Sanitize and validate the input URL.
+		$url = isset( $_POST['url'] ) ? esc_url_raw( wp_unslash( $_POST['url'] ) ) : '';
 
-        try {
-            $metadata = (new Metadata())->extract_metadata($url);
-            $social = (new SocialMedia())->extract_social_profiles(@file_get_contents($url), $url);
+		if ( ! filter_var( $url, FILTER_VALIDATE_URL ) ) {
+			wp_send_json_error( [ 'message' => __( 'The provided URL is not valid.', 'hellaz-sitez-analyzer' ) ], 400 );
+		}
 
-            if (isset($metadata['error'])) {
-                wp_send_json_error(['message' => $metadata['error']], 500);
-            }
+		try {
+			// Instantiate analysis classes. The autoloader will handle loading them.
+			$metadata_extractor = new Metadata();
+			$social_extractor   = new SocialMedia();
 
-            wp_send_json_success(['metadata' => $metadata, 'social' => $social]);
-        } catch (\Throwable $e) {
-            wp_send_json_error(['message' => $e->getMessage()], 500);
-        }
-    }
+			$html     = Utils::get_html( $url );
+			if ( is_wp_error( $html ) ) {
+				wp_send_json_error( [ 'message' => $html->get_error_message() ], 500 );
+			}
+
+			$metadata = $metadata_extractor->extract_metadata( $url, $html );
+			$social   = $social_extractor->extract_social_profiles( $html, $url );
+
+			if ( isset( $metadata['error'] ) ) {
+				wp_send_json_error( [ 'message' => $metadata['error'] ], 500 );
+			}
+
+			wp_send_json_success( [ 'metadata' => $metadata, 'social' => $social ] );
+
+		} catch ( \Throwable $e ) {
+			Utils::log_error( 'AJAX analysis failed: ' . $e->getMessage() );
+			wp_send_json_error( [ 'message' => __( 'An unexpected error occurred during analysis.', 'hellaz-sitez-analyzer' ) ], 500 );
+		}
+	}
 }

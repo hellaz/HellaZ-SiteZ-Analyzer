@@ -1,37 +1,75 @@
 <?php
+/**
+ * Security-related utility functions.
+ *
+ * @package HellaZ_SiteZ_Analyzer
+ * @since 1.0.0
+ */
+
 namespace HSZ;
-if (!defined('ABSPATH')) exit;
+
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * Class Security
+ *
+ * Provides methods for validating and securing data, particularly URLs.
+ */
 class Security {
-    public function validate_url($url) {
-        $url = trim($url);
-        if (!filter_var($url, FILTER_VALIDATE_URL)) {
-            throw new \Exception(__('Invalid URL format', 'hellaz-sitez-analyzer'));
-        }
-        $bad = ['javascript:', 'data:', 'vbscript:', 'file://', 'ftp://'];
-        foreach ($bad as $pattern) {
-            if (stripos($url, $pattern) !== false) throw new \Exception(__('Potentially malicious URL detected', 'hellaz-sitez-analyzer'));
-        }
-        return esc_url_raw($url);
-    }
-    public function verify_nonce($action, $nonce = null) {
-        if ($nonce === null) $nonce = $_POST['nonce'] ?? $_GET['nonce'] ?? '';
-        if (!wp_verify_nonce($nonce, $action)) {
-            throw new \Exception(__('Security verification failed', 'hellaz-sitez-analyzer'));
-        }
-        return true;
-    }
-    public function sanitize_bulk_urls($urls_input) {
-        $urls = [];
-        if (is_string($urls_input)) $raw_urls = preg_split('/[\r\n,]+/', $urls_input);
-        elseif (is_array($urls_input)) $raw_urls = $urls_input;
-        else throw new \Exception(__('Invalid URL input format', 'hellaz-sitez-analyzer'));
-        foreach ($raw_urls as $url) {
-            $url = trim($url);
-            if (!empty($url)) {
-                try { $urls[] = $this->validate_url($url); }
-                catch (\Exception $e) { Utils::log_error('Invalid URL skipped: ' . $url . ' - ' . $e->getMessage()); }
-            }
-        }
-        return $urls;
-    }
+
+	/**
+	 * Validates a URL to ensure it is safe to request.
+	 *
+	 * This checks for proper formatting and helps prevent Server-Side Request Forgery (SSRF)
+	 * by blocking requests to local, private, or reserved network addresses.
+	 *
+	 * @param string $url The URL to validate.
+	 * @return bool True if the URL is valid and safe, false otherwise.
+	 * @throws \Exception If the URL is invalid or unsafe.
+	 */
+	public static function validate_url( string $url ): bool {
+		// 1. Use WordPress's built-in URL validator.
+		if ( ! wp_http_validate_url( $url ) ) {
+			throw new \Exception( 'URL is not valid according to WordPress standards.' );
+		}
+
+		// 2. Parse the URL to get the host.
+		$host = wp_parse_url( $url, PHP_URL_HOST );
+		if ( ! $host ) {
+			throw new \Exception( 'Could not parse the hostname from the URL.' );
+		}
+
+		// 3. Get the IP address of the host.
+		$ip = gethostbyname( $host );
+
+		// 4. Check if the resolved IP is in a private or reserved range.
+		if ( ! filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) ) {
+			throw new \Exception( 'URL resolves to a private or reserved IP address, which is not allowed.' );
+		}
+
+		return true;
+	}
+
+	/**
+	 * Sanitizes an array of URLs, removing any that are unsafe.
+	 *
+	 * @param array $urls An array of URLs to sanitize.
+	 * @return array A sanitized array of safe URLs.
+	 */
+	public static function sanitize_url_array( array $urls ): array {
+		$safe_urls = [];
+		foreach ( $urls as $url ) {
+			try {
+				if ( self::validate_url( $url ) ) {
+					$safe_urls[] = esc_url_raw( $url );
+				}
+			} catch ( \Exception $e ) {
+				Utils::log_error( 'Invalid URL skipped during sanitization: ' . $url . ' - ' . $e->getMessage() );
+			}
+		}
+		return $safe_urls;
+	}
 }

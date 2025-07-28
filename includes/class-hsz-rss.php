@@ -1,46 +1,77 @@
 <?php
+/**
+ * Extracts RSS feed URLs from a web page.
+ *
+ * @package HellaZ_SiteZ_Analyzer
+ * @since 1.0.0
+ */
+
 namespace HSZ;
 
+use DOMDocument;
+
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * Class RSS
+ *
+ * Provides functionality to discover RSS and Atom feeds.
+ */
 class RSS {
-    public function detect_rss_feeds($html) {
-        // Validate input
-        if (!is_string($html) || empty(trim($html))) {
-            return [];
-        }
 
-        // Cache key for storing RSS feeds
-        $cache_key = 'hsz_rss_feeds_' . md5($html);
-        $cached_feeds = get_transient($cache_key);
+	/**
+	 * Extracts all RSS and Atom feed URLs from a given HTML content.
+	 *
+	 * @param string $html     The HTML content of the page.
+	 * @param string $base_url The base URL of the page, used for caching key generation.
+	 * @return array An array of found feed URLs.
+	 */
+	public static function extract_feeds( string $html, string $base_url ): array {
+		if ( empty( $html ) ) {
+			return [];
+		}
 
-        if ($cached_feeds) {
-            return $cached_feeds; // Return cached results if available
-        }
+		$cache_key = 'hsz_feeds_' . md5( $base_url );
+		$cached_feeds = get_transient( $cache_key );
 
-        $feeds = [];
-        $dom = new \DOMDocument();
+		if ( is_array( $cached_feeds ) ) {
+			return $cached_feeds;
+		}
 
-        // Suppress warnings and log errors for invalid HTML (optional)
-        if (!@$dom->loadHTML($html)) {
-            error_log('[HellaZ SiteZ Analyzer] Failed to parse HTML for RSS feeds.');
-            return [];
-        }
+		$feeds = [];
+		$dom   = new DOMDocument();
 
-        // Extract RSS feeds from <link> tags
-        $links = $dom->getElementsByTagName('link');
-        foreach ($links as $link) {
-            $type = $link->getAttribute('type');
-            if (in_array($type, ['application/rss+xml', 'application/atom+xml'])) {
-                $href = $link->getAttribute('href');
-                $href = esc_url_raw($href); // Sanitize the URL
-                if (filter_var($href, FILTER_VALIDATE_URL)) {
-                    $feeds[] = $href;
-                }
-            }
-        }
+		// Suppress warnings from malformed HTML.
+		if ( ! @$dom->loadHTML( $html ) ) {
+			Utils::log_error( 'Failed to parse HTML for RSS feed extraction.' );
+			return [];
+		}
 
-        // Cache the results for 24 hours
-        set_transient($cache_key, $feeds, DAY_IN_SECONDS);
+		// Extract RSS/Atom feeds from <link> tags.
+		$links = $dom->getElementsByTagName( 'link' );
+		foreach ( $links as $link ) {
+			$type = $link->getAttribute( 'type' );
+			if ( in_array( $type, [ 'application/rss+xml', 'application/atom+xml' ], true ) ) {
+				$href = $link->getAttribute( 'href' );
 
-        return $feeds;
-    }
+				if ( ! empty( $href ) ) {
+					// Resolve the URL in case it's relative.
+					$feed_url = Utils::resolve_url( $href, $base_url );
+					if ( filter_var( $feed_url, FILTER_VALIDATE_URL ) ) {
+						$feeds[] = $feed_url;
+					}
+				}
+			}
+		}
+		
+		$feeds = array_unique( $feeds );
+
+		// Cache the results for 24 hours.
+		set_transient( $cache_key, $feeds, DAY_IN_SECONDS );
+
+		return $feeds;
+	}
 }

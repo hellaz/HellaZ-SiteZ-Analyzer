@@ -1,263 +1,115 @@
 <?php
+/**
+ * Extracts social media profile links from HTML, including JSON-LD.
+ *
+ * @package HellaZ_SiteZ_Analyzer
+ * @since 1.0.0
+ */
+
 namespace HSZ;
 
-if (!defined('ABSPATH')) exit;
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
- * SocialMedia class – Extracts social, creative, commerce, ranking, and directory URLs and usernames
- * from a website's HTML content.
+ * Class SocialMedia
+ *
+ * Finds links to a comprehensive list of social media platforms.
  */
 class SocialMedia {
-    /**
-     * Platform regex patterns and URL prefixes for constructing profile URLs.
-     * Third array element 'suffix' is optional, appended after username.
-     *
-     * @var array<string, array{pattern: string, url_prefix: string, suffix?: string}>
-     */
-    private $platforms = [
-        'facebook'   => [
-            'pattern' => '~https?://(?:www\.)?facebook\.com/([a-zA-Z0-9\.]+)~i',
-            'url_prefix' => 'https://facebook.com/',
-        ],
-        'twitter'    => [
-            'pattern' => '~https?://(?:www\.)?(?:twitter|x)\.com/([a-zA-Z0-9_]+)~i',
-            'url_prefix' => 'https://twitter.com/',
-        ],
-        'instagram'  => [
-            'pattern' => '~https?://(?:www\.)?instagram\.com/([a-zA-Z0-9_.]+)~i',
-            'url_prefix' => 'https://instagram.com/',
-        ],
-        'linkedin'   => [
-            'pattern' => '~https?://(?:www\.)?linkedin\.com/(?:in|company)/([a-zA-Z0-9\-\_]+)~i',
-            'url_prefix' => 'https://linkedin.com/in/',
-        ],
-        'youtube'    => [
-            'pattern' => '~https?://(?:www\.)?youtube\.com/(?:channel|user|c)/([a-zA-Z0-9_\-]+)~i',
-            'url_prefix' => 'https://youtube.com/channel/',
-        ],
-        'github'    => [
-            'pattern' => '~https?://(?:www\.)?github\.com/([a-zA-Z0-9_\-]+)~i',
-            'url_prefix' => 'https://github.com/',
-        ],
-        'gitlab'    => [
-            'pattern' => '~https?://(?:www\.)?gitlab\.com/([a-zA-Z0-9_\-]+)~i',
-            'url_prefix' => 'https://gitlab.com/',
-        ],
-        'spotify'   => [
-            'pattern' => '~https?://open\.spotify\.com/user/([a-zA-Z0-9]+)~i',
-            'url_prefix' => 'https://open.spotify.com/user/',
-        ],
-        'medium'    => [
-            'pattern' => '~https?://medium\.com/@?([a-zA-Z0-9\-_]+)~i',
-            'url_prefix' => 'https://medium.com/@',
-        ],
-        'tumblr'    => [
-            'pattern' => '~https?://([a-zA-Z0-9\-]+)\.tumblr\.com~i',
-            'url_prefix' => 'https://',
-            'suffix' => '.tumblr.com',
-        ],
-        'flickr'    => [
-            'pattern' => '~https?://(?:www\.)?flickr\.com/people/([a-zA-Z0-9@_\-]+)~i',
-            'url_prefix' => 'https://flickr.com/people/',
-        ],
-        'behance'   => [
-            'pattern' => '~https?://(?:www\.)?behance\.net/([a-zA-Z0-9\-_]+)~i',
-            'url_prefix' => 'https://behance.net/',
-        ],
-        'dribbble'  => [
-            'pattern' => '~https?://(?:www\.)?dribbble\.com/([a-zA-Z0-9\-_]+)~i',
-            'url_prefix' => 'https://dribbble.com/',
-        ],
-        'slack'     => [
-            'pattern' => '~https?://([a-zA-Z0-9_-]+)\.slack\.com~i',
-            'url_prefix' => 'https://',
-            'suffix' => '.slack.com',
-        ],
-        'patreon'   => [
-            'pattern' => '~https?://(?:www\.)?patreon\.com/([a-zA-Z0-9\-_]+)~i',
-            'url_prefix' => 'https://patreon.com/',
-        ],
-        'etsy'      => [
-            'pattern' => '~https?://(?:www\.)?etsy\.com/shop/([a-zA-Z0-9\-_]+)~i',
-            'url_prefix' => 'https://etsy.com/shop/',
-        ],
-        'onlyfans'  => [
-            'pattern' => '~https?://(?:www\.)?onlyfans\.com/([a-zA-Z0-9\-_]+)~i',
-            'url_prefix' => 'https://onlyfans.com/',
-        ],
-        'amazon'    => [
-            'pattern' => '~https?://(?:www\.)?amazon\.[a-z.]+/([a-zA-Z0-9\-_]+)~i',
-            'url_prefix' => 'https://amazon.com/',
-        ],
-        'ebay'      => [
-            'pattern' => '~https?://(?:www\.)?ebay\.[a-z.]+/usr/([a-zA-Z0-9\-_]+)~i',
-            'url_prefix' => 'https://ebay.com/usr/',
-        ],
-        'bluesky'   => [
-            'pattern' => '~https?://(?:www\.)?bsky\.app/profile/([a-zA-Z0-9_\-\.]+)~i',
-            'url_prefix' => 'https://bsky.app/profile/',
-        ],
-        'tiktok'    => [
-            'pattern' => '~https?://(?:www\.)?tiktok\.com/@([a-zA-Z0-9._]+)~i',
-            'url_prefix' => 'https://tiktok.com/@',
-        ],
-        'threads'   => [
-            'pattern' => '~https?://(?:www\.)?threads\.net/@([a-zA-Z0-9_.]+)~i',
-            'url_prefix' => 'https://threads.net/@',
-        ],
-        'mastodon'  => [
-            'pattern' => '~https?://(?:[a-z0-9\-]+\.)?mastodon\.[a-z]+/@?([a-zA-Z0-9_\-]+)~i',
-            'url_prefix' => '',
-        ],
-        'reddit'    => [
-            'pattern' => '~https?://(?:www\.)?reddit\.com/user/([a-zA-Z0-9_\-]+)~i',
-            'url_prefix' => 'https://reddit.com/user/',
-        ],
-        'telegram'  => [
-            'pattern' => '~https?://(?:t\.me|telegram\.me)/([a-zA-Z0-9_]+)~i',
-            'url_prefix' => 'https://t.me/',
-        ],
-        'snapchat'  => [
-            'pattern' => '~https?://(?:www\.)?snapchat\.com/add/([a-zA-Z0-9._]+)~i',
-            'url_prefix' => 'https://www.snapchat.com/add/',
-        ],
-        'whatsapp'  => [
-            'pattern' => '~https?://(?:wa\.me|api\.whatsapp\.com)/([0-9]+)~i',
-            'url_prefix' => 'https://wa.me/',
-        ],
-        'vimeo'     => [
-            'pattern' => '~https?://(?:www\.)?vimeo\.com/([a-zA-Z0-9_\-]+)~i',
-            'url_prefix' => 'https://vimeo.com/',
-        ],
-        'soundcloud'=> [
-            'pattern' => '~https?://(?:www\.)?soundcloud\.com/([a-zA-Z0-9_\-]+)~i',
-            'url_prefix' => 'https://soundcloud.com/',
-        ],
-        'discord'   => [
-            'pattern' => '~https?://(?:www\.)?discord(?:app)?\.com/invite/([a-zA-Z0-9]+)~i',
-            'url_prefix' => 'https://discord.com/invite/',
-        ],
-        'twitch'   => [
-            'pattern' => '~https?://(?:www\.)?twitch\.tv/([a-zA-Z0-9_]+)~i',
-            'url_prefix' => 'https://twitch.tv/',
-        ],
 
-        // Directory and Rankings:
-        'similarweb' => [
-            'pattern' => '~https?://www\.similarweb\.com/website/([\w\.\-]+)~i',
-            'url_prefix' => 'https://www.similarweb.com/website/',
-        ],
-        'alexa' => [
-            'pattern' => '~https?://www\.alexa\.com/siteinfo/([\w\.\-]+)~i',
-            'url_prefix' => 'https://www.alexa.com/siteinfo/',
-        ],
-        'crunchbase' => [
-            'pattern' => '~https?://www\.crunchbase\.com/organization/([\w\-]+)~i',
-            'url_prefix' => 'https://www.crunchbase.com/organization/',
-        ],
-        'statista' => [
-            'pattern' => '~https?://www\.statista\.com/chart/(\d+)~i',
-            'url_prefix' => 'https://www.statista.com/chart/',
-        ],
-        'dmoz' => [
-            'pattern' => '~https?://www\.dmoz\.org/([^/]+)/([^/]+)/([^/]+)/~i',
-            'url_prefix' => 'https://www.dmoz.org/',
-        ],
-    ];
+	/**
+	 * An extensive list of platforms and their regex patterns for detection.
+	 * Preserved from the original file to ensure maximum data extraction.
+	 *
+	 * @var array
+	 */
+	private const PLATFORMS = [
+		'facebook'   => '~https?://(?:www\.)?facebook\.com/([a-zA-Z0-9\.]+)~i',
+		'twitter'    => '~https?://(?:www\.)?(?:twitter|x)\.com/([a-zA-Z0-9_]+)~i',
+		'instagram'  => '~https?://(?:www\.)?instagram\.com/([a-zA-Z0-9_.]+)~i',
+		'linkedin'   => '~https?://(?:www\.)?linkedin\.com/(?:in|company)/([a-zA-Z0-9\-\_]+)~i',
+		'youtube'    => '~https?://(?:www\.)?youtube\.com/(?:channel|user|c)/([a-zA-Z0-9_\-]+)~i',
+		'github'     => '~https?://(?:www\.)?github\.com/([a-zA-Z0-9_\-]+)~i',
+		'gitlab'     => '~https?://(?:www\.)?gitlab\.com/([a-zA-Z0-9_\-]+)~i',
+		'spotify'    => '~https?://open\.spotify\.com/user/([a-zA-Z0-9]+)~i',
+		'medium'     => '~https?://medium\.com/@?([a-zA-Z0-9\-_]+)~i',
+		'tumblr'     => '~https?://([a-zA-Z0-9\-]+)\.tumblr\.com~i',
+		'flickr'     => '~https?://(?:www\.)?flickr\.com/people/([a-zA-Z0-9@_\-]+)~i',
+		'behance'    => '~https?://(?:www\.)?behance\.net/([a-zA-Z0-9\-_]+)~i',
+		'dribbble'   => '~https?://(?:www\.)?dribbble\.com/([a-zA-Z0-9\-_]+)~i',
+		'slack'      => '~https?://([a-zA-Z0-9_-]+)\.slack\.com~i',
+		'patreon'    => '~https?://(?:www\.)?patreon\.com/([a-zA-Z0-9\-_]+)~i',
+		'etsy'       => '~https?://(?:www\.)?etsy\.com/shop/([a-zA-Z0-9\-_]+)~i',
+		'onlyfans'   => '~https?://(?:www\.)?onlyfans\.com/([a-zA-Z0-9\-_]+)~i',
+		'amazon'     => '~https?://(?:www\.)?amazon\.[a-z.]+/([a-zA-Z0-9\-_]+)~i',
+		'ebay'       => '~https?://(?:www\.)?ebay\.[a-z.]+/usr/([a-zA-Z0-9\-_]+)~i',
+		'bluesky'    => '~https?://(?:www\.)?bsky\.app/profile/([a-zA-Z0-9_\-\.]+)~i',
+		'tiktok'     => '~https?://(?:www\.)?tiktok\.com/@([a-zA-Z0-9._]+)~i',
+		'threads'    => '~https?://(?:www\.)?threads\.net/@([a-zA-Z0-9_.]+)~i',
+		'mastodon'   => '~https?://(?:[a-z0-9\-]+\.)?mastodon\.[a-z]+/@?([a-zA-Z0-9_\-]+)~i',
+		'reddit'     => '~https?://(?:www\.)?reddit\.com/user/([a-zA-Z0-9_\-]+)~i',
+		'telegram'   => '~https?://(?:t\.me|telegram\.me)/([a-zA-Z0-9_]+)~i',
+		'snapchat'   => '~https?://(?:www\.)?snapchat\.com/add/([a-zA-Z0-9._]+)~i',
+		'whatsapp'   => '~https?://(?:wa\.me|api\.whatsapp\.com)/([0-9]+)~i',
+		'vimeo'      => '~https?://(?:www\.)?vimeo\.com/([a-zA-Z0-9_\-]+)~i',
+		'soundcloud' => '~https?://(?:www\.)?soundcloud\.com/([a-zA-Z0-9_\-]+)~i',
+		'discord'    => '~https?://(?:www\.)?discord(?:app)?\.com/invite/([a-zA-Z0-9]+)~i',
+		'twitch'     => '~https?://(?:www\.)?twitch\.tv/([a-zA-Z0-9_]+)~i',
+		'similarweb' => '~https?://www\.similarweb\.com/website/([\w\.\-]+)~i',
+		'alexa'      => '~https?://www\.alexa\.com/siteinfo/([\w\.\-]+)~i',
+		'crunchbase' => '~https?://www\.crunchbase\.com/organization/([\w\-]+)~i',
+		'statista'   => '~https?://www\.statista\.com/chart/(\d+)~i',
+		'dmoz'       => '~https?://www\.dmoz\.org/([^/]+)/([^/]+)/([^/]+)/~i',
+	];
 
-    /**
-     * Extract social profiles from the provided HTML content.
-     *
-     * @param string $html The raw HTML of the site.
-     * @param string $base_url The base URL to construct fallback URLs.
-     * @return array<string, array{url: string|null, username: string|null}> Platform keyed array.
-     */
-    public function extract_social_profiles(string $html, string $base_url = ''): array {
-        $results = [];
+	/**
+	 * Extract social profiles from HTML, including hrefs and JSON-LD data.
+	 *
+	 * @param string $html The raw HTML of the site.
+	 * @param string $base_url The base URL for context and caching.
+	 * @return array An array of found social profile URLs.
+	 */
+	public function extract_social_profiles( string $html, string $base_url = '' ): array {
+		$cache_key   = 'social_profiles_' . md5( $base_url );
+		$cached_data = Cache::get_cache( $cache_key );
 
-        // Scrape anchor hrefs from HTML
-        if (preg_match_all('~<a[^>]+href=["\']([^"\']+)["\'][^>]*>~i', $html, $matches)) {
-            foreach ($matches[1] as $href) {
-                foreach ($this->platforms as $platform => $info) {
-                    if (preg_match($info['pattern'], $href, $m)) {
-                        $username = $this->sanitize_username($m[1] ?? '');
-                        if ($username === '') continue;
+		if ( is_array( $cached_data ) ) {
+			return $cached_data;
+		}
 
-                        $url = $info['url_prefix'] . $username;
-                        if (isset($info['suffix'])) $url .= $info['suffix'];
+		$found_urls = [];
 
-                        if (!isset($results[$platform])) {
-                            $results[$platform] = [
-                                'url' => esc_url_raw($url),
-                                'username' => sanitize_text_field($username),
-                            ];
-                        }
-                    }
-                }
-            }
-        }
+		// 1. Scrape all anchor hrefs from HTML
+		$all_links = Utils::get_all_links( $html, $base_url );
+		foreach ( $all_links as $link ) {
+			foreach ( self::PLATFORMS as $pattern ) {
+				if ( preg_match( $pattern, $link ) ) {
+					$found_urls[] = $link;
+					break; // Move to the next link once a platform is matched.
+				}
+			}
+		}
 
-        // Scan JSON-LD for sameAs arrays for social profile URLs
-        if (preg_match_all('~<script[^>]+type=["\']application/ld\+json["\'][^>]*>(.*?)</script>~is', $html, $jsonScripts)) {
-            foreach ($jsonScripts[1] as $jsonStr) {
-                $data = json_decode(trim($jsonStr), true);
-                if (is_array($data) && isset($data['sameAs']) && is_array($data['sameAs'])) {
-                    foreach ($data['sameAs'] as $profileUrl) {
-                        foreach ($this->platforms as $platform => $info) {
-                            if (preg_match($info['pattern'], $profileUrl, $m)) {
-                                $username = $this->sanitize_username($m[1] ?? '');
-                                if ($username === '') continue;
-                                $url = $info['url_prefix'] . $username;
-                                if (isset($info['suffix'])) $url .= $info['suffix'];
+		// 2. Scan JSON-LD for "sameAs" arrays
+		if ( preg_match_all( '~<script type="application/ld\+json"[^>]*>(.*?)</script>~is', $html, $json_matches ) ) {
+			foreach ( $json_matches[1] as $json_string ) {
+				$json_data = json_decode( $json_string, true );
+				if ( ! empty( $json_data['sameAs'] ) && is_array( $json_data['sameAs'] ) ) {
+					foreach ( $json_data['sameAs'] as $same_as_url ) {
+						if ( is_string( $same_as_url ) && filter_var( $same_as_url, FILTER_VALIDATE_URL ) ) {
+							$found_urls[] = $same_as_url;
+						}
+					}
+				}
+			}
+		}
 
-                                if (!isset($results[$platform])) {
-                                    $results[$platform] = [
-                                        'url' => esc_url_raw($url),
-                                        'username' => sanitize_text_field($username),
-                                    ];
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+		$unique_urls = array_unique( $found_urls );
+		Cache::set_cache( $cache_key, $unique_urls );
 
-        // Add fallback ranking/directory URLs based on base domain
-        $host = parse_url($base_url, PHP_URL_HOST);
-        if ($host !== null) {
-            if (!isset($results['similarweb'])) {
-                $results['similarweb'] = [
-                    'url' => 'https://www.similarweb.com/website/' . $host,
-                    'username' => $host,
-                ];
-            }
-            if (!isset($results['alexa'])) {
-                $results['alexa'] = [
-                    'url' => 'https://www.alexa.com/siteinfo/' . $host,
-                    'username' => $host,
-                ];
-            }
-            if (!isset($results['crunchbase'])) {
-                $results['crunchbase'] = [
-                    'url' => 'https://www.crunchbase.com/organization/' . preg_replace('/\W+/', '', $host),
-                    'username' => preg_replace('/\W+/', '', $host),
-                ];
-            }
-        }
-
-        return $results;
-    }
-
-    /**
-     * Sanitize usernames by trimming and removing unsafe characters.
-     *
-     * @param string $username Raw username extracted from URL
-     * @return string Sanitized username
-     */
-    private function sanitize_username(string $username): string {
-        // Remove all characters except letters, numbers, underscore, dot, dash, and @
-        $sanitized = trim(preg_replace('/[^a-zA-Z0-9_\.\-\@]/', '', $username));
-        return $sanitized;
-    }
+		return $unique_urls;
+	}
 }

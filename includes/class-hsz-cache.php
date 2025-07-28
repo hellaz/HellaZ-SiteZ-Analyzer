@@ -1,130 +1,122 @@
 <?php
+/**
+ * Manages caching for the plugin using WordPress transients.
+ *
+ * @package HellaZ_SiteZ_Analyzer
+ * @since 1.0.0
+ */
+
 namespace HSZ;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * Class Cache
+ *
+ * Provides a standardized way to interact with the WordPress Caching API (Transients).
+ */
 class Cache {
-    public function __construct() {
-        add_action('admin_init', [$this, 'register_settings']);
-        add_action('admin_menu', [$this, 'add_cache_clear_page']);
-        add_action('wp_ajax_hsz_clear_cache', [$this, 'clear_cache_ajax']);
-    }
 
-    /**
-     * Register settings for cache clearing.
-     */
-    public function register_settings() {
-        register_setting('hsz_settings_group', 'hsz_cache_cleared');
-    }
+	/**
+	 * A prefix for all cache keys to avoid conflicts.
+	 *
+	 * @var string
+	 */
+	private const CACHE_PREFIX = 'hsz_cache_';
 
-    /**
-     * Add a submenu page for cache clearing.
-     */
-    public function add_cache_clear_page() {
-        add_submenu_page(
-            'tools.php',
-            __('Clear Cache', 'hellaz-sitez-analyzer'),
-            __('Clear Cache', 'hellaz-sitez-analyzer'),
-            'manage_options',
-            'hsz-clear-cache',
-            [$this, 'render_cache_clear_page']
-        );
-    }
+	/**
+	 * Retrieves cached data.
+	 *
+	 * @param string $key The unique part of the cache key.
+	 * @return mixed The cached data, or false if the cache is empty or expired.
+	 */
+	public static function get_cache( string $key ) {
+		$sanitized_key = self::sanitize_key( $key );
+		return get_transient( self::CACHE_PREFIX . $sanitized_key );
+	}
 
-    /**
-     * Render the cache-clearing page.
-     */
-    public function render_cache_clear_page() {
-        ?>
-        <div class="wrap">
-            <h1><?php _e('HellaZ SiteZ Analyzer - Clear Cache', 'hellaz-sitez-analyzer'); ?></h1>
-            <p><?php _e('Click the button below to clear all cached data.', 'hellaz-sitez-analyzer'); ?></p>
-            <form method="post" id="hsz-clear-cache-form">
-                <?php submit_button(__('Clear Cache', 'hellaz-sitez-analyzer'), 'primary', 'hsz_clear_cache'); ?>
-            </form>
-            <div id="hsz-clear-cache-message" style="display: none;"></div>
-        </div>
+	/**
+	 * Stores data in the cache.
+	 *
+	 * @param string $key The unique part of the cache key.
+	 * @param mixed  $data The data to be cached. Must be serializable.
+	 * @param int    $expiration Optional. The time until the cache expires, in seconds. Defaults to value from settings or 1 hour.
+	 * @return bool True if the data was successfully cached, false otherwise.
+	 */
+	public static function set_cache( string $key, $data, int $expiration = 0 ): bool {
+		$sanitized_key = self::sanitize_key( $key );
 
-        <script>
-            jQuery(document).ready(function($) {
-                $('#hsz-clear-cache-form').on('submit', function(e) {
-                    e.preventDefault();
-                    $.ajax({
-                        url: '<?php echo admin_url('admin-ajax.php'); ?>',
-                        type: 'POST',
-                        data: {
-                            action: 'hsz_clear_cache'
-                        },
-                        success: function(response) {
-                            $('#hsz-clear-cache-message').html('<div class="notice notice-success"><p>' + response.message + '</p></div>').show();
-                        },
-                        error: function() {
-                            $('#hsz-clear-cache-message').html('<div class="notice notice-error"><p><?php _e('An error occurred while clearing the cache.', 'hellaz-sitez-analyzer'); ?></p></div>').show();
-                        }
-                    });
-                });
-            });
-        </script>
-        <?php
-    }
+		if ( 0 === $expiration ) {
+			// Use the duration set in the plugin's settings, with a fallback.
+			$expiration = get_option( 'hsz_cache_duration', HOUR_IN_SECONDS );
+		}
 
-    /**
-     * Clear all transients via AJAX.
-     */
-    public function clear_cache_ajax() {
-        global $wpdb;
-        $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_hsz_%'");
-        wp_send_json_success(['message' => __('Cache cleared successfully.', 'hellaz-sitez-analyzer')]);
-    }
+		return set_transient( self::CACHE_PREFIX . $sanitized_key, $data, absint( $expiration ) );
+	}
 
-    /**
-     * Get cached data or fetch new data if not cached.
-     *
-     * @param string $url The URL to analyze.
-     * @return array Cached data or newly fetched data.
-     */
-    public function get_cached_data($url) {
-        // Validate input
-        if (!filter_var($url, FILTER_VALIDATE_URL)) {
-            return [];
-        }
+	/**
+	 * Deletes a specific item from the cache.
+	 *
+	 * @param string $key The unique part of the cache key.
+	 * @return bool True if the cache was successfully deleted, false otherwise.
+	 */
+	public static function delete_cache( string $key ): bool {
+		$sanitized_key = self::sanitize_key( $key );
+		return delete_transient( self::CACHE_PREFIX . $sanitized_key );
+	}
 
-        // Cache key for storing data
-        $cache_key = 'hsz_' . md5($url);
-        $data = get_transient($cache_key);
+	/**
+	 * Clears all transients created by this plugin.
+	 *
+	 * This is a more aggressive form of cache clearing, targeting all related entries
+	 * directly in the database for a complete cleanup.
+	 *
+	 * @return int The number of rows deleted.
+	 */
+	public static function clear_all_hsz_transients(): int {
+		global $wpdb;
 
-        if ($data === false) {
-            $data = $this->fetch_data($url);
-            set_transient($cache_key, $data, DAY_IN_SECONDS);
-        }
+		// Correctly escape the '_' which is a wildcard character in SQL LIKE clauses.
+		// This ensures we only delete transients with the exact 'hsz_cache_' prefix.
+		$transient_pattern = $wpdb->esc_like( '_transient_' . self::CACHE_PREFIX ) . '%';
+		$timeout_pattern   = $wpdb->esc_like( '_transient_timeout_' . self::CACHE_PREFIX ) . '%';
 
-        return $data;
-    }
+		$sql = $wpdb->prepare(
+			"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
+			$transient_pattern,
+			$timeout_pattern
+		);
 
-    /**
-     * Fetch data from an external source.
-     *
-     * @param string $url The URL to analyze.
-     * @return array Fetched data.
-     */
+		// The query is prepared, so it is safe to execute directly.
+		$deleted_rows = $wpdb->query( $sql ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 
-    private function fetch_data($url) {
-        // Fetch and process data here
-        // Log errors if fetching fails (optional)
-        error_log('[HellaZ SiteZ Analyzer] Failed to fetch data for URL: ' . esc_url($url));
-        return [];
-    }
+		// Return the number of deleted database rows.
+		return is_numeric( $deleted_rows ) ? (int) $deleted_rows : 0;
+	}
 
-    public function clear_cache() {
-        if (isset($_POST['hsz_clear_cache'])) {
-            check_admin_referer('hsz_clear_cache_nonce', 'hsz_nonce'); // Verify nonce
-            delete_transient('hsz_metadata_cache');
-            add_settings_error('hsz_messages', 'cache_cleared', __('Cache cleared successfully.', 'hellaz-sitez-analyzer'), 'success');
-        }
-    }
+	/**
+	 * Generates a unique cache key from an array of parameters.
+	 *
+	 * @param array $params An array of parameters that uniquely identify the data.
+	 * @return string A unique MD5 hash representing the parameters.
+	 */
+	public static function generate_key( array $params ): string {
+		// Sort the array to ensure consistency, then serialize and hash it.
+		ksort( $params );
+		return md5( wp_json_encode( $params ) );
+	}
 
-    public function render_cache_clear_button() {
-        echo '<form method="post">';
-        wp_nonce_field('hsz_clear_cache_nonce', 'hsz_nonce'); // Add nonce field
-        submit_button(__('Clear Cache', 'hellaz-sitez-analyzer'), 'secondary', 'hsz_clear_cache');
-        echo '</form>';
-    }
+	/**
+	 * Sanitizes a cache key part.
+	 *
+	 * @param string $key The key part to sanitize.
+	 * @return string The sanitized key.
+	 */
+	private static function sanitize_key( string $key ): string {
+		// Replaces any character that is not a letter, number, or underscore with an underscore.
+		return preg_replace( '/[^A-Za-z0-9_]/', '_', $key );
+	}
 }

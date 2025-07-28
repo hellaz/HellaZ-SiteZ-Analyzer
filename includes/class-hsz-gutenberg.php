@@ -26,8 +26,6 @@ class Gutenberg {
 	/**
 	 * Gutenberg constructor.
 	 *
-	 * CORRECTED: Visibility is now `public` to allow instantiation from the Core class.
-	 *
 	 * Registers the necessary hooks for the Gutenberg block.
 	 */
 	public function __construct() {
@@ -37,11 +35,26 @@ class Gutenberg {
 
 	/**
 	 * Registers the Gutenberg block on the server.
+	 *
+	 * CORRECTED: This now explicitly registers the block with a lowercase name
+	 * and its attributes to comply with WordPress standards and fix the PHP notice.
 	 */
 	public function register_block(): void {
 		register_block_type(
-			HSZ_PLUGIN_PATH . 'build',
+			'hsz/analyzer-block', // The block name must be all lowercase.
 			[
+				// Register attributes on the server to make them available to the render_callback.
+				'attributes'      => [
+					'url'         => [
+						'type'    => 'string',
+						'default' => '',
+					],
+					'displayType' => [
+						'type'    => 'string',
+						'default' => 'full',
+					],
+				],
+				// Define the server-side rendering callback for this dynamic block.
 				'render_callback' => [ $this, 'render_block' ],
 			]
 		);

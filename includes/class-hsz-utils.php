@@ -1,362 +1,452 @@
 <?php
+/**
+ * Utility class for various helper functions.
+ *
+ * This class provides static methods for common tasks such as making HTTP requests,
+ * parsing HTML content, handling data encryption/decryption, caching, logging,
+ * and performance monitoring.
+ *
+ * @package HellaZ_SiteZ_Analyzer
+ * @since 1.0.0
+ */
+
 namespace HSZ;
 
-if (!defined('ABSPATH')) {
-    exit;
+use DOMDocument;
+use DOMXPath;
+use WP_Error;
+use WP_Transient_Cache;
+
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
 }
 
 /**
- * Utility helper class for the SiteZ Analyzer plugin.
- * Provides caching, error logging, encryption, performance monitoring, and sanitization functions.
+ * Class Utils
+ *
+ * Provides a suite of static utility methods for the plugin.
+ *
+ * @package HSZ
  */
-class Utils
-{
-    /**
-     * Enhanced error logging with context and log levels.
-     *
-     * @param string $message Error message
-     * @param array $context Optional context data
-     * @param string $level Log level ('ERROR', 'WARNING', 'INFO', 'DEBUG')
-     *
-     * Logs errors to PHP error log when WP_DEBUG is enabled and stores critical errors in DB.
-     */
-    public static function log_error(string $message, array $context = [], string $level = 'ERROR'): void
-    {
-        if (!defined('WP_DEBUG') || !WP_DEBUG) {
-            return;
-        }
+class Utils {
 
-        $timestamp = current_time('Y-m-d H:i:s');
-        $user_id = get_current_user_id();
-        $ip = self::get_client_ip();
+	/**
+	 * The encryption cipher.
+	 *
+	 * @var string
+	 */
+	private const CIPHER = 'aes-256-cbc';
 
-        $log_entry = [
-            'timestamp' => $timestamp,
-            'level'     => $level,
-            'message'   => $message,
-            'user_id'   => $user_id,
-            'ip'        => $ip,
-            'context'   => $context,
-            'memory'    => self::format_bytes(memory_get_usage()),
-            'url'       => $_SERVER['REQUEST_URI'] ?? 'CLI',
-        ];
+	/**
+	 * A container for performance timers.
+	 *
+	 * @var array
+	 */
+	private static array $timers = [];
 
-        $log_line = sprintf(
-            '[%s] [%s] [HellaZ SiteZ Analyzer] %s | User: %d | IP: %s | Memory: %s',
-            $log_entry['timestamp'],
-            $log_entry['level'],
-            $log_entry['message'],
-            $log_entry['user_id'],
-            $log_entry['ip'],
-            $log_entry['memory']
-        );
+	/**
+	 * Checks if the encryption functionality is properly configured.
+	 *
+	 * @since 1.0.1
+	 *
+	 * @return bool True if the encryption key is defined as a non-empty string, false otherwise.
+	 */
+	public static function is_encryption_configured(): bool {
+		return defined( 'HSZ_ENCRYPTION_KEY' ) && is_string( HSZ_ENCRYPTION_KEY ) && ! empty( HSZ_ENCRYPTION_KEY );
+	}
 
-        if (!empty($context)) {
-            $log_line .= ' | Context: ' . wp_json_encode($context);
-        }
+	/**
+	 * Sanitizes and encrypts an option value for safe storage.
+	 *
+	 * This method is the designated callback for the `sanitize_option_*` filter.
+	 * It ensures that encryption only runs when correctly configured, preventing fatal errors.
+	 * If encryption is not configured, it returns the raw, sanitized value.
+	 *
+	 * @since 1.0.1
+	 *
+	 * @param mixed $value The value to sanitize and encrypt.
+	 * @return mixed The encrypted string, or the original value if encryption is not configured or fails.
+	 */
+	public static function sanitize_and_encrypt( $value ) {
+		if ( ! is_string( $value ) || empty( $value ) ) {
+			return $value;
+		}
 
-        error_log($log_line);
+		// Always sanitize the value.
+		$sanitized_value = esc_url_raw( $value );
 
-        // Store only critical errors in DB for admin review
-        if ($level === 'ERROR') {
-            self::store_error_in_db($log_entry);
-        }
-    }
+		// Only encrypt if the key is properly configured.
+		if ( ! self::is_encryption_configured() ) {
+			// A warning should be displayed in the admin to inform the user.
+			return $sanitized_value;
+		}
 
-    /**
-     * Store error log entry into custom database table.
-     *
-     * @param array $log_entry Entry data
-     */
-    protected static function store_error_in_db(array $log_entry): void
-    {
-        global $wpdb;
+		return self::encrypt( $sanitized_value );
+	}
 
-        $table = $wpdb->prefix . 'hsz_error_log';
+	/**
+	 * Encrypts a string using the HSZ_ENCRYPTION_KEY from wp-config.php.
+	 *
+	 * This method is modified to be self-contained, generating its own IV and
+	 * relying on the defined constant for the key.
+	 *
+	 * @since 1.0.0
+	 * @version 1.0.1
+	 *
+	 * @param string $data The plaintext data to encrypt.
+	 * @return string|false The base64-encoded encrypted string (IV prepended) or false on failure.
+	 */
+	public static function encrypt( string $data ) {
+		if ( ! self::is_encryption_configured() ) {
+			return false;
+		}
 
-        // Create table if not exists (should ideally be in install routine)
-        $charset_collate = $wpdb->get_charset_collate();
-        $sql = "CREATE TABLE IF NOT EXISTS $table (
-            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-            timestamp datetime NOT NULL,
-            level varchar(10) NOT NULL,
-            message text NOT NULL,
-            user_id bigint(20) unsigned NOT NULL,
-            ip varchar(45) NOT NULL,
-            context longtext,
-            memory varchar(20),
-            url varchar(255),
-            PRIMARY KEY (id),
-            KEY timestamp (timestamp),
-            KEY level (level)
-        ) $charset_collate";
+		$key       = HSZ_ENCRYPTION_KEY;
+		$iv_length = openssl_cipher_iv_length( self::CIPHER );
 
-        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-        dbDelta($sql);
+		if ( false === $iv_length ) {
+			return false;
+		}
 
-        $wpdb->insert(
-            $table,
-            [
-                'timestamp' => $log_entry['timestamp'],
-                'level'     => $log_entry['level'],
-                'message'   => $log_entry['message'],
-                'user_id'   => $log_entry['user_id'],
-                'ip'        => $log_entry['ip'],
-                'context'   => wp_json_encode($log_entry['context']),
-                'memory'    => $log_entry['memory'],
-                'url'       => $log_entry['url'],
-            ],
-            [
-                '%s', '%s', '%s', '%d', '%s', '%s', '%s', '%s'
-            ]
-        );
-    }
+		$iv        = openssl_random_pseudo_bytes( $iv_length );
+		$encrypted = openssl_encrypt( $data, self::CIPHER, $key, OPENSSL_RAW_DATA, $iv );
 
-    /**
-     * Returns the client's IP address.
-     *
-     * @return string IP address
-     */
-    public static function get_client_ip(): string
-    {
-        $headers = [
-            'HTTP_CLIENT_IP',
-            'HTTP_X_FORWARDED_FOR',
-            'HTTP_X_FORWARDED',
-            'HTTP_FORWARDED_FOR',
-            'HTTP_FORWARDED',
-            'REMOTE_ADDR',
-        ];
+		if ( false === $encrypted ) {
+			return false;
+		}
 
-        foreach ($headers as $header) {
-            if (!empty($_SERVER[$header])) {
-                $ipList = explode(',', $_SERVER[$header]);
-                $ip = trim(current($ipList));
-                if (filter_var($ip, FILTER_VALIDATE_IP)) {
-                    return $ip;
-                }
-            }
-        }
+		// Prepend the IV to the ciphertext for use in decryption.
+		return base64_encode( $iv . $encrypted );
+	}
 
-        return 'UNKNOWN';
-    }
+	/**
+	 * Decrypts a string using the HSZ_ENCRYPTION_KEY from wp-config.php.
+	 *
+	 * This method is modified to handle a base64-encoded string that contains
+	 * both the IV and the ciphertext.
+	 *
+	 * @since 1.0.0
+	 * @version 1.0.1
+	 *
+	 * @param string $data The base64-encoded data to decrypt.
+	 * @return string|false The decrypted plaintext string or false on failure.
+	 */
+	public static function decrypt( string $data ) {
+		if ( ! self::is_encryption_configured() || empty( $data ) ) {
+			return false;
+		}
 
-    /**
-     * Caching helper: get data from transient cache.
-     *
-     * @param string $key Cache key
-     * @param mixed $default Default value if no cache
-     * @return mixed Cached data or default
-     */
-    public static function get_cached_data(string $key, $default = false)
-    {
-        $cache_key = 'hsz_cache_' . $key;
-        $value = get_transient($cache_key);
+		$key  = HSZ_ENCRYPTION_KEY;
+		$data = base64_decode( $data, true );
 
-        if ($value !== false) {
-            self::log_error("Cache HIT for key: $cache_key", [], 'DEBUG');
-            return $value;
-        }
+		if ( false === $data ) {
+			return false;
+		}
 
-        self::log_error("Cache MISS for key: $cache_key", [], 'DEBUG');
-        return $default;
-    }
+		$iv_length = openssl_cipher_iv_length( self::CIPHER );
+		if ( false === $iv_length || mb_strlen( $data, '8bit' ) < $iv_length ) {
+			return false;
+		}
 
-    /**
-     * Caching helper: set data into transient cache.
-     *
-     * @param string $key Cache key
-     * @param mixed $data Data to cache
-     * @param int|null $expiration Cache duration in seconds, defaults to plugin setting
-     * @return bool True on success
-     */
-    public static function set_cached_data(string $key, $data, ?int $expiration = null): bool
-    {
-        if ($expiration === null) {
-            $expiration = max(0, (int) get_option('hsz_cache_duration', DAY_IN_SECONDS));
-        }
+		$iv         = mb_substr( $data, 0, $iv_length, '8bit' );
+		$ciphertext = mb_substr( $data, $iv_length, null, '8bit' );
 
-        $cache_key = 'hsz_cache_' . $key;
-        $success = set_transient($cache_key, $data, $expiration);
+		return openssl_decrypt( $ciphertext, self::CIPHER, $key, OPENSSL_RAW_DATA, $iv );
+	}
 
-        if ($success) {
-            self::log_error("Cache SET for key: $cache_key with expiration: $expiration", [], 'DEBUG');
-        } else {
-            self::log_error("Cache SET FAILED for key: $cache_key", [], 'WARNING');
-        }
+	/**
+	 * Retrieves the HTML content of a given URL using WordPress HTTP API.
+	 *
+	 * @param string $url The URL to fetch.
+	 * @return string|WP_Error The HTML content as a string or a WP_Error on failure.
+	 */
+	public static function get_html( string $url ) {
+		$response = wp_remote_get( esc_url_raw( $url ) );
+		if ( is_wp_error( $response ) ) {
+			self::log_error( 'Failed to fetch URL: ' . $url . ' - ' . $response->get_error_message() );
+			return $response;
+		}
+		return wp_remote_retrieve_body( $response );
+	}
 
-        return $success;
-    }
+	/**
+	 * Gets the HTTP status code for a given URL.
+	 *
+	 * @param string $url The URL to check.
+	 * @return int|WP_Error The HTTP status code or a WP_Error on failure.
+	 */
+	public static function get_http_status( string $url ) {
+		$response = wp_remote_head( esc_url_raw( $url ) );
+		if ( is_wp_error( $response ) ) {
+			self::log_error( 'Failed to get HTTP status for URL: ' . $url . ' - ' . $response->get_error_message() );
+			return $response;
+		}
+		return wp_remote_retrieve_response_code( $response );
+	}
 
-    /**
-     * Delete cached entries optionally filtered by prefix pattern.
-     *
-     * @param string|null $pattern If specified, only remove keys containing this pattern.
-     * @return int Number of entries deleted
-     */
-    public static function clear_cache(?string $pattern = null): int
-    {
-        global $wpdb;
-        $count = 0;
-        $option_table = $wpdb->options;
+	/**
+	 * Parses HTML to extract meta tags.
+	 *
+	 * @param string $html The HTML content.
+	 * @return array An associative array of meta tags.
+	 */
+	public static function get_meta_tags( string $html ): array {
+		if ( empty( $html ) ) {
+			return [];
+		}
+		$dom = new DOMDocument();
+		@$dom->loadHTML( $html );
+		$tags      = $dom->getElementsByTagName( 'meta' );
+		$meta_data = [];
+		foreach ( $tags as $tag ) {
+			$name = $tag->getAttribute( 'name' );
+			if ( $name ) {
+				$meta_data[ $name ] = $tag->getAttribute( 'content' );
+			}
+		}
+		return $meta_data;
+	}
 
-        if ($pattern) {
-            $like = '%hsz_cache_' . $wpdb->esc_like($pattern) . '%';
-        } else {
-            $like = '%hsz_cache_%';
-        }
+	/**
+	 * Extracts Open Graph (OG) tags from HTML.
+	 *
+	 * @param string $html The HTML content.
+	 * @return array An associative array of OG tags.
+	 */
+	public static function get_og_tags( string $html ): array {
+		if ( empty( $html ) ) {
+			return [];
+		}
+		$dom = new DOMDocument();
+		@$dom->loadHTML( $html );
+		$tags    = $dom->getElementsByTagName( 'meta' );
+		$og_data = [];
+		foreach ( $tags as $tag ) {
+			$property = $tag->getAttribute( 'property' );
+			if ( strpos( $property, 'og:' ) === 0 ) {
+				$og_data[ substr( $property, 3 ) ] = $tag->getAttribute( 'content' );
+			}
+		}
+		return $og_data;
+	}
 
-        // Remove transients and their timeouts
-        $count += $wpdb->query($wpdb->prepare("DELETE FROM $option_table WHERE option_name LIKE %s", '_transient_' . $like));
-        $count += $wpdb->query($wpdb->prepare("DELETE FROM $option_table WHERE option_name LIKE %s", '_transient_timeout_' . $like));
+	/**
+	 * Extracts Twitter Card tags from HTML.
+	 *
+	 * @param string $html The HTML content.
+	 * @return array An associative array of Twitter tags.
+	 */
+	public static function get_twitter_tags( string $html ): array {
+		if ( empty( $html ) ) {
+			return [];
+		}
+		$dom = new DOMDocument();
+		@$dom->loadHTML( $html );
+		$tags         = $dom->getElementsByTagName( 'meta' );
+		$twitter_data = [];
+		foreach ( $tags as $tag ) {
+			$name = $tag->getAttribute( 'name' );
+			if ( strpos( $name, 'twitter:' ) === 0 ) {
+				$twitter_data[ substr( $name, 8 ) ] = $tag->getAttribute( 'content' );
+			}
+		}
+		return $twitter_data;
+	}
 
-        self::log_error("Cache cleared with pattern: $pattern, entries removed: $count", [], 'INFO');
+	/**
+	 * Extracts the <title> tag content from HTML.
+	 *
+	 * @param string $html The HTML content.
+	 * @return string The title content.
+	 */
+	public static function get_title_tag( string $html ): string {
+		if ( empty( $html ) ) {
+			return '';
+		}
+		$dom = new DOMDocument();
+		@$dom->loadHTML( $html );
+		$title_node = $dom->getElementsByTagName( 'title' );
+		return $title_node->length > 0 ? $title_node->item( 0 )->nodeValue : '';
+	}
 
-        return $count;
-    }
+	/**
+	 * Finds the favicon URL from the HTML.
+	 *
+	 * @param string $html The HTML content.
+	 * @param string $base_url The base URL of the site to resolve relative paths.
+	 * @return string|false The favicon URL or false if not found.
+	 */
+	public static function get_favicon( string $html, string $base_url ) {
+		if ( empty( $html ) ) {
+			return false;
+		}
+		$dom = new DOMDocument();
+		@$dom->loadHTML( $html );
+		$xpath = new DOMXPath( $dom );
+		$links = $xpath->query( "//link[contains(@rel, 'icon')]" );
+		if ( $links->length > 0 ) {
+			$href = $links->item( 0 )->getAttribute( 'href' );
+			return self::resolve_url( $href, $base_url );
+		}
+		return false;
+	}
 
-    /**
-     * Formats bytes into a human-readable format.
-     *
-     * @param int $bytes Number of bytes
-     * @return string Formatted string
-     */
-    public static function format_bytes(int $bytes): string
-    {
-        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
-        $power = $bytes > 0 ? floor(log($bytes, 1024)) : 0;
-        $power = min($power, count($units) - 1);
-        $value = $bytes / pow(1024, $power);
+	/**
+	 * Extracts all image URLs from the HTML content.
+	 *
+	 * @param string $html The HTML content.
+	 * @param string $base_url The base URL for resolving relative image paths.
+	 * @return array A list of image URLs.
+	 */
+	public static function get_images_from_html( string $html, string $base_url ): array {
+		if ( empty( $html ) ) {
+			return [];
+		}
+		$dom = new DOMDocument();
+		@$dom->loadHTML( $html );
+		$images    = $dom->getElementsByTagName( 'img' );
+		$image_urls = [];
+		foreach ( $images as $image ) {
+			$src = $image->getAttribute( 'src' );
+			if ( $src ) {
+				$image_urls[] = self::resolve_url( $src, $base_url );
+			}
+		}
+		return $image_urls;
+	}
 
-        return round($value, 2) . ' ' . $units[(int) $power];
-    }
+	/**
+	 * Extracts all hyperlink URLs from the HTML.
+	 *
+	 * @param string $html The HTML content.
+	 * @param string $base_url The base URL for resolving relative link paths.
+	 * @return array A list of hyperlink URLs.
+	 */
+	public static function get_all_links( string $html, string $base_url ): array {
+		if ( empty( $html ) ) {
+			return [];
+		}
+		$dom = new DOMDocument();
+		@$dom->loadHTML( $html );
+		$links    = $dom->getElementsByTagName( 'a' );
+		$link_urls = [];
+		foreach ( $links as $link ) {
+			$href = $link->getAttribute( 'href' );
+			if ( $href ) {
+				$link_urls[] = self::resolve_url( $href, $base_url );
+			}
+		}
+		return $link_urls;
+	}
 
-    /**
-     * Encrypt API key for storage.
-     *
-     * @param string $key Plain API key
-     * @return string Encrypted key (base64) or plain base64 if encryption unavailable
-     */
-    public static function encrypt(string $key): string
-    {
-        if (empty($key)) {
-            return '';
-        }
+	/**
+	 * Gets the dimensions of an image from its URL.
+	 *
+	 * @param string $image_url The URL of the image.
+	 * @return array|false An array with width and height, or false on failure.
+	 */
+	public static function get_image_dimensions( string $image_url ) {
+		$size = @getimagesize( esc_url_raw( $image_url ) );
+		if ( false === $size ) {
+			return false;
+		}
+		return [
+			'width'  => $size[0],
+			'height' => $size[1],
+		];
+	}
 
-        if (!function_exists('openssl_encrypt')) {
-            // Fallback to base64
-            return base64_encode($key);
-        }
+	/**
+	 * Resolves a relative URL to an absolute URL.
+	 *
+	 * @param string $url The URL to resolve.
+	 * @param string $base_url The base URL to use for resolution.
+	 * @return string The absolute URL.
+	 */
+	private static function resolve_url( string $url, string $base_url ): string {
+		if ( strpos( $url, '//' ) === 0 ) {
+			$base_parts = parse_url( $base_url );
+			return ( $base_parts['scheme'] ?? 'http' ) . ':' . $url;
+		}
+		if ( parse_url( $url, PHP_URL_SCHEME ) !== null ) {
+			return $url;
+		}
+		$base_parts = parse_url( $base_url );
+		$base_root  = ( $base_parts['scheme'] ?? 'http' ) . '://' . ( $base_parts['host'] ?? '' );
+		if ( strpos( $url, '/' ) === 0 ) {
+			return $base_root . $url;
+		}
+		$path = dirname( $base_parts['path'] ?? '' );
+		return $base_root . ( $path === '/' ? '' : $path ) . '/' . $url;
+	}
 
-        $encryption_key = self::get_encryption_key();
-        $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length('aes-256-cbc'));
-        $encrypted = openssl_encrypt($key, 'aes-256-cbc', $encryption_key, 0, $iv);
+	/**
+	 * Logs an error message to the WordPress debug log.
+	 *
+	 * @param string $message The error message.
+	 * @param string $file The file where the error occurred.
+	 * @param int    $line The line where the error occurred.
+	 */
+	public static function log_error( string $message, string $file = __FILE__, int $line = __LINE__ ): void {
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( sprintf( '[HellaZ SiteZ Analyzer] %s in %s on line %d', $message, $file, $line ) );
+		}
+	}
 
-        return base64_encode($iv . $encrypted);
-    }
+	/**
+	 * Sets data in the WordPress transient cache.
+	 *
+	 * @param string $key The cache key.
+	 * @param mixed  $data The data to cache.
+	 * @param int    $expiration The cache lifetime in seconds.
+	 * @return bool True on success, false on failure.
+	 */
+	public static function set_cache( string $key, $data, int $expiration = HOUR_IN_SECONDS ): bool {
+		return set_transient( 'hsz_cache_' . $key, $data, $expiration );
+	}
 
-    /**
-     * Decrypt stored API key.
-     *
-     * @param string $encrypted Encrypted or base64 API key
-     * @return string Decrypted plain key
-     */
-    public static function decrypt(string $encrypted): string
-    {
-        if (empty($encrypted)) {
-            return '';
-        }
+	/**
+	 * Gets data from the WordPress transient cache.
+	 *
+	 * @param string $key The cache key.
+	 * @return mixed The cached data or false if not found.
+	 */
+	public static function get_cache( string $key ) {
+		return get_transient( 'hsz_cache_' . $key );
+	}
 
-        if (!function_exists('openssl_decrypt')) {
-            return base64_decode($encrypted);
-        }
+	/**
+	 * Deletes data from the WordPress transient cache.
+	 *
+	 * @param string $key The cache key.
+	 * @return bool True on success, false on failure.
+	 */
+	public static function delete_cache( string $key ): bool {
+		return delete_transient( 'hsz_cache_' . $key );
+	}
 
-        $data = base64_decode($encrypted);
-        $iv_len = openssl_cipher_iv_length('aes-256-cbc');
-        $iv = substr($data, 0, $iv_len);
-        $ciphertext = substr($data, $iv_len);
-        $encryption_key = self::get_encryption_key();
+	/**
+	 * Starts a performance timer.
+	 *
+	 * @param string $key A unique identifier for the timer.
+	 */
+	public static function start_timer( string $key ): void {
+		self::$timers[ $key ] = microtime( true );
+	}
 
-        return openssl_decrypt($ciphertext, 'aes-256-cbc', $encryption_key, 0, $iv) ?: '';
-    }
-
-    /**
-     * Retrieves encryption key from options or generates a new one.
-     *
-     * @return string Encryption key
-     */
-    protected static function get_encryption_key(): string
-    {
-        $key = get_option('hsz_encryption_key', '');
-        if (empty($key)) {
-            $key = wp_generate_password(32, false);
-            update_option('hsz_encryption_key', $key);
-        }
-        return $key;
-    }
-
-    /**
-     * Display an inspector table for admins showing live cache status.
-     */
-    public static function show_cache_inspector(): void
-    {
-        if (!current_user_can('manage_options')) {
-            return;
-        }
-
-        global $wpdb;
-
-        $entries = $wpdb->get_results(
-            "SELECT option_name, option_value FROM {$wpdb->options} WHERE option_name LIKE '_transient_hsz_cache_%' LIMIT 50"
-        );
-
-        if (!$entries) {
-            echo '<p>No active SiteZ Analyzer cache entries found.</p>';
-            return;
-        }
-
-        echo '<h4>Active SiteZ Analyzer Cache Entries (Showing up to 50)</h4>';
-        echo '<table class="widefat" style="max-width: 90%"><thead><tr><th>Cache Key</th><th>Preview (First 100 chars)</th></tr></thead><tbody>';
-
-        foreach ($entries as $entry) {
-            $key = esc_html(str_replace('_transient_', '', $entry->option_name));
-            $value_preview = esc_html(mb_substr(serialize($entry->option_value), 0, 100));
-            echo "<tr><td>{$key}</td><td><code>{$value_preview}</code></td></tr>";
-        }
-
-        echo '</tbody></table>';
-    }
-
-    /**
-     * Starts a performance timer for debugging.
-     *
-     * @param string $label Timer label
-     * @return float Start timestamp
-     */
-    public static function start_timer(string $label): float
-    {
-        $start = microtime(true);
-        set_transient("hsz_perf_timer_{$label}", $start, 300);
-        return $start;
-    }
-
-    /**
-     * Ends a performance timer and logs the elapsed time.
-     *
-     * @param string $label Timer label
-     * @return float|null Elapsed time in seconds or null if no start time found
-     */
-    public static function end_timer(string $label): ?float
-    {
-        $start = get_transient("hsz_perf_timer_{$label}");
-        if (!$start) {
-            return null;
-        }
-        delete_transient("hsz_perf_timer_{$label}");
-        $elapsed = microtime(true) - $start;
-
-        self::log_error("Performance timer '{$label}' took {$elapsed} seconds", [], 'INFO');
-
-        return $elapsed;
-    }
+	/**
+	 * Stops a performance timer and returns the elapsed time.
+	 *
+	 * @param string $key The identifier for the timer.
+	 * @return float|false The elapsed time in seconds, or false if the timer wasn't started.
+	 */
+	public static function stop_timer( string $key ) {
+		if ( isset( self::$timers[ $key ] ) ) {
+			$elapsed = microtime( true ) - self::$timers[ $key ];
+			unset( self::$timers[ $key ] );
+			return $elapsed;
+		}
+		return false;
+	}
 }

@@ -1,17 +1,30 @@
 <?php
 /**
- * metadata-compact.php
- * Minimal clean display template
+ * Template: Compact Metadata Display
  *
- * Variables expected:
- * - $url, $title, $description, $disclaimer
+ * A minimalist view of the analyzed metadata, suitable for small areas.
+ *
+ * @package HellaZ_SiteZ_Analyzer
+ * @since 1.0.0
+ *
+ * @var string $url           The URL being analyzed.
+ * @var string $display_title The title of the page.
+ * @var string $favicon       The URL of the favicon.
  */
-?>
 
-<div class="hsz-metadata-compact" style="max-width: 600px; font-family: Arial, sans-serif; font-size: 14px; color: #222;">
-    <h3 style="margin: 0 0 4px 0;"><?php echo esc_html($title); ?></h3>
-    <a href="<?php echo esc_url($url); ?>" target="_blank" rel="nofollow noopener noreferrer" style="font-size: 0.9em; color: #0073aa; text-decoration: none;"><?php echo esc_html($url); ?></a>
-    <?php if (!empty($disclaimer)) : ?>
-        <p style="margin-top: 6px; font-size: 0.75em; color: #666;"><?php echo esc_html($disclaimer); ?></p>
-    <?php endif; ?>
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+?>
+<div class="hsz-card hsz-compact">
+	<a href="<?php echo esc_url( $url ); ?>" target="_blank" rel="noopener noreferrer" class="hsz-compact-link">
+		<?php if ( ! empty( $favicon ) ) : ?>
+			<img src="<?php echo esc_url( $favicon ); ?>" class="hsz-favicon" alt="<?php echo esc_attr( $display_title ); ?> Favicon" />
+		<?php endif; ?>
+
+		<?php if ( ! empty( $display_title ) ) : ?>
+			<span class="hsz-title"><?php echo esc_html( $display_title ); ?></span>
+		<?php endif; ?>
+	</a>
 </div>

@@ -1,66 +1,100 @@
-.nav-tab-wrapper {
-    margin-bottom: 20px;
+/**
+ * HellaZ SiteZ Analyzer - Admin Settings Styles
+ *
+ * Styles for the main settings page, including tabs and form elements.
+ * All rules are scoped under `.hsz-settings-wrap` to prevent conflicts.
+ *
+ * @version 1.0.1
+ */
+
+/* Main tab navigation wrapper */
+.hsz-settings-wrap .nav-tab-wrapper {
+	margin-bottom: 20px;
 }
 
-.tab-content {
-    display: none;
+/* Base styles for tab content - hidden by default */
+.hsz-settings-wrap .tab-content {
+	display: none;
 }
 
-.tab-content-active {
-    display: block;
+/* Show the active tab's content */
+.hsz-settings-wrap .tab-content-active {
+	display: block;
 }
 
-#hsz-clear-cache-button {
-    margin-top: 20px; /* Increased spacing for better separation */
+/* Inner container for tab content for better visual separation */
+.hsz-settings-wrap .tab-content-inner {
+	padding: 20px;
+	border: 1px solid #ddd;
+	background-color: #fff;
+	margin-top: 20px;
 }
 
-.notice {
-    margin-top: 10px;
+/* Spacing for the clear cache button */
+.hsz-settings-wrap #hsz-clear-cache-button {
+	margin-top: 20px;
 }
 
-/* Additional styles for the tabbed interface */
-.tab-content-inner {
-    padding: 20px;
-    border: 1px solid #ddd;
-    background-color: #fff;
-    margin-top: 20px;
+/* Standard notice styling within our settings page */
+.hsz-settings-wrap .notice {
+	margin-top: 10px;
 }
 
-.about-section {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
-    font-family: Arial, sans-serif;
-    line-height: 1.6;
+/* Styles for the "About" section, from the original file */
+.hsz-settings-wrap .about-section {
+	max-width: 800px;
+	margin: 0 auto;
+	padding: 20px;
+	font-family: Arial, sans-serif;
+	line-height: 1.6;
 }
 
-.about-section h2 {
-    font-size: 24px;
-    color: #333;
-    margin-bottom: 10px;
+.hsz-settings-wrap .about-section h2 {
+	font-size: 24px;
+	color: #333;
+	margin-bottom: 10px;
 }
 
-.about-section p {
-    font-size: 16px;
-    color: #555;
-    margin-bottom: 20px;
+.hsz-settings-wrap .about-section p {
+	font-size: 16px;
+	color: #555;
+	margin-bottom: 20px;
 }
 
-.about-section ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+.hsz-settings-wrap .about-section ul {
+	list-style: none;
+	padding: 0;
+	margin: 0;
 }
 
-.about-section li {
-    margin-bottom: 10px;
+.hsz-settings-wrap .about-section li {
+	margin-bottom: 10px;
 }
 
-.about-section a {
-    text-decoration: none;
-    color: #0073aa;
+.hsz-settings-wrap .about-section a {
+	text-decoration: none;
+	color: #0073aa;
 }
 
-.about-section a:hover {
-    text-decoration: underline;
+.hsz-settings-wrap .about-section a:hover {
+	text-decoration: underline;
+}
+
+/* Styles for settings sections, moved from styles.css */
+.hsz-settings-wrap .hsz-settings-section {
+	margin-bottom: 20px;
+	padding: 10px;
+	border: 1px solid #eee;
+	background-color: #fafafa;
+}
+
+.hsz-settings-wrap .hsz-settings-section h2 {
+	font-size: 20px;
+	color: #0073aa;
+	margin-bottom: 10px;
+}
+
+.hsz-settings-wrap .hsz-settings-section p {
+	font-size: 14px;
+	color: #555;
 }

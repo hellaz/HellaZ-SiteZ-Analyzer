@@ -1,386 +1,233 @@
-# HellaZ SiteZ Analyzer
-# Copyright (C) 2023 Hellaz
-# This file is distributed under the GPLv2 or later license.
 msgid ""
 msgstr ""
-"Project-Id-Version: HellaZ SiteZ Analyzer 1.0\n"
-"Report-Msgid-Bugs-To: https://github.com/hellaz/HellaZ-SiteZ-Analyzer/issues\n"
-"POT-Creation-Date: 2023-10-XX XX:XX+XXXX\n"
+"Project-Id-Version: HellaZ SiteZ Analyzer 1.0.0\n"
+"Report-Msgid-Bugs-To: https://github.com/hellaz/HellaZ-SiteZ-Analyzer\n"
+"POT-Creation-Date: 2025-07-28 00:00+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"Last-Translator: YOUR NAME <YOUR EMAIL>\n"
+"Language-Team: LANGUAGE <EMAIL@ADDRESS>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit X.X\n"
+"X-Generator: Perplexity AI Translation Update\n"
+"X-Domain: hellaz-sitez-analyzer\n"
 
-#: includes/class-hsz-gutenberg.php:45
-msgid "Enter URL:"
-msgstr ""
-#. translators: This string is used as the label for the URL input field in the Gutenberg block.
-
-#: includes/class-hsz-gutenberg.php:60
-msgid "Analyze Metadata"
-msgstr ""
-#. translators: This string is used as the button label for analyzing metadata in the Gutenberg block.
-
-#: includes/class-hsz-gutenberg.php:75
-msgid "Metadata Analysis Results"
-msgstr ""
-#. translators: This string is used as the title for the metadata analysis results in the Gutenberg block.
-
-#: includes/class-hsz-gutenberg.php:90
-msgid "Social Media Links"
-msgstr ""
-#. translators: This string is used as the subtitle for the social media links section in the Gutenberg block.
-
-#: includes/class-hsz-gutenberg.php:105
-msgid "SSL Certificate Information"
-msgstr ""
-#. translators: This string is used as the subtitle for the SSL certificate information section in the Gutenberg block.
-
-#: includes/class-hsz-gutenberg.php:120
-msgid "Open Graph Tags"
-msgstr ""
-#. translators: This string is used as the subtitle for the Open Graph tags section in the Gutenberg block.
-
-#: includes/class-hsz-widget.php:60
-msgid "No social media links found."
-msgstr ""
-#. translators: This message is displayed when no social media links are detected for the provided URL.
-
-#: includes/class-hsz-widget.php:75
-msgid "Website Metadata"
-msgstr ""
-#. translators: This string is used as the title for the widget displaying website metadata.
-
-#: includes/class-hsz-widget.php:90
-msgid "Social Media Profiles"
-msgstr ""
-#. translators: This string is used as the subtitle for the social media profiles section in the widget.
-
-#: includes/class-hsz-widget.php:105
-msgid "Security Details"
-msgstr ""
-#. translators: This string is used as the subtitle for the security details section in the widget.
-
-#: includes/class-hsz-shortcode.php:40
-msgid "Shortcode Usage"
-msgstr ""
-#. translators: This string is used as the heading for shortcode usage instructions.
-
-#: includes/class-hsz-shortcode.php:55
-msgid "Use the following shortcode to display metadata:"
-msgstr ""
-#. translators: This string provides instructions for using the shortcode.
-
-#: includes/class-hsz-shortcode.php:70
-msgid "Website Analysis"
-msgstr ""
-#. translators: This string is used as the title for the metadata analysis results displayed via the shortcode.
-
-#: includes/class-hsz-shortcode.php:85
-msgid "Social Media Connections"
-msgstr ""
-#. translators: This string is used as the subtitle for the social media connections section in the shortcode output.
-
-#: includes/class-hsz-shortcode.php:100
-msgid "SSL Certificate Status"
-msgstr ""
-#. translators: This string is used as the subtitle for the SSL certificate status section in the shortcode output.
-
-#: includes/class-hsz-shortcode.php:115
-msgid "Open Graph Data"
-msgstr ""
-#. translators: This string is used as the subtitle for the Open Graph data section in the shortcode output.
-
-#: hellaz-sitez-analyzer.php:4
-msgid "HellaZ SiteZ Analyzer"
+#. Plugin and UI strings
+msgid "SiteZ Analyzer"
 msgstr ""
 
-#: hellaz-sitez-analyzer.php:5
-msgid "Analyze websites for metadata, open graph, server, security, technology stack, social media, rss feeds, contact information and more."
+msgid "SiteZ Analyzer Settings"
 msgstr ""
 
-#: includes/class-hsz-fallbacks.php:19
-msgid "Fallback image not found at"
+msgid "HellaZ SiteZ Analyzer Settings"
 msgstr ""
 
-#: includes/class-hsz-fallbacks.php:30
-msgid "No description available."
-msgstr ""
-
-#: includes/class-hsz-settings.php:45
-msgid "%s API Key"
-msgstr ""
-
-#: includes/class-hsz-settings.php:46
-msgid "Enter your %s API key."
-msgstr ""
-
-#: includes/class-hsz-settings.php:55
 msgid "Fallback Image URL"
 msgstr ""
 
-#: includes/class-hsz-settings.php:56
-msgid "Enter the URL of the fallback image to use when no favicon is found."
+msgid "Fallback Title"
 msgstr ""
 
-#: includes/class-hsz-settings.php:63
+msgid "Fallback Description"
+msgstr ""
+
 msgid "Enable Disclaimer"
 msgstr ""
 
-#: includes/class-hsz-settings.php:64
-msgid "Check to enable the disclaimer message."
-msgstr ""
-
-#: includes/class-hsz-settings.php:71
 msgid "Disclaimer Message"
 msgstr ""
 
-#: includes/class-hsz-settings.php:72
-msgid "Enter the disclaimer message to display."
+msgid "VirusTotal API Key"
 msgstr ""
 
-#: includes/class-hsz-settings.php:79
-msgid "Link Target"
+msgid "BuiltWith API Key"
 msgstr ""
 
-#: includes/class-hsz-settings.php:80
-msgid "Choose how links should open."
+msgid "URLScan.io API Key"
 msgstr ""
 
-#: includes/class-hsz-settings.php:87
-msgid "Open in New Window"
+msgid "Enable %s API"
 msgstr ""
 
-#: includes/class-hsz-settings.php:88
-msgid "Open in Same Window"
-msgstr ""
-
-#: includes/class-hsz-settings.php:95
-msgid "Icon Library"
-msgstr ""
-
-#: includes/class-hsz-settings.php:96
-msgid "Select the icon library to use for social media icons."
-msgstr ""
-
-#: includes/class-hsz-settings.php:103
-msgid "Font Awesome (CDN)"
-msgstr ""
-
-#: includes/class-hsz-settings.php:104
-msgid "Material Icons (CDN)"
-msgstr ""
-
-#: includes/class-hsz-settings.php:105
-msgid "Bootstrap Icons (CDN)"
-msgstr ""
-
-#: includes/class-hsz-settings.php:106
-msgid "Custom Icons"
-msgstr ""
-
-#: includes/class-hsz-settings.php:113
-msgid "Upload Custom Icons"
-msgstr ""
-
-#: includes/class-hsz-settings.php:114
-msgid "Upload custom icons for social media platforms."
-msgstr ""
-
-#: includes/class-hsz-settings.php:121
 msgid "Clear Cache"
 msgstr ""
 
-#: includes/class-hsz-settings.php:122
-msgid "Click the button below to clear all cached data."
+msgid "Cache Duration (seconds)"
 msgstr ""
 
-#: includes/class-hsz-settings.php:123
-msgid "Cache cleared successfully."
+msgid "Enable Cache Debug"
 msgstr ""
 
-#: includes/class-hsz-settings.php:124
-msgid "An error occurred while clearing the cache."
+msgid "Default Output Template"
 msgstr ""
 
-#: templates/metadata-template.php:15
-msgid "Untitled"
+msgid "General"
 msgstr ""
 
-#: templates/metadata-template.php:20
-msgid "This is a default description."
+msgid "APIs"
 msgstr ""
 
-#: templates/metadata-template.php:40
-msgid "Basic Metadata"
+msgid "Bulk"
 msgstr ""
 
-#: templates/metadata-template.php:45
-msgid "Author:"
+msgid "Cache"
 msgstr ""
 
-#: templates/metadata-template.php:50
-msgid "Keywords:"
+msgid "Templates"
 msgstr ""
 
-#: templates/metadata-template.php:55
-msgid "Referrer:"
+msgid "About"
 msgstr ""
 
-#: templates/metadata-template.php:60
-msgid "Language:"
+msgid "An error occurred while processing the URL."
 msgstr ""
 
-#: templates/metadata-template.php:65
-msgid "Canonical URL:"
+msgid "Please provide a valid URL."
 msgstr ""
 
-#: templates/metadata-template.php:80
-msgid "Server Information"
+msgid "An error occurred while extracting metadata."
 msgstr ""
 
-#: templates/metadata-template.php:85
-msgid "Server Location:"
+msgid "Please provide a valid URL."
 msgstr ""
 
-#: templates/metadata-template.php:90
-msgid "SSL Valid From:"
+msgid "Website URL:"
 msgstr ""
 
-#: templates/metadata-template.php:95
-msgid "SSL Valid To:"
+msgid "Title:"
 msgstr ""
 
-#: templates/metadata-template.php:100
-msgid "SSL Issuer:"
+msgid "Metadata extraction error: %s"
 msgstr ""
 
-#: templates/metadata-template.php:105
-msgid "SSL/TLS information unavailable."
+msgid "Bulk Operations Status"
 msgstr ""
 
-#: templates/metadata-template.php:115
-msgid "Security Analysis"
+msgid "No recent bulk operations found."
 msgstr ""
 
-#: templates/metadata-template.php:120
-msgid "%s Detections:"
+msgid "Batch"
 msgstr ""
 
-#: templates/metadata-template.php:135
-msgid "Last Updated:"
+msgid "Status"
 msgstr ""
 
-#: templates/metadata-template.php:145
-msgid "Technology Stack"
+msgid "Created"
 msgstr ""
 
-#: templates/metadata-template.php:155
-msgid "URLScan.io Analysis"
+msgid "Processed"
 msgstr ""
 
-#: templates/metadata-template.php:160
-msgid "View Report on URLScan.io"
+msgid "Success"
 msgstr ""
 
-#: templates/metadata-template.php:170
-msgid "Social Media Profiles"
+msgid "Failed"
 msgstr ""
 
-#: templates/metadata-template.php:185
-msgid "No %s detected."
+msgid "No valid URLs provided."
 msgstr ""
 
-#: templates/metadata-template.php:195
-msgid "Contact Information"
+msgid "Cache cleared"
 msgstr ""
 
-#: templates/metadata-template.php:200
-msgid "Emails"
+msgid "SiteZ Analyzer Plugin"
 msgstr ""
 
-#: templates/metadata-template.php:210
-msgid "No email addresses detected."
+msgid "Version:"
 msgstr ""
 
-#: templates/metadata-template.php:220
-msgid "Contact Forms"
+msgid "Plugin URL:"
 msgstr ""
 
-#: templates/metadata-template.php:230
-msgid "No contact forms detected."
+msgid "An error occurred."
 msgstr ""
 
-#: templates/metadata-template.php:240
-msgid "Address"
+msgid ""
+"SiteZ Analyzer is a WordPress plugin by Hellaz that extracts and displays "
+"website metadata, social profiles, tech stack, and security info."
 msgstr ""
 
-#: templates/metadata-template.php:250
-msgid "RSS Feeds"
+msgid "You do not have permission to access this page."
 msgstr ""
 
-#: templates/metadata-template.php:260
-msgid "No RSS feeds detected."
+msgid "Insufficient permissions."
 msgstr ""
 
-#: templates/metadata-template.php:270
-msgid "This is a default disclaimer message."
+msgid "Invalid URL."
 msgstr ""
 
-#: includes/class-hsz-utils.php:90
-msgid "An error occurred while retrieving SSL information."
+msgid "Unauthorized"
 msgstr ""
-#. translators: This error message is displayed when SSL certificate retrieval fails.
 
-#: includes/class-hsz-utils.php:105
-msgid "Debug Log"
+msgid "No error logs found."
 msgstr ""
-#. translators: This string is used as the heading for the debug log section.
 
-#: includes/class-hsz-social-media.php:75
-msgid "Social Media Links"
+msgid "SiteZ Analyzer Error Logs"
 msgstr ""
-#. translators: This string is used as a heading for the section displaying social media links.
 
-#: includes/class-hsz-fallbacks.php:30
-msgid "No metadata found for this URL."
+msgid "Time"
 msgstr ""
-#. translators: This message is displayed when no metadata is extracted for the provided URL.
 
-#: includes/class-hsz-fallbacks.php:45
-msgid "Please enter a valid URL."
+msgid "Level"
 msgstr ""
-#. translators: This message is displayed when the user does not provide a valid URL.
 
-#: includes/class-hsz-apimanager.php:50
-msgid "API Request Failed"
+msgid "Message"
 msgstr ""
-#. translators: This error message is displayed when an API request fails.
 
-#: includes/class-hsz-apimanager.php:65
-msgid "Retry API Request"
+msgid "User"
 msgstr ""
-#. translators: This string is used as the label for retrying a failed API request.
 
-#: includes/class-hsz-core.php:30
-msgid "HellaZ SiteZ Analyzer Initialized"
+msgid "IP"
 msgstr ""
-#. translators: This message is logged when the plugin is successfully initialized.
 
-#: includes/class-hsz-core.php:45
-msgid "Error initializing plugin components."
+msgid "SiteZ Analyzer Settings"
 msgstr ""
-#. translators: This error message is displayed when plugin initialization fails.
 
-#: uninstall.php:20
-msgid "Plugin data has been successfully removed."
+msgid "Enable %s API"
 msgstr ""
-#. translators: This message is displayed when plugin data is removed during uninstallation.
 
-#: uninstall.php:30
-msgid "Failed to remove plugin data."
+msgid "Leave blank to keep existing key."
 msgstr ""
-#. translators: This error message is displayed when plugin data removal fails during uninstallation.
+
+msgid "Leave blank to keep existing."
+msgstr ""
+
+#: includes/class-hsz-shortcode.php:...
+msgid "Please provide a valid URL."
+msgstr ""
+
+msgid "Error"
+msgstr ""
+
+msgid "Information is for reference only."
+msgstr ""
+
+msgid "No Title"
+msgstr ""
+
+msgid "No description available."
+msgstr ""
+
+msgid "Favicon"
+msgstr ""
+
+msgid "Loading..."
+msgstr ""
+
+msgid "No social profiles found."
+msgstr ""
+
+msgid "Clear All Caches"
+msgstr ""
+
+msgid "Cache Duration (seconds)"
+msgstr ""
+
+msgid "Enable Cache Debug"
+msgstr ""
+
+msgid "How long to cache metadata results (0 = no caching)."
+msgstr ""
+
+msgid "Show cache usage and keys in admin bulk/result pages."
+msgstr ""

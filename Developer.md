@@ -1,72 +1,118 @@
-# Developer Documentation for HellaZ SiteZ Analyzer
+# Developer Guide – HellaZ SiteZ Analyzer
 
-This document provides technical details for developers who want to extend or customize the HellaZ SiteZ Analyzer plugin.
+## Table of Contents
+
+- Overview
+- Architecture
+- Core Classes
+- Data Flow
+- Adding New Features
+- Hooks and Filters
+- Translation and i18n
+- Performance and Caching
+- Security Considerations
+- Templates and Theming
+- Bulk Processing
+- API Integrations
+- Testing and Debugging
+
+## Overview
+
+HellaZ SiteZ Analyzer is modular WordPress plugin designed to analyze websites by fetching metadata, social links, security data, and technology info. It provides multiple UI entry points (shortcode, widgets, Gutenberg blocks) and admin tooling for configuration, bulk processing, and logs.
 
 ## Architecture
 
-The plugin is modular, with each class responsible for a specific feature or functionality. Dependencies are managed through the `Core` class (`class-hsz-core.php`), which initializes all components.
+- **Bootstrap:** `hellaz-sitez-analyzer.php` initializes the plugin, defines constants and autoloading, and triggers `HSZ\Core::init()`.
+- **Core Orchestration:** `class-hsz-core.php` loads all components, registers hooks, and handles activation/deactivation tasks.
+- **Settings:** Provides admin UI and persistent options with tabbed organization.
+- **Metadata:** Extracts and parses metadata from fetched HTML and APIs.
+- **Social Media:** Parses social profile URLs from HTML and schema data.
+- **Bulk Processing:** Handles queued multiple URL analyses with database tracking.
+- **AJAX:** Supports asynchronous requests via secure handlers.
+- **Templates:** PHP partials provide flexible display of analysis results.
+- **Utilities:** Helpers for caching, encryption, logging, and performance measurement.
 
-### Key Files and Their Roles
-- **`hellaz-sitez-analyzer.php`**: Main plugin file. Initializes the plugin and enqueues assets.
-- **`uninstall.php`**: Cleans up plugin data (e.g., transients) upon uninstallation.
-- **`includes/class-hsz-core.php`**: Initializes all plugin components.
-- **`includes/class-hsz-gutenberg.php`**: Defines the Gutenberg block (`hsz/metadata-block`).
-- **`includes/class-hsz-metadata.php`**: Extracts metadata from URLs (e.g., Open Graph tags, social media links, SSL info).
-- **`includes/class-hsz-security.php`**: Retrieves SSL certificate information using APIs or direct parsing.
-- **`includes/class-hsz-apimanager.php`**: Manages API requests and caching.
-- **`includes/class-hsz-shortcode.php`**: Implements the `[hsz_metadata]` shortcode for backward compatibility.
-- **`includes/class-hsz-social-media.php`**: Detects and extracts social media links (e.g., Facebook, Twitter/X, LinkedIn, YouTube).
-- **`includes/class-hsz-settings.php`**: Provides an admin settings page for configuring plugin options.
-- **`includes/class-hsz-widget.php`**: Implements a widget for displaying metadata in sidebars.
-- **`templates/metadata-template.php`**: Renders metadata in a structured format for frontend display.
+## Core Classes
+
+- `Core` – Main plugin bootstrap.
+- `Settings` – Admin settings and forms.
+- `Metadata` – Metadata extraction logic.
+- `SocialMedia` – Social profile detection.
+- `BulkProcessor` – Batch job management.
+- `AjaxHandler` – Secure AJAX endpoints.
+- `AdminLogs` – Error and event log management.
+- `Utils` – Helper methods.
+- `Widget` – sidebar widget.
+- `Shortcode` – shortcode handler.
+- `Gutenberg` – block registration and rendering.
+
+## Data Flow
+
+1. User triggers analysis (shortcode, widget, block, or bulk).
+2. `Metadata` class fetches URL content, extracts metadata, caches results.
+3. `SocialMedia` parses social links from content.
+4. Output rendered per selected template.
+5. Bulk processing allows queued URL analysis with progress stored in DB tables.
+
+## Adding Features
+
+- Place new classes in `includes/`.
+- Register in `Core->load_dependencies()`.
+- Add new admin UI tabs in `Settings`.
+- Utilize caching via `Utils`.
+- Follow WordPress best practices for hooks, sanitization, and security.
 
 ## Hooks and Filters
 
-### Actions
-- `hsz_before_render_metadata`: Fires before rendering metadata.
-- `hsz_after_render_metadata`: Fires after rendering metadata.
+- `init` for shortcodes, blocks, REST registering.
+- `widgets_init` for widget registration.
+- `admin_menu` for settings UI.
+- AJAX actions protected by nonce (`hsz_analyze_nonce`) and capability checks.
 
-### Filters
-- `hsz_extracted_metadata`: Allows modifying extracted metadata before rendering.
-  ```php
-  add_filter('hsz_extracted_metadata', function ($metadata) {
-      $metadata['custom_field'] = 'Custom Value';
-      return $metadata;
-  });
+## Translation and i18n
 
-## Extending Functionality ##
-Adding New Platforms
-To add support for a new social media platform, update the detect_social_media_links() method in class-hsz-social-media.php:
+- All user-facing strings are wrapped in `__()`, `_e()`, `_x()`, etc.
+- POT file located in `/languages/hellaz-sitez-analyzer.pot`.
+- Use `load_plugin_textdomain()` on plugin init.
 
-$tiktok_links = $xpath->query('//a[contains(@href, "tiktok.com")]');
-Customizing Templates
-To customize the frontend output, copy templates/metadata-template.php to your theme directory and modify it as needed. For example:
+## Performance and Caching
 
-Copy the file to wp-content/themes/your-theme/hsz/metadata-template.php.
-Modify the template to suit your needs.
-Overriding Default Settings
-You can override default settings by filtering the hsz_default_settings hook:
+- Uses WP transients for result caching.
+- `Utils` provides cache get/set and clearing logic.
+- Cache duration controlled via admin.
+- Cache inspector displays current cache keys to admins.
 
-add_filter('hsz_default_settings', function ($defaults) {
-    $defaults['cache_duration'] = 3600; // Change cache duration to 1 hour
-    return $defaults;
-});
+## Security Considerations
 
-REST API Endpoint
-The plugin exposes a REST API endpoint for external integrations:
+- All inputs sanitized via `sanitize_text_field()`, `esc_url_raw()`, etc.
+- All outputs escaped with `esc_html()`, `esc_url()`.
+- AJAX endpoints validate nonces and user capabilities.
+- Sensitive data (API keys) encrypted at rest.
 
-GET /wp-json/hsz/v1/metadata/{url}
-Example:
+## Templates and Theming
 
-curl -X GET "https://example.com/wp-json/hsz/v1/metadata/https://wordpress.org"
-Support
-For support, please visit the GitHub repository .
+- Multiple output templates (classic, modern, compact).
+- Templates located in `/templates/`.
+- Templates receive sanitized data; can be overridden by developers.
 
-Contributing
-Contributions are welcome! If you'd like to contribute, please follow these steps:
+## Bulk Processing
 
-Fork the repository.
-Create a new branch for your feature or bug fix.
-Submit a pull request with a detailed description of your changes.
-License
-This plugin is released under the GPLv2 or later license
+- Uses dedicated DB tables for batch and URL tracking.
+- Progress and errors recorded for admin status display.
+- Can be extended with WP Cron or manual triggers.
+
+## API Integrations
+
+- VirusTotal, BuiltWith, URLScan.io keys saved securely.
+- Extend `Metadata` class to add API-enhanced data fetching.
+
+## Testing and Debugging
+
+- Use WP_DEBUG and log monitoring.
+- Use browser console and network inspector for AJAX.
+- Manual and unit testing recommended for new features.
+- Use `Utils::log_error()` for standardized logging.
+
+---
+
+For detailed code examples and development best practices, refer to `/docs` folder and inline code comments.

@@ -1,12 +1,12 @@
 <?php
 /**
- * Extracts and organizes comprehensive metadata from HTML content.
+ * Responsible for extracting all metadata from a given URL's HTML content.
  *
- * This class acts as a high-level orchestrator, using its own detailed parsing methods
- * and the centralized Cache class to extract, cache, and return a rich set of metadata.
+ * This class fetches HTML and parses it to find title, description,
+ * Open Graph data, Twitter cards, favicons, and other relevant metadata.
  *
  * @package HellaZ_SiteZ_Analyzer
- * @since 1.0.0
+ * @since 1.0.2
  */
 
 namespace HSZ;
@@ -22,165 +22,171 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Class Metadata
  *
- * Extracts and structures a comprehensive set of metadata from a web page.
+ * Extracts and processes metadata from HTML content.
  */
 class Metadata {
 
+	private string $url;
+	private string $html;
+	private array $data = [];
+
 	/**
-	 * Extract comprehensive metadata from a given URL.
+	 * Extracts all relevant metadata from the given HTML content.
 	 *
-	 * This is the main orchestrator method that retrieves content, calls specific
-	 * extraction helpers, applies fallbacks, and manages caching.
-	 *
-	 * @param string $url The URL to analyze.
+	 * @param string $url  The URL of the content being analyzed.
 	 * @param string $html The HTML content of the page.
-	 * @return array An array of all extracted metadata.
+	 * @return array An associative array containing all extracted metadata.
 	 */
 	public function extract_metadata( string $url, string $html ): array {
-		$cache_key   = 'metadata_' . md5( $url );
-		$cached_data = Cache::get_cache( $cache_key );
-
-		if ( is_array( $cached_data ) && ! empty( $cached_data ) ) {
-			return $cached_data;
-		}
-
 		if ( empty( $html ) ) {
 			return [ 'error' => __( 'HTML content is empty and cannot be analyzed.', 'hellaz-sitez-analyzer' ) ];
 		}
 
+		$this->url  = $url;
+		$this->html = $html;
+
 		try {
-			$dom = new DOMDocument();
-			libxml_use_internal_errors( true );
-			$dom->loadHTML( $html );
-			libxml_clear_errors();
-			$xpath = new DOMXPath( $dom );
-
-			$result = [
-				'title'         => $this->get_title( $dom ),
-				'description'   => $this->get_meta_tag( $xpath, 'description' ),
-				'favicon'       => $this->get_favicon( $xpath, $url ),
-				'language'      => $this->get_language( $dom ),
-				'og'            => $this->get_open_graph_tags( $xpath ),
-				'twitter'       => $this->get_twitter_card_tags( $xpath ),
-				'canonical'     => $this->get_canonical( $xpath, $url ),
-				'robots'        => $this->get_meta_tag( $xpath, 'robots' ),
-				'theme_color'   => $this->get_meta_tag( $xpath, 'theme-color' ),
-				'feeds'         => $this->get_rss_feeds( $xpath, $url ),
-				'contact_email' => $this->find_contact_email( $html ),
-				'phone_numbers' => $this->find_phone_numbers( $html ),
-			];
-
-			// --- Enhanced Fallback Logic ---
-			// 1. Prioritize social meta tags for title and description.
-			$result['title']       = $result['title'] ?: ( $result['og']['title'] ?? $result['twitter']['title'] ?? '' );
-			$result['description'] = $result['description'] ?: ( $result['og']['description'] ?? $result['twitter']['description'] ?? '' );
-			
-			// 2. Use global plugin settings as the final fallback.
-			$result['title']       = $result['title'] ?: Fallbacks::get_fallback_title();
-			$result['description'] = $result['description'] ?: Fallbacks::get_fallback_description();
-			$result['favicon']     = $result['favicon'] ?: Fallbacks::get_fallback_image();
-
-			Cache::set_cache( $cache_key, $result );
-
-			return $result;
+			$this->data['title']       = $this->get_title();
+			$this->data['description'] = $this->get_description();
+			$this->data['favicon']     = $this->get_favicon();
+			$this->data['og']          = $this->get_og_tags();
+			$this->data['twitter']     = $this->get_twitter_tags();
 
 		} catch ( \Throwable $e ) {
-			Utils::log_error( 'Metadata extraction error for ' . $url . ': ' . $e->getMessage() );
+			Utils::log_error( 'Metadata extraction error for ' . $url . ': ' . $e->getMessage(), __FILE__, __LINE__ );
 			return [ 'error' => __( 'An unexpected error occurred during metadata extraction.', 'hellaz-sitez-analyzer' ) ];
 		}
+
+		return $this->data;
 	}
 
-	private function get_title( DOMDocument $dom ): string {
-		$node = $dom->getElementsByTagName( 'title' );
-		return $node->length > 0 ? trim( $node->item( 0 )->nodeValue ) : '';
+	/**
+	 * Gets the page title, prioritizing Open Graph, then Twitter, then <title> tag.
+	 */
+	private function get_title(): string {
+		$og_tags = $this->get_og_tags();
+		if ( ! empty( $og_tags['title'] ) ) {
+			return $og_tags['title'];
+		}
+
+		$twitter_tags = $this->get_twitter_tags();
+		if ( ! empty( $twitter_tags['title'] ) ) {
+			return $twitter_tags['title'];
+		}
+
+		return $this->get_title_tag();
 	}
 
-	private function get_meta_tag( DOMXPath $xpath, string $name ): string {
-		$nodes = $xpath->query( "//meta[@name='{$name}']" );
-		return $nodes->length > 0 ? trim( $nodes->item( 0 )->getAttribute( 'content' ) ) : '';
+	/**
+	 * Gets the page description, prioritizing Open Graph, then Twitter, then meta description.
+	 */
+	private function get_description(): string {
+		$og_tags = $this->get_og_tags();
+		if ( ! empty( $og_tags['description'] ) ) {
+			return $og_tags['description'];
+		}
+
+		$twitter_tags = $this->get_twitter_tags();
+		if ( ! empty( $twitter_tags['description'] ) ) {
+			return $twitter_tags['description'];
+		}
+
+		$meta_tags = $this->get_meta_tags();
+		return $meta_tags['description'] ?? '';
 	}
 
-	private function get_favicon( DOMXPath $xpath, string $base_url ): string {
-		$queries = [
-			"//link[@rel='icon']",
-			"//link[@rel='shortcut icon']",
-			"//link[@rel='apple-touch-icon']",
-		];
-		foreach ( $queries as $query ) {
-			$nodes = $xpath->query( $query );
-			if ( $nodes->length > 0 ) {
-				$href = $nodes->item( 0 )->getAttribute( 'href' );
-				if ( $href ) {
-					return Utils::resolve_url( $href, $base_url );
-				}
+	// --- Private Helper Methods (Moved from Utils class) ---
+
+	private function get_meta_tags(): array {
+		if ( empty( $this->html ) ) {
+			return [];
+		}
+		$dom = new DOMDocument();
+		@$dom->loadHTML( $this->html );
+		$tags      = $dom->getElementsByTagName( 'meta' );
+		$meta_data = [];
+		foreach ( $tags as $tag ) {
+			$name = $tag->getAttribute( 'name' );
+			if ( $name ) {
+				$meta_data[ $name ] = $tag->getAttribute( 'content' );
 			}
 		}
-		return '';
+		return $meta_data;
 	}
-    
-	private function get_language( DOMDocument $dom ): string {
-		$html_node = $dom->getElementsByTagName( 'html' );
-		return $html_node->length > 0 ? $html_node->item( 0 )->getAttribute( 'lang' ) : '';
-	}
-
-	private function get_open_graph_tags( DOMXPath $xpath ): array {
-		$tags  = [];
-		$nodes = $xpath->query( "//meta[starts-with(@property, 'og:')]" );
-		foreach ( $nodes as $node ) {
-			$property         = substr( $node->getAttribute( 'property' ), 3 );
-			$tags[ $property ] = $node->getAttribute( 'content' );
+	
+	private function get_og_tags(): array {
+		if ( empty( $this->html ) ) {
+			return [];
 		}
-		return $tags;
-	}
-
-	private function get_twitter_card_tags( DOMXPath $xpath ): array {
-		$tags  = [];
-		$nodes = $xpath->query( "//meta[starts-with(@name, 'twitter:')]" );
-		foreach ( $nodes as $node ) {
-			$name             = substr( $node->getAttribute( 'name' ), 8 );
-			$tags[ $name ] = $node->getAttribute( 'content' );
-		}
-		return $tags;
-	}
-
-	private function get_canonical( DOMXPath $xpath, string $base_url ): string {
-		$nodes = $xpath->query( "//link[@rel='canonical']" );
-		if ( $nodes->length > 0 ) {
-			$href = $nodes->item( 0 )->getAttribute( 'href' );
-			return Utils::resolve_url( $href, $base_url );
-		}
-		return '';
-	}
-
-	private function get_rss_feeds( DOMXPath $xpath, string $base_url ): array {
-		$feeds = [];
-		$types = [ 'application/rss+xml', 'application/atom+xml' ];
-		foreach ( $types as $type ) {
-			$nodes = $xpath->query( "//link[@type='{$type}']" );
-			foreach ( $nodes as $node ) {
-				$href = $node->getAttribute( 'href' );
-				if ( $href ) {
-					$feeds[] = Utils::resolve_url( $href, $base_url );
-				}
+		$dom = new DOMDocument();
+		@$dom->loadHTML( $this->html );
+		$tags    = $dom->getElementsByTagName( 'meta' );
+		$og_data = [];
+		foreach ( $tags as $tag ) {
+			$property = $tag->getAttribute( 'property' );
+			if ( strpos( $property, 'og:' ) === 0 ) {
+				$og_data[ substr( $property, 3 ) ] = $tag->getAttribute( 'content' );
 			}
 		}
-		return array_unique( $feeds );
+		return $og_data;
 	}
-    
-	private function find_contact_email( string $html ): string {
-		// A simple regex to find potential email addresses.
-		if ( preg_match( '/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/', $html, $matches ) ) {
-			return $matches[0];
+	
+	private function get_twitter_tags(): array {
+		if ( empty( $this->html ) ) {
+			return [];
 		}
-		return '';
+		$dom = new DOMDocument();
+		@$dom->loadHTML( $this->html );
+		$tags         = $dom->getElementsByTagName( 'meta' );
+		$twitter_data = [];
+		foreach ( $tags as $tag ) {
+			$name = $tag->getAttribute( 'name' );
+			if ( strpos( $name, 'twitter:' ) === 0 ) {
+				$twitter_data[ substr( $name, 8 ) ] = $tag->getAttribute( 'content' );
+			}
+		}
+		return $twitter_data;
 	}
-
-	private function find_phone_numbers( string $html ): array {
-		// A simple regex to find potential phone numbers.
-		$numbers = [];
-		if ( preg_match_all( '/(\+\d{1,3}\s?)?(\(\d{1,4}\)|\d{1,4})[\s.-]?\d{3,4}[\s.-]?\d{3,4}/', $html, $matches ) ) {
-			$numbers = $matches[0];
+	
+	private function get_title_tag(): string {
+		if ( empty( $this->html ) ) {
+			return '';
 		}
-		return array_unique( $numbers );
+		$dom = new DOMDocument();
+		@$dom->loadHTML( $this->html );
+		$title_node = $dom->getElementsByTagName( 'title' );
+		return $title_node->length > 0 ? trim( $title_node->item( 0 )->nodeValue ) : '';
+	}
+	
+	private function get_favicon() {
+		if ( empty( $this->html ) ) {
+			return false;
+		}
+		$dom = new DOMDocument();
+		@$dom->loadHTML( $this->html );
+		$xpath = new DOMXPath( $dom );
+		$links = $xpath->query( "//link[contains(@rel, 'icon') or contains(@rel, 'shortcut icon')]" );
+		if ( $links->length > 0 ) {
+			$href = $links->item( 0 )->getAttribute( 'href' );
+			return $this->resolve_url( $href );
+		}
+		return $this->resolve_url( '/favicon.ico' );
+	}
+	
+	private function resolve_url( string $path ): string {
+		if ( strpos( $path, '//' ) === 0 ) {
+			$base_parts = parse_url( $this->url );
+			return ( $base_parts['scheme'] ?? 'http' ) . ':' . $path;
+		}
+		if ( parse_url( $path, PHP_URL_SCHEME ) !== null ) {
+			return $path;
+		}
+		$base_parts = parse_url( $this->url );
+		$base_root  = ( $base_parts['scheme'] ?? 'http' ) . '://' . ( $base_parts['host'] ?? '' );
+		if ( strpos( $path, '/' ) === 0 ) {
+			return $base_root . $path;
+		}
+		$current_path = dirname( $base_parts['path'] ?? '' );
+		return $base_root . ( $current_path === '/' ? '' : $current_path ) . '/' . $path;
 	}
 }

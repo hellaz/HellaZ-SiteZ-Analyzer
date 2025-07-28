@@ -52,7 +52,8 @@ class Core {
 	/**
 	 * Define the core functionality of the plugin.
 	 *
-	 * Set the plugin version and initialize hooks.
+	 * Set the plugin version and initialize hooks. The constructor is private
+	 * to enforce the singleton pattern.
 	 */
 	private function __construct() {
 		$this->version = HSZ_VERSION;
@@ -98,7 +99,8 @@ class Core {
 	 * The main execution function for the plugin.
 	 */
 	public function run() {
-		// All functionality is initialized via hooks in the constructor.
+		// All functionality is initialized via hooks in the private constructor.
+		// This public method exists as a clean entry point.
 	}
 
 	/**
@@ -131,10 +133,7 @@ class Core {
 	 * Cleanup tasks if necessary on plugin deactivation.
 	 */
 	public static function deactivate() {
-		// Example: Unschedule cron jobs if needed.
-		// if ( wp_next_scheduled( 'hsz_database_maintenance' ) ) {
-		//  wp_clear_scheduled_hook( 'hsz_database_maintenance' );
-		// }
+		// This is a placeholder for future deactivation logic.
 	}
 
 	/**

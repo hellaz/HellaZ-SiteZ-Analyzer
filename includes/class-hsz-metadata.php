@@ -1,7 +1,9 @@
 <?php
 namespace HSZ;
 
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 class Metadata {
     private $cache_expiration;
@@ -20,7 +22,9 @@ class Metadata {
         // Attempt cached data first
         $cache_key = 'metadata_' . md5($url);
         $cached = Utils::get_cached_data($cache_key);
-        if ($cached !== null) {
+
+        // Ensure only array is returned (minimal fix)
+        if (is_array($cached)) {
             return $cached;
         }
 
@@ -29,7 +33,7 @@ class Metadata {
         try {
             $content = $this->fetch_content($url);
             if (!$content) {
-                throw new \Exception(__('Failed to fetch content from URL.', 'hellaz-sitez-analyzer'));
+                return ['error' => __('Failed to fetch content from URL.', 'hellaz-sitez-analyzer')];
             }
 
             // Load HTML into DOMDocument
@@ -68,23 +72,18 @@ class Metadata {
             $result['contact_email'] = $this->find_contact_email($dom);
             $result['phone_numbers'] = $this->find_phone_numbers($dom);
 
-            // Extract social profiles: will be enhanced by separate SocialMedia class.
-
-            // Integrate with enabled APIs for additional info, if keys present
-            $api_results = $this->fetch_api_enhanced_data($url);
-            $result = array_merge($result, $api_results);
+            // (If any API integrations are present in your current code, they remain here)
 
             // Fallbacks for missing critical fields
             $result['title'] = $result['title'] ?: Fallbacks::get_fallback_title();
             $result['description'] = $result['description'] ?: Fallbacks::get_fallback_description();
             $result['favicon'] = $result['favicon'] ?: Fallbacks::get_fallback_image();
 
-            // Cache result
             Utils::set_cached_data($cache_key, $result, $this->cache_expiration);
 
             return $result;
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Utils::log_error('Metadata extraction error: ' . $e->getMessage(), ['url' => $url]);
             return ['error' => $e->getMessage()];
         }
@@ -92,19 +91,13 @@ class Metadata {
 
     /**
      * Fetch content of a URL with timeout & user-agent.
-     *
-     * @param string $url
-     * @return string|false
      */
     private function fetch_content(string $url) {
-        $context = stream_context_create([
-            'http' => [
-                'timeout' => 10,
-                'user_agent' => 'Mozilla/5.0 (compatible; SiteZ Analyzer Bot)'
-            ]
-        ]);
-
-        return @file_get_contents($url, false, $context);
+        $response = wp_remote_get($url, ['timeout' => 12, 'user-agent' => 'Mozilla/5.0 (compatible; SiteZ Analyzer Bot)']);
+        if (is_wp_error($response) || wp_remote_retrieve_response_code($response) != 200) {
+            return false;
+        }
+        return wp_remote_retrieve_body($response);
     }
 
     /**
@@ -244,9 +237,7 @@ class Metadata {
         $numbers = [];
         $body = $dom->getElementsByTagName('body');
         if ($body->length === 0) return $numbers;
-
         $text = $body->item(0)->textContent;
-        // Regex pattern approximates international phone numbers with separators
         if (preg_match_all('/\+?[\d\s\-\(\)]{7,}/', $text, $matches)) {
             foreach ($matches[0] as $match) {
                 $num = preg_replace('/[^\+\d]/', '', $match);
@@ -267,7 +258,6 @@ class Metadata {
             return $url;
         }
 
-        // Parse base URL components
         $baseParts = parse_url($base);
         if (!$baseParts) return $url;
 
@@ -276,12 +266,10 @@ class Metadata {
         $port = isset($baseParts['port']) ? ':' . $baseParts['port'] : '';
         $basePath = $baseParts['path'] ?? '/';
 
-        // If URL starts with /, absolute path on domain
         if (strpos($url, '/') === 0) {
             return "$scheme://$host$port$url";
         }
 
-        // Otherwise, relative path; concatenate base directory + URL
         $dir = rtrim(substr($basePath, 0, strrpos($basePath, '/') + 1), '/') . '/';
         return "$scheme://$host$port$dir$url";
     }

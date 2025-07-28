@@ -6,7 +6,7 @@ use WP_Widget;
 if (!defined('ABSPATH')) exit;
 
 /**
- * SiteZ Analyzer Widget
+ * Hellaz SiteZ Analyzer Widget
  */
 class Widget extends WP_Widget
 {

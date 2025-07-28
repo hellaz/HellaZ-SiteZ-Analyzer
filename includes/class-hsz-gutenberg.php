@@ -6,6 +6,7 @@ if (!defined('ABSPATH')) {
 }
 
 /**
+ * Hellaz SiteZ Analyzer Gutenberg Block
  * Gutenberg block integration for HellaZ SiteZ Analyzer.
  */
 class Gutenberg

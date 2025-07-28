@@ -6,6 +6,7 @@ if (!defined('ABSPATH')) {
 }
 
 /**
+ * Hellaz SiteZ Analyzer Shortcode
  * Shortcode handler for [hsz_analyzer]
  */
 class Shortcode

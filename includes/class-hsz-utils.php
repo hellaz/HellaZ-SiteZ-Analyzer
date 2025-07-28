@@ -173,7 +173,7 @@ class Utils {
 		}
 		return wp_remote_retrieve_body( $response );
 	}
-	
+
 	/**
 	 * Gets the HTTP status code for a given URL.
 	 *
@@ -371,7 +371,7 @@ class Utils {
 	 * @param string $base_url The base URL to use for resolution.
 	 * @return string The absolute URL.
 	 */
-	private static function resolve_url( string $url, string $base_url ): string {
+	public static function resolve_url( string $url, string $base_url ): string {
 		if ( strpos( $url, '//' ) === 0 ) {
 			$base_parts = parse_url( $base_url );
 			return ( $base_parts['scheme'] ?? 'http' ) . ':' . $url;

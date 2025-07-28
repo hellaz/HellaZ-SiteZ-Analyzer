@@ -94,6 +94,7 @@ class Admin {
 		register_setting( $this->settings_group, 'hsz_disclaimer_enabled', [ 'sanitize_callback' => 'absint' ] );
 		register_setting( $this->settings_group, 'hsz_disclaimer_message', [ 'sanitize_callback' => 'wp_kses_post' ] );
 		register_setting( $this->settings_group, 'hsz_auto_analyze_content', [ 'sanitize_callback' => 'absint' ] );
+		register_setting( $this->settings_group, 'hsz_disable_ssl_verify', [ 'sanitize_callback' => 'absint' ] );
 
 		// API Keys Tab
 		$apis = [ 'virustotal', 'builtwith', 'urlscan' ];
@@ -207,6 +208,18 @@ class Admin {
 					<textarea id="hsz_disclaimer_message" name="hsz_disclaimer_message" rows="5" class="large-text"><?php echo esc_textarea( get_option( 'hsz_disclaimer_message', '' ) ); ?></textarea>
 				</td>
 			</tr>
+			<tr valign="top"><th scope="row" colspan="2"><hr><h3><?php esc_html_e( 'Advanced Settings', 'hellaz-sitez-analyzer' ); ?></h3></th></tr>
+			<tr valign="top">
+				<th scope="row"><?php esc_html_e( 'Disable SSL Verification', 'hellaz-sitez-analyzer' ); ?></th>
+				<td>
+					<label><input type="checkbox" name="hsz_disable_ssl_verify" value="1" <?php checked( 1, get_option( 'hsz_disable_ssl_verify', 0 ) ); ?> /> <?php esc_html_e( 'Disable SSL certificate verification for all outbound requests.', 'hellaz-sitez-analyzer' ); ?></label>
+					<p class="description" style="color: #c00;">
+						<strong><?php esc_html_e( 'Warning:', 'hellaz-sitez-analyzer' ); ?></strong>
+						<?php esc_html_e( 'This is a security risk and should only be enabled if you are experiencing "cURL error 60" due to a server configuration issue. Enabling this makes your site vulnerable to man-in-the-middle attacks.', 'hellaz-sitez-analyzer' ); ?>
+					</p>
+				</td>
+			</tr>
+
 		</table>
 		<?php
 	}

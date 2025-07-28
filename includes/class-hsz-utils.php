@@ -162,14 +162,18 @@ class Utils {
 	 * @return string|WP_Error The HTML content as a string or a WP_Error on failure.
 	 */
 	public static function get_html( string $url ) {
-		$response = wp_remote_get( esc_url_raw( $url ) );
+		$args = [];
+		if ( get_option( 'hsz_disable_ssl_verify', 0 ) ) {
+			$args['sslverify'] = false;
+		}
+		$response = wp_remote_get( esc_url_raw( $url ), $args );
 		if ( is_wp_error( $response ) ) {
 			self::log_error( 'Failed to fetch URL: ' . $url . ' - ' . $response->get_error_message() );
 			return $response;
 		}
 		return wp_remote_retrieve_body( $response );
 	}
-
+	
 	/**
 	 * Gets the HTTP status code for a given URL.
 	 *
@@ -177,14 +181,17 @@ class Utils {
 	 * @return int|WP_Error The HTTP status code or a WP_Error on failure.
 	 */
 	public static function get_http_status( string $url ) {
-		$response = wp_remote_head( esc_url_raw( $url ) );
-		if ( is_wp_error( $response ) ) {
-			self::log_error( 'Failed to get HTTP status for URL: ' . $url . ' - ' . $response->get_error_message() );
-			return $response;
-		}
-		return wp_remote_retrieve_response_code( $response );
-	}
-
+    $args = [];
+    if ( get_option( 'hsz_disable_ssl_verify', 0 ) ) {
+        $args['sslverify'] = false;
+    }
+    $response = wp_remote_head( esc_url_raw( $url ), $args );
+    if ( is_wp_error( $response ) ) {
+        self::log_error( 'Failed to get HTTP status for URL: ' . $url . ' - ' . $response->get_error_message() );
+        return $response;
+    }
+    return wp_remote_retrieve_response_code( $response );
+}
 	/**
 	 * Parses HTML to extract meta tags.
 	 *

@@ -107,6 +107,10 @@ class Core {
 	 * Creates database tables and sets default options.
 	 */
 	public static function activate() {
+		// **CRITICAL FIX**: Explicitly require the Database class file here to
+		// prevent a fatal error on activation if the autoloader is not yet available.
+		require_once HSZ_PLUGIN_PATH . 'includes/class-hsz-database.php';
+		
 		// Delegate table creation to the centralized Database class.
 		if ( class_exists( 'HSZ\\Database' ) ) {
 			Database::create_tables();

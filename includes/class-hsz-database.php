@@ -1,158 +1,144 @@
 <?php
+/**
+ * Manages all database operations, including table creation and updates.
+ *
+ * @package HellaZ_SiteZ_Analyzer
+ * @since 1.0.0
+ */
+
 namespace HSZ;
 
-if (!defined('ABSPATH')) exit;
-
-class Database {
-    
-    public static function create_tables() {
-        global $wpdb;
-        $charset_collate = $wpdb->get_charset_collate();
-        
-        // Enhanced bulk batches table with proper indexing
-        $table_batches = $wpdb->prefix . 'hsz_bulk_batches';
-        $sql_batches = "CREATE TABLE $table_batches (
-            id mediumint(9) NOT NULL AUTO_INCREMENT,
-            batch_id varchar(100) NOT NULL,
-            user_id bigint(20) NOT NULL,
-            name varchar(255) NOT NULL,
-            status enum('pending','processing','completed','failed','cancelled') DEFAULT 'pending',
-            total_urls int(11) DEFAULT 0,
-            processed_urls int(11) DEFAULT 0,
-            successful_urls int(11) DEFAULT 0,
-            failed_urls int(11) DEFAULT 0,
-            settings longtext,
-            created_at datetime DEFAULT CURRENT_TIMESTAMP,
-            started_at datetime DEFAULT NULL,
-            completed_at datetime DEFAULT NULL,
-            PRIMARY KEY (id),
-            UNIQUE KEY batch_id (batch_id),
-            KEY user_status (user_id, status),
-            KEY created_at (created_at),
-            KEY status_created (status, created_at)
-        ) $charset_collate;";
-        
-        // Enhanced bulk results table with proper indexing
-        $table_results = $wpdb->prefix . 'hsz_bulk_results';
-        $sql_results = "CREATE TABLE $table_results (
-            id mediumint(9) NOT NULL AUTO_INCREMENT,
-            batch_id varchar(100) NOT NULL,
-            url varchar(2048) NOT NULL,
-            status enum('pending','processing','completed','failed') DEFAULT 'pending',
-            metadata longtext,
-            social_media longtext,
-            security_info longtext,
-            error_message text,
-            processing_time float DEFAULT NULL,
-            created_at datetime DEFAULT CURRENT_TIMESTAMP,
-            processed_at datetime DEFAULT NULL,
-            PRIMARY KEY (id),
-            KEY batch_status (batch_id, status),
-            KEY url_hash (url(191)),
-            KEY processed_at (processed_at),
-            KEY status_created (status, created_at)
-        ) $charset_collate;";
-        
-        // Enhanced analysis cache table with proper indexing and TTL
-        $table_cache = $wpdb->prefix . 'hsz_analysis_cache';
-        $sql_cache = "CREATE TABLE $table_cache (
-            id mediumint(9) NOT NULL AUTO_INCREMENT,
-            url_hash varchar(64) NOT NULL,
-            url varchar(2048) NOT NULL,
-            metadata longtext,
-            social_media longtext,
-            security_info longtext,
-            expires_at datetime NOT NULL,
-            created_at datetime DEFAULT CURRENT_TIMESTAMP,
-            access_count int(11) DEFAULT 1,
-            last_accessed datetime DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (id),
-            UNIQUE KEY url_hash (url_hash),
-            KEY expires_at (expires_at),
-            KEY last_accessed (last_accessed),
-            KEY url_partial (url(191))
-        ) $charset_collate;";
-        
-        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-        
-        dbDelta($sql_batches);
-        dbDelta($sql_results);
-        dbDelta($sql_cache);
-        
-        // Update database version
-        update_option('hsz_db_version', HSZ_DB_VERSION);
-        
-        // Schedule database maintenance
-        if (!wp_next_scheduled('hsz_database_maintenance')) {
-            wp_schedule_event(time(), 'weekly', 'hsz_database_maintenance');
-        }
-        
-        Utils::log_error('Database tables created/updated successfully');
-    }
-    
-    public static function create_tables_new_site($blog_id) {
-        if (is_plugin_active_for_network(HSZ_PLUGIN_BASENAME)) {
-            switch_to_blog($blog_id);
-            self::create_tables();
-            restore_current_blog();
-        }
-    }
-    
-    public static function check_db_version() {
-        $current_version = get_option('hsz_db_version', '1.0.0');
-        if (version_compare($current_version, HSZ_DB_VERSION, '<')) {
-            self::create_tables();
-            Utils::log_error('Database upgraded from version ' . $current_version . ' to ' . HSZ_DB_VERSION);
-        }
-    }
-    
-    /**
-     * Database maintenance tasks
-     */
-    public static function maintenance() {
-        global $wpdb;
-        
-        Utils::log_error('Starting database maintenance');
-        
-        // Clean up expired cache entries
-        $cache_table = $wpdb->prefix . 'hsz_analysis_cache';
-        $deleted_cache = $wpdb->query(
-            "DELETE FROM $cache_table WHERE expires_at < NOW()"
-        );
-        
-        // Clean up old completed batches (older than 30 days)
-        $batch_table = $wpdb->prefix . 'hsz_bulk_batches';
-        $results_table = $wpdb->prefix . 'hsz_bulk_results';
-        
-        $old_batches = $wpdb->get_col(
-            "SELECT batch_id FROM $batch_table 
-             WHERE status IN ('completed', 'failed', 'cancelled') 
-             AND completed_at < DATE_SUB(NOW(), INTERVAL 30 DAY)"
-        );
-        
-        $deleted_batches = 0;
-        $deleted_results = 0;
-        
-        if (!empty($old_batches)) {
-            $batch_ids = "'" . implode("','", array_map('esc_sql', $old_batches)) . "'";
-            
-            $deleted_results = $wpdb->query(
-                "DELETE FROM $results_table WHERE batch_id IN ($batch_ids)"
-            );
-            
-            $deleted_batches = $wpdb->query(
-                "DELETE FROM $batch_table WHERE batch_id IN ($batch_ids)"
-            );
-        }
-        
-        // Optimize tables
-        $wpdb->query("OPTIMIZE TABLE $cache_table");
-        $wpdb->query("OPTIMIZE TABLE $batch_table");
-        $wpdb->query("OPTIMIZE TABLE $results_table");
-        
-        Utils::log_error("Database maintenance completed: {$deleted_cache} cache entries, {$deleted_batches} batches, {$deleted_results} results cleaned up");
-    }
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
 }
 
-// Hook database maintenance
-add_action('hsz_database_maintenance', array('HSZ\\Database', 'maintenance'));
+/**
+ * Class Database
+ *
+ * Handles the creation and maintenance of custom database tables.
+ */
+class Database {
+
+	/**
+	 * The current database version.
+	 *
+	 * This constant is the single source of truth for the database schema version.
+	 * It is used to track whether the database needs to be updated.
+	 *
+	 * @var string
+	 */
+	private const DB_VERSION = '1.0';
+
+	/**
+	 * The prefix for all custom tables created by this plugin.
+	 *
+	 * @var string
+	 */
+	private const TABLE_PREFIX = 'hsz_';
+
+	/**
+	 * Creates all necessary database tables for the plugin.
+	 *
+	 * This method is called upon plugin activation. It uses the dbDelta function
+	 * to create or update tables to match the defined schema.
+	 */
+	public static function create_tables(): void {
+		global $wpdb;
+
+		$charset_collate = $wpdb->get_charset_collate();
+		$table_prefix    = $wpdb->prefix . self::TABLE_PREFIX;
+
+		// SQL for the bulk analysis batches table.
+		$sql_batches = "CREATE TABLE {$table_prefix}bulk_batches (
+			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			batch_id varchar(255) NOT NULL,
+			user_id bigint(20) unsigned NOT NULL,
+			name varchar(255) DEFAULT '' NOT NULL,
+			status varchar(20) DEFAULT 'pending' NOT NULL,
+			total_urls int(11) unsigned DEFAULT 0 NOT NULL,
+			processed_urls int(11) unsigned DEFAULT 0 NOT NULL,
+			successful_urls int(11) unsigned DEFAULT 0 NOT NULL,
+			failed_urls int(11) unsigned DEFAULT 0 NOT NULL,
+			settings text,
+			created_at datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+			updated_at datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+			PRIMARY KEY (id),
+			UNIQUE KEY batch_id (batch_id),
+			KEY user_id (user_id)
+		) $charset_collate;";
+
+		// SQL for the bulk analysis results table.
+		$sql_results = "CREATE TABLE {$table_prefix}bulk_results (
+			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			batch_id varchar(255) NOT NULL,
+			url text NOT NULL,
+			status varchar(20) DEFAULT 'pending' NOT NULL,
+			result longtext,
+			processed_at datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+			created_at datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+			PRIMARY KEY (id),
+			KEY batch_id (batch_id)
+		) $charset_collate;";
+
+		// SQL for the analysis cache table.
+		$sql_cache = "CREATE TABLE {$table_prefix}analysis_cache (
+			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			cache_key varchar(191) NOT NULL,
+			url text NOT NULL,
+			data longtext NOT NULL,
+			created_at datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+			expires_at datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+			PRIMARY KEY (id),
+			UNIQUE KEY cache_key (cache_key)
+		) $charset_collate;";
+
+		// SQL for the error log table.
+		$sql_log = "CREATE TABLE {$table_prefix}error_log (
+			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			error_code varchar(50) DEFAULT '' NOT NULL,
+			message text NOT NULL,
+			context text,
+			created_at datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+			PRIMARY KEY (id),
+			KEY error_code (error_code)
+		) $charset_collate;";
+
+		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+		dbDelta( $sql_batches );
+		dbDelta( $sql_results );
+		dbDelta( $sql_cache );
+		dbDelta( $sql_log );
+
+		// CRITICAL FIX: Use the internal class constant instead of a global one.
+		update_option( 'hsz_db_version', self::DB_VERSION );
+	}
+
+	/**
+	 * Checks if the database is up to date and runs upgrades if necessary.
+	 *
+	 * This method compares the stored database version with the plugin's current
+	 * database version constant and triggers an update if they do not match.
+	 */
+	public static function check_db_version(): void {
+		$installed_version = get_option( 'hsz_db_version' );
+
+		// If the stored version does not match the current version, re-run table creation.
+		if ( $installed_version !== self::DB_VERSION ) {
+			self::create_tables();
+		}
+	}
+
+	/**
+	 * Activation hook for new sites in a multisite network.
+	 *
+	 * @param int $blog_id The ID of the new site.
+	 */
+	public static function create_tables_new_site( int $blog_id ): void {
+		if ( is_plugin_active_for_network( plugin_basename( HSZ_PLUGIN_PATH . 'hellaz-sitez-analyzer.php' ) ) ) {
+			switch_to_blog( $blog_id );
+			self::create_tables();
+			restore_current_blog();
+		}
+	}
+}

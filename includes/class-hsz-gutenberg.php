@@ -113,6 +113,8 @@ class Gutenberg {
 
 			// Step 5: Render the output using an output buffer.
 			ob_start();
+			error_log( '[HSZ Debug] Template path checked by Gutenberg block: ' . $template_path );
+
 			if ( file_exists( $template_path ) ) {
 				// Make all extracted data available to the included template.
 				include $template_path;

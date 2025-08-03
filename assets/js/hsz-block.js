@@ -1,8 +1,7 @@
 /**
  * HellaZ SiteZ Analyzer - Gutenberg Block
  *
- * This file contains the client-side logic for the main Gutenberg block,
- * including settings, AJAX requests, and editor previews.
+ * Client-side logic for the main Gutenberg block, including settings, AJAX requests, and editor previews.
  *
  * @version 1.0.1
  * @author HellaZ
@@ -31,55 +30,46 @@
 			url: { type: 'string', default: '' },
 			displayType: { type: 'string', default: 'full' },
 		},
+
 		edit: function(props) {
 			const { attributes, setAttributes } = props;
 			const { url, displayType } = attributes;
 			const blockProps = useBlockProps({ className: 'hsz-analyzer-block-editor' });
-
 			const [analysisData, setAnalysisData] = useState(null);
 			const [isLoading, setIsLoading] = useState(false);
 			const [error, setError] = useState('');
 
-			/**
-			 * Handles the AJAX request to analyze the URL.
-			 */
 			const analyzeUrl = function() {
-				// BUG FIX: Added an else block to prevent execution flow continuing after error.
 				if (!url || !url.trim()) {
 					setError(__('Please enter a valid URL.', 'hellaz-sitez-analyzer'));
-				} else {
-					setIsLoading(true);
-					setError('');
-					setAnalysisData(null);
-
-					wp.ajax.post('hsz_analyze_url', {
-							url: url.trim(),
-							_wpnonce: window.hsz_block_params.nonce || '', // Assumes hsz_block_params is localized.
-						})
-						.done(function(response) {
-							// BUG FIX: Access data from the `data` property of the successful response.
-							if (response && response.data) {
-								setAnalysisData(response.data);
-							} else {
-								setError(__('Invalid response structure from server.', 'hellaz-sitez-analyzer'));
-							}
-						})
-						.fail(function(xhr) {
-							let errorMessage = __('Failed to analyze URL. The server returned an error.', 'hellaz-sitez-analyzer');
-							if (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) {
-								errorMessage = xhr.responseJSON.data.message;
-							}
-							setError(errorMessage);
-						})
-						.always(function() {
-							setIsLoading(false);
-						});
+					return;
 				}
+				setIsLoading(true);
+				setError('');
+				setAnalysisData(null);
+				wp.ajax.post('hsz_analyze_url', {
+					url: url.trim(),
+					nonce: window.hsz_block_params.nonce || '',  // <-- Changed field name here.
+				})
+				.done(function(response) {
+					if (response && response.data) {
+						setAnalysisData(response.data);
+					} else {
+						setError(__('Invalid response structure from server.', 'hellaz-sitez-analyzer'));
+					}
+				})
+				.fail(function(xhr) {
+					let errorMessage = __('Failed to analyze URL. The server returned an error.', 'hellaz-sitez-analyzer');
+					if (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) {
+						errorMessage = xhr.responseJSON.data.message;
+					}
+					setError(errorMessage);
+				})
+				.always(function() {
+					setIsLoading(false);
+				});
 			};
 
-			/**
-			 * Renders the preview inside the block editor based on the current state.
-			 */
 			const renderPreview = function() {
 				if (isLoading) {
 					return createElement('div', { className: 'hsz-loading' },
@@ -87,18 +77,14 @@
 						createElement('p', null, __('Analyzing URL...', 'hellaz-sitez-analyzer'))
 					);
 				}
-
 				if (error) {
 					return createElement(Notice, { status: 'error', isDismissible: false }, error);
 				}
-
 				if (!analysisData) {
 					return createElement('div', { className: 'hsz-placeholder' },
 						createElement('p', null, __('Enter a URL and click "Analyze" to see a preview.', 'hellaz-sitez-analyzer'))
 					);
 				}
-
-				// BUG FIX: Access metadata from the correct object path.
 				const metadata = analysisData.metadata || {};
 				const social = analysisData.social || [];
 				const socialCount = Array.isArray(social) ? social.length : 0;
@@ -123,35 +109,35 @@
 
 			return [
 				createElement(InspectorControls, { key: 'inspector' },
-					createElement(PanelBody, {
-						title: __('Analyzer Settings', 'hellaz-sitez-analyzer'),
-						initialOpen: true,
-					},
-					createElement(TextControl, {
-						label: __('Website URL', 'hellaz-sitez-analyzer'),
-						value: url,
-						onChange: (val) => setAttributes({ url: val }),
-						placeholder: __('https://example.com', 'hellaz-sitez-analyzer'),
-						help: __('Enter the URL you want to analyze.', 'hellaz-sitez-analyzer'),
-					}),
-					createElement(SelectControl, {
-						label: __('Display Type', 'hellaz-sitez-analyzer'),
-						value: displayType,
-						options: [
-							{ label: __('Full Analysis', 'hellaz-sitez-analyzer'), value: 'full' },
-							{ label: __('Metadata Only', 'hellaz-sitez-analyzer'), value: 'metadata' },
-							{ label: __('Social Media Only', 'hellaz-sitez-analyzer'), value: 'social' },
-						],
-						onChange: (val) => setAttributes({ displayType: val }),
-						help: __('Choose what information to display.', 'hellaz-sitez-analyzer'),
-					}),
-					createElement(Button, {
-						isPrimary: true,
-						onClick: analyzeUrl,
-						disabled: !url || isLoading,
-						isBusy: isLoading,
-					}, isLoading ? __('Analyzing...', 'hellaz-sitez-analyzer') : __('Analyze URL', 'hellaz-sitez-analyzer')))
+					createElement(PanelBody,
+						{ title: __('Analyzer Settings', 'hellaz-sitez-analyzer'), initialOpen: true },
+						createElement(TextControl, {
+							label: __('Website URL', 'hellaz-sitez-analyzer'),
+							value: url,
+							onChange: (val) => setAttributes({ url: val }),
+							placeholder: __('https://example.com', 'hellaz-sitez-analyzer'),
+							help: __('Enter the URL you want to analyze.', 'hellaz-sitez-analyzer'),
+						}),
+						createElement(SelectControl, {
+							label: __('Display Type', 'hellaz-sitez-analyzer'),
+							value: displayType,
+							options: [
+								{ label: __('Full Analysis', 'hellaz-sitez-analyzer'), value: 'full' },
+								{ label: __('Metadata Only', 'hellaz-sitez-analyzer'), value: 'metadata' },
+								{ label: __('Social Media Only', 'hellaz-sitez-analyzer'), value: 'social' },
+							],
+							onChange: (val) => setAttributes({ displayType: val }),
+							help: __('Choose what information to display.', 'hellaz-sitez-analyzer'),
+						}),
+						createElement(Button, {
+							isPrimary: true,
+							onClick: analyzeUrl,
+							disabled: !url || isLoading,
+							isBusy: isLoading,
+						}, isLoading ? __('Analyzing...', 'hellaz-sitez-analyzer') : __('Analyze URL', 'hellaz-sitez-analyzer'))
+					)
 				),
+
 				createElement('div', Object.assign({ key: 'block' }, blockProps),
 					createElement('div', { className: 'hsz-block-header' },
 						createElement('h3', null, __('HellaZ SiteZ Analyzer', 'hellaz-sitez-analyzer')),
@@ -161,15 +147,9 @@
 				)
 			];
 		},
+
 		save: function() {
 			return null; // Server-side rendering handled by PHP.
 		},
 	});
-
-})(
-	window.wp.blocks,
-	window.wp.element,
-	window.wp.blockEditor,
-	window.wp.components,
-	window.wp.i18n
-);
+})(window.wp.blocks, window.wp.element, window.wp.blockEditor, window.wp.components, window.wp.i18n);

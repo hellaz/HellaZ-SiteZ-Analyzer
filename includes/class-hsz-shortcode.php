@@ -77,6 +77,8 @@ class Shortcode {
 			$template_path = HSZ_PLUGIN_PATH . "templates/metadata-{$template_mode}.php";
 
 			ob_start();
+			error_log( '[HSZ Debug] Template path checked by shortcode: ' . $template_path );
+
 			if ( file_exists( $template_path ) ) {
 				include $template_path;
 			} else {

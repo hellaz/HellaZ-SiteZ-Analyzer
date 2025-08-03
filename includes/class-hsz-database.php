@@ -1,6 +1,8 @@
 <?php
 /**
- * Manages all database operations, including table creation and updates.
+ * Database management class for HellaZ SiteZ Analyzer.
+ *
+ * Handles table creation and database versioning.
  *
  * @package HellaZ_SiteZ_Analyzer
  * @since 1.0.0
@@ -8,40 +10,24 @@
 
 namespace HSZ;
 
-// Exit if accessed directly.
+use wpdb;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-/**
- * Class Database
- *
- * Handles the creation and maintenance of custom database tables.
- */
 class Database {
 
-	/**
-	 * The current database version.
-	 *
-	 * This constant is the single source of truth for the database schema version.
-	 * It is used to track whether the database needs to be updated.
-	 *
-	 * @var string
-	 */
-	private const DB_VERSION = '1.0';
+	/** Plugin's database version. Increment on schema updates. */
+	const DB_VERSION = '1.0.2';
+
+	/** Table prefix used by this plugin */
+	const TABLE_PREFIX = 'hsz_';
 
 	/**
-	 * The prefix for all custom tables created by this plugin.
+	 * Creates or updates the plugin database tables.
 	 *
-	 * @var string
-	 */
-	private const TABLE_PREFIX = 'hsz_';
-
-	/**
-	 * Creates all necessary database tables for the plugin.
-	 *
-	 * This method is called upon plugin activation. It uses the dbDelta function
-	 * to create or update tables to match the defined schema.
+	 * Uses dbDelta which can create or update tables appropriately.
 	 */
 	public static function create_tables(): void {
 		global $wpdb;
@@ -49,7 +35,7 @@ class Database {
 		$charset_collate = $wpdb->get_charset_collate();
 		$table_prefix    = $wpdb->prefix . self::TABLE_PREFIX;
 
-		// SQL for the bulk analysis batches table.
+		// --- Bulk Analysis Batches Table ---
 		$sql_batches = "CREATE TABLE {$table_prefix}bulk_batches (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 			batch_id varchar(255) NOT NULL,
@@ -68,7 +54,7 @@ class Database {
 			KEY user_id (user_id)
 		) $charset_collate;";
 
-		// SQL for the bulk analysis results table.
+		// --- Bulk Analysis Results Table ---
 		$sql_results = "CREATE TABLE {$table_prefix}bulk_results (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 			batch_id varchar(255) NOT NULL,
@@ -81,7 +67,7 @@ class Database {
 			KEY batch_id (batch_id)
 		) $charset_collate;";
 
-		// SQL for the analysis cache table.
+		// --- Analysis Cache Table ---
 		$sql_cache = "CREATE TABLE {$table_prefix}analysis_cache (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 			cache_key varchar(191) NOT NULL,
@@ -93,7 +79,8 @@ class Database {
 			UNIQUE KEY cache_key (cache_key)
 		) $charset_collate;";
 
-		// SQL for the error log table.
+		// --- Error Log Table ---
+		// Note: Uses 'created_at' column as timestamp for logging instead of 'timestamp' to align with plugin queries.
 		$sql_log = "CREATE TABLE {$table_prefix}error_log (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 			error_code varchar(50) DEFAULT '' NOT NULL,
@@ -105,34 +92,32 @@ class Database {
 		) $charset_collate;";
 
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+
 		dbDelta( $sql_batches );
 		dbDelta( $sql_results );
 		dbDelta( $sql_cache );
 		dbDelta( $sql_log );
 
-		// CRITICAL FIX: Use the internal class constant instead of a global one.
+		// Update the stored database version option
 		update_option( 'hsz_db_version', self::DB_VERSION );
 	}
 
 	/**
-	 * Checks if the database is up to date and runs upgrades if necessary.
-	 *
-	 * This method compares the stored database version with the plugin's current
-	 * database version constant and triggers an update if they do not match.
+	 * Checks if the database version stored in the options matches the plugin version.
+	 * Runs upgrade routines if needed.
 	 */
 	public static function check_db_version(): void {
 		$installed_version = get_option( 'hsz_db_version' );
 
-		// If the stored version does not match the current version, re-run table creation.
 		if ( $installed_version !== self::DB_VERSION ) {
 			self::create_tables();
 		}
 	}
 
 	/**
-	 * Activation hook for new sites in a multisite network.
+	 * Activation hook handler for new sites in multisite networks.
 	 *
-	 * @param int $blog_id The ID of the new site.
+	 * @param int $blog_id The site ID.
 	 */
 	public static function create_tables_new_site( int $blog_id ): void {
 		if ( is_plugin_active_for_network( plugin_basename( HSZ_PLUGIN_PATH . 'hellaz-sitez-analyzer.php' ) ) ) {

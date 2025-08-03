@@ -7,7 +7,7 @@
  * and performance monitoring.
  *
  * @package HellaZ_SiteZ_Analyzer
- * @since 1.0.0
+ * @since 1.0.2
  */
 
 namespace HSZ;
@@ -15,7 +15,6 @@ namespace HSZ;
 use DOMDocument;
 use DOMXPath;
 use WP_Error;
-use WP_Transient_Cache;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -26,77 +25,30 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Class Utils
  *
  * Provides a suite of static utility methods for the plugin.
- *
- * @package HSZ
  */
 class Utils {
 
-	/**
-	 * The encryption cipher.
-	 *
-	 * @var string
-	 */
 	private const CIPHER = 'aes-256-cbc';
-
-	/**
-	 * A container for performance timers.
-	 *
-	 * @var array
-	 */
 	private static array $timers = [];
 
-	/**
-	 * Checks if the encryption functionality is properly configured.
-	 *
-	 * @since 1.0.1
-	 *
-	 * @return bool True if the encryption key is defined as a non-empty string, false otherwise.
-	 */
 	public static function is_encryption_configured(): bool {
 		return defined( 'HSZ_ENCRYPTION_KEY' ) && is_string( HSZ_ENCRYPTION_KEY ) && ! empty( HSZ_ENCRYPTION_KEY );
 	}
 
-	/**
-	 * Sanitizes and encrypts an option value for safe storage.
-	 *
-	 * This method is the designated callback for the `sanitize_option_*` filter.
-	 * It ensures that encryption only runs when correctly configured, preventing fatal errors.
-	 * If encryption is not configured, it returns the raw, sanitized value.
-	 *
-	 * @since 1.0.1
-	 *
-	 * @param mixed $value The value to sanitize and encrypt.
-	 * @return mixed The encrypted string, or the original value if encryption is not configured or fails.
-	 */
 	public static function sanitize_and_encrypt( $value ) {
 		if ( ! is_string( $value ) || empty( $value ) ) {
 			return $value;
 		}
 
-		// Always sanitize the value.
 		$sanitized_value = esc_url_raw( $value );
 
-		// Only encrypt if the key is properly configured.
 		if ( ! self::is_encryption_configured() ) {
-			// A warning should be displayed in the admin to inform the user.
 			return $sanitized_value;
 		}
 
 		return self::encrypt( $sanitized_value );
 	}
 
-	/**
-	 * Encrypts a string using the HSZ_ENCRYPTION_KEY from wp-config.php.
-	 *
-	 * This method is modified to be self-contained, generating its own IV and
-	 * relying on the defined constant for the key.
-	 *
-	 * @since 1.0.0
-	 * @version 1.0.1
-	 *
-	 * @param string $data The plaintext data to encrypt.
-	 * @return string|false The base64-encoded encrypted string (IV prepended) or false on failure.
-	 */
 	public static function encrypt( string $data ) {
 		if ( ! self::is_encryption_configured() ) {
 			return false;
@@ -116,22 +68,9 @@ class Utils {
 			return false;
 		}
 
-		// Prepend the IV to the ciphertext for use in decryption.
 		return base64_encode( $iv . $encrypted );
 	}
 
-	/**
-	 * Decrypts a string using the HSZ_ENCRYPTION_KEY from wp-config.php.
-	 *
-	 * This method is modified to handle a base64-encoded string that contains
-	 * both the IV and the ciphertext.
-	 *
-	 * @since 1.0.0
-	 * @version 1.0.1
-	 *
-	 * @param string $data The base64-encoded data to decrypt.
-	 * @return string|false The decrypted plaintext string or false on failure.
-	 */
 	public static function decrypt( string $data ) {
 		if ( ! self::is_encryption_configured() || empty( $data ) ) {
 			return false;
@@ -156,19 +95,23 @@ class Utils {
 	}
 
 	/**
-	 * Retrieves the HTML content of a given URL using WordPress HTTP API.
-	 *
+	 * Retrieves the HTML content of a given URL.
+	 * 
 	 * @param string $url The URL to fetch.
 	 * @return string|WP_Error The HTML content as a string or a WP_Error on failure.
 	 */
 	public static function get_html( string $url ) {
-		$args = [];
+		$args = [
+			'timeout' => 15, // A reasonable timeout.
+		];
 		if ( get_option( 'hsz_disable_ssl_verify', 0 ) ) {
 			$args['sslverify'] = false;
 		}
+
 		$response = wp_remote_get( esc_url_raw( $url ), $args );
+
 		if ( is_wp_error( $response ) ) {
-			self::log_error( 'Failed to fetch URL: ' . $url . ' - ' . $response->get_error_message() );
+			self::log_error( 'Failed to fetch URL: ' . $url . ' - ' . $response->get_error_message(), __FILE__, __LINE__ );
 			return $response;
 		}
 		return wp_remote_retrieve_body( $response );
@@ -181,23 +124,220 @@ class Utils {
 	 * @return int|WP_Error The HTTP status code or a WP_Error on failure.
 	 */
 	public static function get_http_status( string $url ) {
-    $args = [];
-    if ( get_option( 'hsz_disable_ssl_verify', 0 ) ) {
-        $args['sslverify'] = false;
-    }
-    $response = wp_remote_head( esc_url_raw( $url ), $args );
-    if ( is_wp_error( $response ) ) {
-        self::log_error( 'Failed to get HTTP status for URL: ' . $url . ' - ' . $response->get_error_message() );
-        return $response;
-    }
-    return wp_remote_retrieve_response_code( $response );
-}
+		$args = [
+			'timeout' => 15,
+		];
+		if ( get_option( 'hsz_disable_ssl_verify', 0 ) ) {
+			$args['sslverify'] = false;
+		}
+
+		$response = wp_remote_head( esc_url_raw( $url ), $args );
+
+		if ( is_wp_error( $response ) ) {
+			self::log_error( 'Failed to get HTTP status for URL: ' . $url . ' - ' . $response->get_error_message(), __FILE__, __LINE__ );
+			return $response;
+		}
+		return wp_remote_retrieve_response_code( $response );
+	}
+
+	/**
+	 * Parses HTML to extract meta tags.
+	 *
+	 * @param string $html The HTML content.
+	 * @return array An associative array of meta tags.
+	 */
+	public static function get_meta_tags( string $html ): array {
+		if ( empty( $html ) ) {
+			return [];
+		}
+		$dom = new DOMDocument();
+		@$dom->loadHTML( $html );
+		$tags      = $dom->getElementsByTagName( 'meta' );
+		$meta_data = [];
+		foreach ( $tags as $tag ) {
+			$name = $tag->getAttribute( 'name' );
+			if ( $name ) {
+				$meta_data[ $name ] = $tag->getAttribute( 'content' );
+			}
+		}
+		return $meta_data;
+	}
+	
+	/**
+	 * Extracts Open Graph (OG) tags from HTML.
+	 *
+	 * @param string $html The HTML content.
+	 * @return array An associative array of OG tags.
+	 */
+	public static function get_og_tags( string $html ): array {
+		if ( empty( $html ) ) {
+			return [];
+		}
+		$dom = new DOMDocument();
+		@$dom->loadHTML( $html );
+		$tags    = $dom->getElementsByTagName( 'meta' );
+		$og_data = [];
+		foreach ( $tags as $tag ) {
+			$property = $tag->getAttribute( 'property' );
+			if ( strpos( $property, 'og:' ) === 0 ) {
+				$og_data[ substr( $property, 3 ) ] = $tag->getAttribute( 'content' );
+			}
+		}
+		return $og_data;
+	}
+	
+	/**
+	 * Extracts Twitter Card tags from HTML.
+	 *
+	 * @param string $html The HTML content.
+	 * @return array An associative array of Twitter tags.
+	 */
+	public static function get_twitter_tags( string $html ): array {
+		if ( empty( $html ) ) {
+			return [];
+		}
+		$dom = new DOMDocument();
+		@$dom->loadHTML( $html );
+		$tags         = $dom->getElementsByTagName( 'meta' );
+		$twitter_data = [];
+		foreach ( $tags as $tag ) {
+			$name = $tag->getAttribute( 'name' );
+			if ( strpos( $name, 'twitter:' ) === 0 ) {
+				$twitter_data[ substr( $name, 8 ) ] = $tag->getAttribute( 'content' );
+			}
+		}
+		return $twitter_data;
+	}
+	
+	/**
+	 * Extracts the <title> tag from HTML.
+	 *
+	 * @param string $html The HTML content.
+	 * @return string The title content.
+	 */
+	public static function get_title_tag( string $html ): string {
+		if ( empty( $html ) ) {
+			return '';
+		}
+		$dom = new DOMDocument();
+		@$dom->loadHTML( $html );
+		$title_node = $dom->getElementsByTagName( 'title' );
+		return $title_node->length > 0 ? trim( $title_node->item( 0 )->nodeValue ) : '';
+	}
+	
+	/**
+	 * Extracts the favicon URL from HTML.
+	 *
+	 * @param string $html The HTML content.
+	 * @param string $base_url The base URL to resolve relative URLs.
+	 * @return string|false The favicon URL or false if not found.
+	 */
+	public static function get_favicon( string $html, string $base_url ) {
+		if ( empty( $html ) ) {
+			return false;
+		}
+		$dom = new DOMDocument();
+		@$dom->loadHTML( $html );
+		$xpath = new DOMXPath( $dom );
+		$links = $xpath->query( "//link[contains(@rel, 'icon') or contains(@rel, 'shortcut icon')]" );
+		if ( $links->length > 0 ) {
+			$href = $links->item( 0 )->getAttribute( 'href' );
+			return self::resolve_url( $href, $base_url );
+		}
+		return self::resolve_url( '/favicon.ico', $base_url );
+	}
+	
+	/**
+	 * Extracts all image URLs from HTML.
+	 *
+	 * @param string $html The HTML content.
+	 * @param string $base_url The base URL to resolve relative URLs.
+	 * @return array An array of image URLs.
+	 */
+	public static function get_images_from_html( string $html, string $base_url ): array {
+		if ( empty( $html ) ) {
+			return [];
+		}
+		$dom = new DOMDocument();
+		@$dom->loadHTML( $html );
+		$images    = $dom->getElementsByTagName( 'img' );
+		$image_urls = [];
+		foreach ( $images as $image ) {
+			$src = $image->getAttribute( 'src' );
+			if ( $src ) {
+				$image_urls[] = self::resolve_url( $src, $base_url );
+			}
+		}
+		return $image_urls;
+	}
+	
+	/**
+	 * Extracts all hyperlink URLs from HTML.
+	 *
+	 * @param string $html The HTML content.
+	 * @param string $base_url The base URL to resolve relative URLs.
+	 * @return array An array of link URLs.
+	 */
+	public static function get_all_links( string $html, string $base_url ): array {
+		if ( empty( $html ) ) {
+			return [];
+		}
+		$dom = new DOMDocument();
+		@$dom->loadHTML( $html );
+		$links    = $dom->getElementsByTagName( 'a' );
+		$link_urls = [];
+		foreach ( $links as $link ) {
+			$href = $link->getAttribute( 'href' );
+			if ( $href ) {
+				$link_urls[] = self::resolve_url( $href, $base_url );
+			}
+		}
+		return $link_urls;
+	}
+	
+	/**
+	 * Gets the dimensions of an image.
+	 *
+	 * @param string $image_url The URL of the image.
+	 * @return array|false The image dimensions or false on failure.
+	 */
+	public static function get_image_dimensions( string $image_url ) {
+		$size = @getimagesize( esc_url_raw( $image_url ) );
+		if ( false === $size ) {
+			return false;
+		}
+		return [
+			'width'  => $size[0],
+			'height' => $size[1],
+		];
+	}
+	
+	/**
+	 * Resolves a URL, converting relative URLs to absolute.
+	 *
+	 * @param string $url The URL to resolve.
+	 * @param string $base_url The base URL for context.
+	 * @return string The resolved, absolute URL.
+	 */
+	public static function resolve_url( string $url, string $base_url ): string {
+		if ( strpos( $url, '//' ) === 0 ) {
+			$base_parts = parse_url( $base_url );
+			return ( $base_parts['scheme'] ?? 'http' ) . ':' . $url;
+		}
+		if ( parse_url( $url, PHP_URL_SCHEME ) !== null ) {
+			return $url;
+		}
+		$base_parts = parse_url( $base_url );
+		$base_root  = ( $base_parts['scheme'] ?? 'http' ) . '://' . ( $base_parts['host'] ?? '' );
+		if ( strpos( $url, '/' ) === 0 ) {
+			return $base_root . $url;
+		}
+		$path = dirname( $base_parts['path'] ?? '' );
+		return $base_root . ( $path === '/' ? '' : $path ) . '/' . $url;
+	}
+
 	/**
 	 * Logs an error message to the WordPress debug log.
-	 *
-	 * @param string $message The error message.
-	 * @param string $file The file where the error occurred.
-	 * @param int    $line The line where the error occurred.
 	 */
 	public static function log_error( string $message, string $file = __FILE__, int $line = __LINE__ ): void {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
@@ -205,53 +345,22 @@ class Utils {
 		}
 	}
 
-	/**
-	 * Sets data in the WordPress transient cache.
-	 *
-	 * @param string $key The cache key.
-	 * @param mixed  $data The data to cache.
-	 * @param int    $expiration The cache lifetime in seconds.
-	 * @return bool True on success, false on failure.
-	 */
 	public static function set_cache( string $key, $data, int $expiration = HOUR_IN_SECONDS ): bool {
 		return set_transient( 'hsz_cache_' . $key, $data, $expiration );
 	}
-
-	/**
-	 * Gets data from the WordPress transient cache.
-	 *
-	 * @param string $key The cache key.
-	 * @return mixed The cached data or false if not found.
-	 */
+	
 	public static function get_cache( string $key ) {
 		return get_transient( 'hsz_cache_' . $key );
 	}
 
-	/**
-	 * Deletes data from the WordPress transient cache.
-	 *
-	 * @param string $key The cache key.
-	 * @return bool True on success, false on failure.
-	 */
 	public static function delete_cache( string $key ): bool {
 		return delete_transient( 'hsz_cache_' . $key );
 	}
 
-	/**
-	 * Starts a performance timer.
-	 *
-	 * @param string $key A unique identifier for the timer.
-	 */
 	public static function start_timer( string $key ): void {
 		self::$timers[ $key ] = microtime( true );
 	}
 
-	/**
-	 * Stops a performance timer and returns the elapsed time.
-	 *
-	 * @param string $key The identifier for the timer.
-	 * @return float|false The elapsed time in seconds, or false if the timer wasn't started.
-	 */
 	public static function stop_timer( string $key ) {
 		if ( isset( self::$timers[ $key ] ) ) {
 			$elapsed = microtime( true ) - self::$timers[ $key ];

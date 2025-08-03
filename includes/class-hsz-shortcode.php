@@ -31,11 +31,12 @@ class Shortcode {
 
 	/**
 	 * Renders the shortcode output.
-	 *
+	 * Usage: [sitez_analyzer url="https://example.com"]
 	 * @param array $atts Shortcode attributes.
 	 * @return string The rendered HTML.
 	 */
-	public function render_shortcode( $atts ): string {
+	public function render_shortcode( $atts ) {
+		// Merge defaults with user input.
 		$atts = shortcode_atts(
 			[
 				'url'         => '',
@@ -49,18 +50,17 @@ class Shortcode {
 		$displayType = sanitize_key( $atts['displayType'] );
 
 		if ( ! filter_var( $url, FILTER_VALIDATE_URL ) ) {
-			return '<div class="hsz-error">' . esc_html__( 'Please provide a valid URL.', 'hellaz-sitez-analyzer' ) . '</div>';
+			return '<div class="hsz-error">' . esc_html__( 'Please provide a valid URL for analysis.', 'hellaz-sitez-analyzer' ) . '</div>';
 		}
 
 		try {
-			// Use WordPress HTTP API for fetching HTML safely via our Utils class.
+			$metadata_extractor = new Metadata();
+			$social_extractor   = new SocialMedia();
+
 			$html = Utils::get_html( $url );
 			if ( is_wp_error( $html ) ) {
 				throw new \Exception( $html->get_error_message() );
 			}
-
-			$metadata_extractor = new Metadata();
-			$social_extractor   = new SocialMedia();
 
 			$metadata = $metadata_extractor->extract_metadata( $url, $html );
 			$social   = $social_extractor->extract_social_profiles( $html, $url );
@@ -69,29 +69,24 @@ class Shortcode {
 				throw new \Exception( $metadata['error'] );
 			}
 
-			// Initialize ALL variables used in the rendering templates, with fallbacks.
 			$display_title       = $metadata['title'] ?? Fallbacks::get_fallback_title();
 			$display_description = $metadata['description'] ?? Fallbacks::get_fallback_description();
 			$favicon             = $metadata['favicon'] ?? Fallbacks::get_fallback_image();
 
-			// Select template mode from settings.
 			$template_mode = get_option( 'hsz_template_mode', 'classic' );
 			$template_path = HSZ_PLUGIN_PATH . "templates/metadata-{$template_mode}.php";
 
+			ob_start();
 			if ( file_exists( $template_path ) ) {
-				ob_start();
-				// Variables in scope for templates:
-				// $url, $display_title, $display_description, $favicon, $social, $displayType
 				include $template_path;
-				return ob_get_clean();
+			} else {
+				echo '<div class="hsz-error">' . esc_html__( 'Rendering template not found.', 'hellaz-sitez-analyzer' ) . '</div>';
 			}
-
-			// Fallback if template file is missing.
-			return '<div class="hsz-error">' . esc_html__( 'Rendering template not found.', 'hellaz-sitez-analyzer' ) . '</div>';
+			return ob_get_clean();
 
 		} catch ( \Throwable $e ) {
-			Utils::log_error( 'Shortcode failed for URL: ' . $url . ' - ' . $e->getMessage() );
-			return '<div class="hsz-error">' . esc_html__( 'An error occurred while processing the URL.', 'hellaz-sitez-analyzer' ) . '</div>';
+			Utils::log_error( 'Shortcode render failed for ' . $url . ': ' . $e->getMessage() );
+			return '<div class="hsz-error">' . esc_html__( 'An unexpected error occurred during analysis.', 'hellaz-sitez-analyzer' ) . '</div>';
 		}
 	}
 }

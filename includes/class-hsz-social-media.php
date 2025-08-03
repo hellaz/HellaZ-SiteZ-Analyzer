@@ -94,22 +94,21 @@ class SocialMedia {
 		}
 
 		// 2. Scan JSON-LD for "sameAs" arrays
-		if ( preg_match_all( '~<script type="application/ld\+json"[^>]*>(.*?)</script>~is', $html, $json_matches ) ) {
-			foreach ( $json_matches[1] as $json_string ) {
-				$json_data = json_decode( $json_string, true );
-				if ( ! empty( $json_data['sameAs'] ) && is_array( $json_data['sameAs'] ) ) {
-					foreach ( $json_data['sameAs'] as $same_as_url ) {
-						if ( is_string( $same_as_url ) && filter_var( $same_as_url, FILTER_VALIDATE_URL ) ) {
-							$found_urls[] = $same_as_url;
+		if ( preg_match_all( '/<script[^>]+type=["\']application\/ld\+json["\'][^>]*>(.*?)<\/script>/is', $html, $matches ) ) {
+			foreach ( $matches[1] as $block ) {
+				$data = json_decode( trim( $block ), true );
+				if ( is_array( $data ) ) {
+					if ( isset( $data['sameAs'] ) && is_array( $data['sameAs'] ) ) {
+						foreach ( $data['sameAs'] as $profile_url ) {
+							$found_urls[] = $profile_url;
 						}
 					}
 				}
 			}
 		}
 
-		$unique_urls = array_unique( $found_urls );
-		Cache::set_cache( $cache_key, $unique_urls );
-
-		return $unique_urls;
+		$found_urls = array_unique( $found_urls );
+		Cache::set_cache( $cache_key, $found_urls, HOUR_IN_SECONDS );
+		return $found_urls;
 	}
 }

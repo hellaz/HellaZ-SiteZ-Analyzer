@@ -73,7 +73,11 @@ class Shortcode {
 			$display_description = $metadata['description'] ?? Fallbacks::get_fallback_description();
 			$favicon             = $metadata['favicon'] ?? Fallbacks::get_fallback_image();
 
-			$template_mode = get_option( 'hsz_template_mode', 'classic' );
+			// Updated safe fallback
+			$template_mode = get_option( 'hsz_template_mode' );
+			if ( empty( $template_mode ) ) {
+				$template_mode = 'classic';
+			}
 			$template_path = HSZ_PLUGIN_PATH . "templates/metadata-{$template_mode}.php";
 
 			ob_start();

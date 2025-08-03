@@ -145,13 +145,13 @@ class Gutenberg {
 			);
 
 			// Pass a nonce and other data to the block script for secure AJAX.
-			wp_localize_script(
-				'hsz-block-editor-script',
-				'hsz_block_params',
-				[
-					'nonce' => wp_create_nonce( 'hsz_analyze_url_nonce' ),
-				]
-			);
+wp_localize_script(
+    'hsz-block-editor-script',
+    'hsz_block_params',
+    [
+        'nonce' => wp_create_nonce( 'hsz_analyze_url_nonce' ),
+    ]
+);
 		}
 	}
 }

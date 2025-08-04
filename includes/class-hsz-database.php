@@ -10,24 +10,17 @@
 
 namespace HSZ;
 
-use wpdb;
-
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
 class Database {
 
-	/** Plugin's database version. Increment on schema updates. */
 	const DB_VERSION = '1.0.2';
-
-	/** Table prefix used by this plugin */
 	const TABLE_PREFIX = 'hsz_';
 
 	/**
 	 * Creates or updates the plugin database tables.
-	 *
-	 * Uses dbDelta which can create or update tables appropriately.
 	 */
 	public static function create_tables(): void {
 		global $wpdb;
@@ -80,7 +73,7 @@ class Database {
 		) $charset_collate;";
 
 		// --- Error Log Table ---
-		// Note: Uses 'created_at' column as timestamp for logging instead of 'timestamp' to align with plugin queries.
+		// Uses 'created_at' as the log timestamp column.
 		$sql_log = "CREATE TABLE {$table_prefix}error_log (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 			error_code varchar(50) DEFAULT '' NOT NULL,
@@ -98,26 +91,22 @@ class Database {
 		dbDelta( $sql_cache );
 		dbDelta( $sql_log );
 
-		// Update the stored database version option
 		update_option( 'hsz_db_version', self::DB_VERSION );
 	}
 
 	/**
-	 * Checks if the database version stored in the options matches the plugin version.
-	 * Runs upgrade routines if needed.
+	 * Checks if the database is up to date and runs upgrades if necessary.
 	 */
 	public static function check_db_version(): void {
 		$installed_version = get_option( 'hsz_db_version' );
-
 		if ( $installed_version !== self::DB_VERSION ) {
 			self::create_tables();
 		}
 	}
 
 	/**
-	 * Activation hook handler for new sites in multisite networks.
-	 *
-	 * @param int $blog_id The site ID.
+	 * Activation hook for new sites in a multisite network.
+	 * @param int $blog_id The ID of the new site.
 	 */
 	public static function create_tables_new_site( int $blog_id ): void {
 		if ( is_plugin_active_for_network( plugin_basename( HSZ_PLUGIN_PATH . 'hellaz-sitez-analyzer.php' ) ) ) {

@@ -30,8 +30,9 @@ foreach ( $option_names as $option_name ) {
 // 2. Clean up all transients associated with the plugin.
 // The '\' escapes the '_' which is a wildcard character in SQL LIKE clauses.
 // This ensures we only delete transients with the 'hsz_' prefix.
-$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '\_transient\_hsz\_%' OR option_name LIKE '\_transient\_timeout\_hsz\_%'" );
-
+$wpdb->query(
+	"DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_hsz_%' OR option_name LIKE '_transient_timeout_hsz_%'"
+);
 // 3. Drop custom database tables.
 $tables = [
 	$wpdb->prefix . 'hsz_bulk_batches',

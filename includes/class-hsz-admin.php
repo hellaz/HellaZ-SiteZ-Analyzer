@@ -97,14 +97,14 @@ class Admin {
 
         wp_enqueue_style(
             'hsz-admin-enhanced',
-            HSZ_ASSETS_URL . 'css/admin-enhanced.css',
+            HSZ_ASSETS_URL . 'css/hsz-admin.css',
             [],
             HSZ_VERSION
         );
 
         wp_enqueue_script(
             'hsz-admin-enhanced',
-            HSZ_ASSETS_URL . 'js/admin-enhanced.js',
+            HSZ_ASSETS_URL . 'js/hsz-admin.js',
             [ 'jquery', 'wp-util' ],
             HSZ_VERSION,
             true

@@ -124,3 +124,301 @@
 	});
 
 })(jQuery);
+
+/**
+ * Enhanced Admin JavaScript for HellaZ SiteZ Analyzer
+ * Handles template selection, API testing, and admin interactions
+ */
+
+jQuery(document).ready(function($) {
+    'use strict';
+
+    // Template selection interactions
+    $('.hsz-template-option').on('click', function(e) {
+        // Don't trigger if clicking on the radio button directly
+        if (e.target.type !== 'radio') {
+            $(this).find('input[type="radio"]').prop('checked', true);
+        }
+        
+        $('.hsz-template-option').removeClass('hsz-selected');
+        $(this).addClass('hsz-selected');
+    });
+
+    // Template option hover effects
+    $('.hsz-template-option').hover(
+        function() {
+            $(this).addClass('hsz-template-hover');
+        },
+        function() {
+            $(this).removeClass('hsz-template-hover');
+        }
+    );
+
+    // API Testing functionality
+    $('.hsz-test-api').on('click', function(e) {
+        e.preventDefault();
+        
+        var $button = $(this);
+        var apiType = $button.data('api');
+        var $input = $button.prev('input[type="password"]');
+        var apiKey = $input.val();
+
+        if (!apiKey) {
+            alert(hszAdminEnhanced.i18n.api_failed + ' API key is required.');
+            return;
+        }
+
+        // Update button state
+        $button.prop('disabled', true)
+               .removeClass('success error')
+               .addClass('testing')
+               .text(hszAdminEnhanced.i18n.testing_api);
+
+        // AJAX request to test API
+        $.ajax({
+            url: hszAdminEnhanced.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'hsz_test_api',
+                nonce: hszAdminEnhanced.nonce,
+                api_type: apiType,
+                api_key: apiKey
+            },
+            success: function(response) {
+                if (response.success) {
+                    $button.removeClass('testing error')
+                           .addClass('success')
+                           .text('✓ ' + hszAdminEnhanced.i18n.api_success);
+                    
+                    // Show success message
+                    showMessage(response.data, 'success');
+                } else {
+                    $button.removeClass('testing success')
+                           .addClass('error')
+                           .text('✗ API Failed');
+                    
+                    // Show error message
+                    showMessage(response.data, 'error');
+                }
+            },
+            error: function() {
+                $button.removeClass('testing success')
+                       .addClass('error')
+                       .text('✗ Connection Error');
+                
+                showMessage('Connection failed. Please try again.', 'error');
+            },
+            complete: function() {
+                // Reset button after 3 seconds
+                setTimeout(function() {
+                    $button.prop('disabled', false)
+                           .removeClass('testing success error')
+                           .text('Test API');
+                }, 3000);
+            }
+        });
+    });
+
+    // Clear Cache functionality
+    $('.hsz-clear-cache-btn').on('click', function(e) {
+        e.preventDefault();
+        
+        var $button = $(this);
+        
+        if (!confirm(hszAdminEnhanced.i18n.clearing_cache + ' Continue?')) {
+            return;
+        }
+
+        $button.prop('disabled', true)
+               .addClass('hsz-loading')
+               .text(hszAdminEnhanced.i18n.clearing_cache);
+
+        $.ajax({
+            url: hszAdminEnhanced.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'hsz_clear_cache_ajax',
+                nonce: hszAdminEnhanced.nonce
+            },
+            success: function(response) {
+                if (response.success) {
+                    showMessage(hszAdminEnhanced.i18n.cache_cleared, 'success');
+                } else {
+                    showMessage(response.data || 'Cache clearing failed.', 'error');
+                }
+            },
+            error: function() {
+                showMessage('Failed to clear cache. Please try again.', 'error');
+            },
+            complete: function() {
+                $button.prop('disabled', false)
+                       .removeClass('hsz-loading')
+                       .text('Clear Cache');
+            }
+        });
+    });
+
+    // Reset Settings functionality
+    $('.hsz-reset-settings-btn').on('click', function(e) {
+        e.preventDefault();
+        
+        var $button = $(this);
+        
+        if (!confirm(hszAdminEnhanced.i18n.confirm_reset)) {
+            return;
+        }
+
+        $button.prop('disabled', true)
+               .addClass('hsz-loading')
+               .text('Resetting...');
+
+        $.ajax({
+            url: hszAdminEnhanced.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'hsz_reset_settings',
+                nonce: hszAdminEnhanced.nonce
+            },
+            success: function(response) {
+                if (response.success) {
+                    showMessage('Settings reset successfully. Page will reload.', 'success');
+                    // Reload page after 2 seconds
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    showMessage(response.data || 'Settings reset failed.', 'error');
+                }
+            },
+            error: function() {
+                showMessage('Failed to reset settings. Please try again.', 'error');
+            },
+            complete: function() {
+                $button.prop('disabled', false)
+                       .removeClass('hsz-loading')
+                       .text('Reset Settings');
+            }
+        });
+    });
+
+    // Save Settings enhancement with feedback
+    $('.hsz-save-settings').on('click', function() {
+        var $button = $(this);
+        
+        // Add loading state
+        $button.addClass('hsz-loading');
+        
+        // Remove loading state after form submission
+        setTimeout(function() {
+            $button.removeClass('hsz-loading');
+        }, 2000);
+    });
+
+    // Show message function
+    function showMessage(message, type) {
+        // Remove existing messages
+        $('.hsz-message').remove();
+        
+        // Create message element
+        var $message = $('<div class="hsz-message ' + type + '">' + message + '</div>');
+        
+        // Insert after the admin header
+        $('.hsz-admin-header').after($message);
+        
+        // Auto-hide after 5 seconds
+        setTimeout(function() {
+            $message.fadeOut(function() {
+                $(this).remove();
+            });
+        }, 5000);
+    }
+
+    // Form validation enhancement
+    $('form.hsz-settings-form').on('submit', function() {
+        var hasErrors = false;
+        
+        // Basic validation for required fields
+        $(this).find('input[required]').each(function() {
+            if (!$(this).val()) {
+                $(this).css('border-color', '#d63638');
+                hasErrors = true;
+            } else {
+                $(this).css('border-color', '');
+            }
+        });
+        
+        if (hasErrors) {
+            showMessage('Please fill in all required fields.', 'error');
+            return false;
+        }
+        
+        return true;
+    });
+
+    // Smooth scroll for internal links
+    $('a[href^="#"]').on('click', function(e) {
+        var target = $(this.getAttribute('href'));
+        if (target.length) {
+            e.preventDefault();
+            $('html, body').animate({
+                scrollTop: target.offset().top - 50
+            }, 500);
+        }
+    });
+
+    // Initialize tooltips if available
+    if ($.fn.tooltip) {
+        $('[title]').tooltip({
+            placement: 'top',
+            trigger: 'hover'
+        });
+    }
+
+    // Auto-save draft functionality for text areas
+    $('textarea').on('input', function() {
+        var $textarea = $(this);
+        var fieldName = $textarea.attr('name');
+        
+        // Debounced auto-save (wait 2 seconds after last input)
+        clearTimeout($textarea.data('timeout'));
+        $textarea.data('timeout', setTimeout(function() {
+            // Auto-save logic here if needed
+            console.log('Auto-saving field: ' + fieldName);
+        }, 2000));
+    });
+});
+
+// Additional utility functions
+window.HSZ_Admin = {
+    showMessage: function(message, type) {
+        jQuery('.hsz-message').remove();
+        var $message = jQuery('<div class="hsz-message ' + type + '">' + message + '</div>');
+        jQuery('.hsz-admin-header').after($message);
+        setTimeout(function() {
+            $message.fadeOut(function() {
+                jQuery(this).remove();
+            });
+        }, 5000);
+    },
+    
+    testAPI: function(apiType, apiKey) {
+        // Programmatic API testing function
+        jQuery.ajax({
+            url: hszAdminEnhanced.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'hsz_test_api',
+                nonce: hszAdminEnhanced.nonce,
+                api_type: apiType,
+                api_key: apiKey
+            },
+            success: function(response) {
+                if (response.success) {
+                    HSZ_Admin.showMessage(response.data, 'success');
+                } else {
+                    HSZ_Admin.showMessage(response.data, 'error');
+                }
+            }
+        });
+    }
+};

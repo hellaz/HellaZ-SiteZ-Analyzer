@@ -1,494 +1,445 @@
 <?php
 /**
- * Core class for HellaZ SiteZ Analyzer.
- *
- * Manages plugin initialization, component loading, and enhanced features.
+ * Core plugin class that orchestrates all functionality
  *
  * @package HellaZ_SiteZ_Analyzer
- * @since 1.1.0
+ * @since 1.0.0
  */
 
 namespace HSZ;
 
-defined( 'ABSPATH' ) || exit;
+// Exit if accessed directly
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
 
 class Core {
 
-	/**
-	 * Plugin version.
-	 *
-	 * @var string
-	 */
-	private $version;
+    /**
+     * Plugin instance
+     *
+     * @var Core|null
+     */
+    private static $instance = null;
 
-	/**
-	 * Plugin components.
-	 *
-	 * @var array
-	 */
-	private $components = [];
+    /**
+     * Plugin components
+     *
+     * @var array
+     */
+    private $components = [];
 
-	/**
-	 * Constructor - Initialize the plugin.
-	 */
-	public function __construct() {
-		$this->version = HSZ_VERSION;
+    /**
+     * Get plugin instance (Singleton pattern)
+     *
+     * @return Core
+     */
+    public static function instance() {
+        if ( null === self::$instance ) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
 
-		$this->init_classes();
-		$this->init_hooks();
-		$this->init_enhanced_features();
-	}
+    /**
+     * Private constructor to prevent direct instantiation
+     */
+    private function __construct() {
+        // Constructor is private for singleton
+    }
 
-	/**
-	 * Initializes the necessary classes for the plugin.
-	 * Relies on the autoloader.
-	 */
-	private function init_classes() {
-		// Existing core classes - maintain all functionality
-		$this->components['admin'] = new Admin();
-		$this->components['ajax'] = new Ajax();
-		$this->components['admin_logs'] = new AdminLogs();
-		$this->components['shortcode'] = new Shortcode();
-		$this->components['gutenberg'] = new Gutenberg();
-		$this->components['widget'] = new Widget();
+    /**
+     * Initialize the plugin
+     */
+    public function run() {
+        add_action( 'init', [ $this, 'init' ] );
+        add_action( 'plugins_loaded', [ $this, 'load_textdomain' ], 10 );
 
-		// Enhanced Phase 1 classes - initialize only if they exist
-		$this->init_enhanced_classes();
-	}
+        // Initialize components
+        $this->init_components();
+    }
 
-	/**
-	 * Initialize enhanced Phase 1 classes
-	 */
-	private function init_enhanced_classes() {
-		// Define enhanced classes to be loaded
-		// This allows for easy addition of new classes in the future.
-		// Each class should be defined in its own file under the includes/ directory.
-		$enhanced_classes = [
-			'grading'     => 'Grading',     // includes/class-hsz-grading.php
-			'preview'     => 'Preview',     // includes/class-hsz-preview.php
-			'performance' => 'Performance', // includes/class-hsz-performance.php
-			'security'    => 'Security',    // includes/class-hsz-security.php
-			'metadata'    => 'Metadata',    // includes/class-hsz-metadata.php
-			'api_manager' => 'ApiManager',  // includes/class-hsz-apimanager.php
-			'social_media'=> 'SocialMedia', // includes/class-hsz-social-media.php
-			'hooks'       => 'Hooks',       // includes/class-hsz-hooks.php
-			// Ensure these classes are loaded only if they exist
-			// This prevents fatal errors if the files are not present.
-		];
+    /**
+     * Initialize plugin functionality
+     */
+    public function init() {
+        // Hook into WordPress initialization
+        if ( is_admin() ) {
+            $this->init_admin();
+        }
 
-		foreach ( $enhanced_classes as $key => $class_name ) {
-			$full_class_name = "HSZ\\{$class_name}";
+        // Initialize frontend functionality
+        $this->init_frontend();
 
-			if ( class_exists( $full_class_name ) ) {
-				$this->components[ $key ] = new $full_class_name();
-			}
-		}
-	}
+        // Initialize AJAX handlers
+        $this->init_ajax();
+    }
 
-	/**
-	 * Initialize and register WordPress hooks and filters.
-	 */
-	private function init_hooks() {
-		// Existing hooks - maintain all functionality
-		add_action( 'plugins_loaded', [ $this, 'load_plugin_textdomain' ] );
-		add_action( 'wpmu_new_blog', [ 'HSZ\\Database', 'create_tables_new_site' ] );
-		add_action( 'init', [ 'HSZ\\Database', 'check_db_version' ] );
+    /**
+     * Initialize plugin components
+     */
+    private function init_components() {
+        // Load admin functionality
+        if ( is_admin() ) {
+            $this->components['admin'] = new Admin();
+        }
 
-		// Enhanced hooks for Phase 1 features
-		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_frontend_assets' ] );
-		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
-		add_action( 'init', [ $this, 'init_cron_jobs' ] );
+        // Load shortcode functionality
+        $this->components['shortcode'] = new Shortcode();
 
-		// Initialize Hooks class if available
-		if ( isset( $this->components['hooks'] ) ) {
-			Hooks::init();
-		}
-	}
+        // Load widget functionality  
+        add_action( 'widgets_init', [ $this, 'register_widgets' ] );
 
-	/**
-	 * Initialize enhanced features
-	 */
-	private function init_enhanced_features() {
-		// Set default options for enhanced features
-		$this->set_enhanced_defaults();
+        // Load Gutenberg block
+        if ( function_exists( 'register_block_type' ) ) {
+            add_action( 'init', [ $this, 'register_blocks' ] );
+        }
+    }
 
-		// Initialize cleanup cron jobs
-		$this->schedule_cleanup_jobs();
-	}
+    /**
+     * Initialize admin functionality
+     */
+    private function init_admin() {
+        // Admin functionality is loaded via components
+        add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
+    }
 
-	/**
-	 * Set default options for enhanced features
-	 */
-	private function set_enhanced_defaults() {
-		$defaults = [
-			// Performance Analysis
-			'hsz_performance_analysis_enabled' => true,
-			'hsz_pagespeed_enabled' => false,
-			'hsz_pagespeed_api_key' => '',
-			'hsz_webpagetest_enabled' => false,
-			'hsz_webpagetest_api_key' => '',
+    /**
+     * Initialize frontend functionality
+     */
+    private function init_frontend() {
+        // Enqueue frontend assets
+        add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_frontend_assets' ] );
+    }
 
-			// Security Analysis
-			'hsz_security_analysis_enabled' => true,
-			'hsz_ssl_analysis_enabled' => true,
-			'hsz_security_headers_check' => true,
-			'hsz_vulnerability_scan_enabled' => true,
+    /**
+     * Initialize AJAX handlers
+     */
+    private function init_ajax() {
+        // AJAX handlers for logged-in users
+        add_action( 'wp_ajax_hsz_analyze_url', [ $this, 'ajax_analyze_url' ] );
+        add_action( 'wp_ajax_hsz_start_bulk_processing', [ $this, 'ajax_start_bulk_processing' ] );
 
-			// Preview Generation
-			'hsz_preview_generation_enabled' => true,
-			'hsz_screenshot_service' => 'thum_io', // Free service as default
-			'hsz_screenshot_width' => 1366,
-			'hsz_screenshot_height' => 768,
+        // AJAX handlers for non-logged-in users (if needed)
+        add_action( 'wp_ajax_nopriv_hsz_analyze_url', [ $this, 'ajax_analyze_url' ] );
+    }
 
-			// Grading System
-			'hsz_grading_system_enabled' => true,
-			'hsz_overall_grade_display' => true,
-			'hsz_performance_weight' => 30,
-			'hsz_security_weight' => 30,
-			'hsz_content_weight' => 20,
-			'hsz_usability_weight' => 20,
+    /**
+     * Load plugin textdomain for translations
+     */
+    public function load_textdomain() {
+        load_plugin_textdomain(
+            'hellaz-sitez-analyzer',
+            false,
+            dirname( HSZ_PLUGIN_BASENAME ) . '/languages/'
+        );
+    }
 
-			// API Management
-			'hsz_api_timeout' => 30,
-			'hsz_api_rate_limit' => 100,
-			'hsz_api_retry_attempts' => 3,
+    /**
+     * Register widgets
+     */
+    public function register_widgets() {
+        if ( class_exists( 'HSZ\\Widget' ) ) {
+            register_widget( 'HSZ\\Widget' );
+        }
+    }
 
-			// Caching for enhanced features
-			'hsz_performance_cache_duration' => HOUR_IN_SECONDS * 6,
-			'hsz_security_cache_duration' => HOUR_IN_SECONDS * 12,
-			'hsz_preview_cache_duration' => DAY_IN_SECONDS * 7,
+    /**
+     * Register Gutenberg blocks
+     */
+    public function register_blocks() {
+        if ( class_exists( 'HSZ\\Block' ) ) {
+            $block = new Block();
+            $block->register();
+        }
+    }
 
-			// Hooks settings
-			'hsz_auto_analyze_links' => false,
-			'hsz_add_security_attributes' => true,
-			'hsz_validate_redirects' => true,
-			'hsz_add_security_headers' => false,
-			'hsz_optimize_assets' => false,
-			'hsz_add_resource_hints' => false,
-			'hsz_enable_analytics' => false,
-		];
+    /**
+     * Enqueue admin assets
+     */
+    public function enqueue_admin_assets( $hook ) {
+        // Only load on plugin pages
+        if ( strpos( $hook, 'hellaz-sitez-analyzer' ) === false ) {
+            return;
+        }
 
-		foreach ( $defaults as $option => $value ) {
-			if ( false === get_option( $option ) ) {
-				add_option( $option, $value );
-			}
-		}
-	}
+        wp_enqueue_style(
+            'hsz-admin',
+            HSZ_ASSETS_URL . 'css/hsz-admin.css',
+            [],
+            HSZ_VERSION
+        );
 
-	/**
-	 * Schedule cleanup cron jobs
-	 */
-	private function schedule_cleanup_jobs() {
-		// Existing cache cleanup
-		if ( ! wp_next_scheduled( 'hsz_cleanup_cache' ) ) {
-			wp_schedule_event( time(), 'daily', 'hsz_cleanup_cache' );
-		}
+        wp_enqueue_script(
+            'hsz-admin',
+            HSZ_ASSETS_URL . 'js/hsz-admin.js',
+            [ 'jquery' ],
+            HSZ_VERSION,
+            true
+        );
 
-		// Enhanced cleanup jobs
-		if ( ! wp_next_scheduled( 'hsz_cleanup_screenshots' ) ) {
-			wp_schedule_event( time(), 'weekly', 'hsz_cleanup_screenshots' );
-		}
+        // Localize script for AJAX
+        wp_localize_script( 'hsz-admin', 'hsz_admin_params', [
+            'ajaxurl' => admin_url( 'admin-ajax.php' ),
+            'nonce' => wp_create_nonce( 'hsz_admin_nonce' ),
+            'error_url_empty' => __( 'Please provide a URL to analyze.', 'hellaz-sitez-analyzer' ),
+            'text_analyzing' => __( 'Analyzing...', 'hellaz-sitez-analyzer' ),
+            'text_loading' => __( 'Fetching data...', 'hellaz-sitez-analyzer' ),
+            'text_analysis_complete' => __( 'Analysis Complete', 'hellaz-sitez-analyzer' ),
+            'error_generic' => __( 'An unknown error occurred.', 'hellaz-sitez-analyzer' ),
+            'error_ajax' => __( 'The request failed. Please check your connection and try again.', 'hellaz-sitez-analyzer' ),
+        ]);
+    }
 
-		if ( ! wp_next_scheduled( 'hsz_cleanup_reports' ) ) {
-			wp_schedule_event( time(), 'weekly', 'hsz_cleanup_reports' );
-		}
+    /**
+     * Enqueue frontend assets
+     */
+    public function enqueue_frontend_assets() {
+        // Only enqueue if shortcode or widget is present
+        if ( $this->should_load_frontend_assets() ) {
+            wp_enqueue_style(
+                'hsz-frontend',
+                HSZ_ASSETS_URL . 'css/hsz-frontend.css',
+                [],
+                HSZ_VERSION
+            );
 
-		// Add cron actions
-		add_action( 'hsz_cleanup_screenshots', [ $this, 'cleanup_old_screenshots' ] );
-		add_action( 'hsz_cleanup_reports', [ $this, 'cleanup_old_reports' ] );
-	}
+            wp_enqueue_script(
+                'hsz-frontend',
+                HSZ_ASSETS_URL . 'js/hsz-frontend.js',
+                [ 'jquery' ],
+                HSZ_VERSION,
+                true
+            );
+        }
+    }
 
-	/**
-	 * Initialize cron jobs for enhanced features
-	 */
-	public function init_cron_jobs() {
-		// Register custom cron intervals
-		add_filter( 'cron_schedules', [ $this, 'add_cron_intervals' ] );
-	}
+    /**
+     * Check if frontend assets should be loaded
+     */
+    private function should_load_frontend_assets() {
+        global $post;
 
-	/**
-	 * Add custom cron intervals
-	 *
-	 * @param array $schedules Existing schedules
-	 * @return array Modified schedules
-	 */
-	public function add_cron_intervals( $schedules ) {
-		$schedules['weekly'] = [
-			'interval' => WEEK_IN_SECONDS,
-			'display' => __( 'Weekly', 'hellaz-sitez-analyzer' )
-		];
-		return $schedules;
-	}
+        // Check if shortcode is present
+        if ( $post && has_shortcode( $post->post_content, 'hsz_analyzer' ) ) {
+            return true;
+        }
 
-	/**
-	 * Load the plugin text domain for translation.
-	 */
-	public function load_plugin_textdomain() {
-		load_plugin_textdomain(
-			'hellaz-sitez-analyzer',
-			false,
-			dirname( plugin_basename( HSZ_PLUGIN_PATH ) ) . '/languages/'
-		);
-	}
+        // Check if widget is active
+        if ( is_active_widget( false, false, 'hsz_widget' ) ) {
+            return true;
+        }
 
-	/**
-	 * Enqueue frontend assets for enhanced features
-	 */
-	public function enqueue_frontend_assets() {
-		// Only enqueue if enhanced features are being used on this page
-		if ( $this->should_load_frontend_assets() ) {
-			wp_enqueue_style(
-				'hsz-enhanced-frontend',
-				HSZ_ASSETS_URL . 'css/enhanced-frontend.css',
-				[ 'hsz-frontend' ],
-				HSZ_VERSION
-			);
+        // Check if Gutenberg block is present
+        if ( $post && has_blocks( $post->post_content ) ) {
+            $blocks = parse_blocks( $post->post_content );
+            foreach ( $blocks as $block ) {
+                if ( $block['blockName'] === 'hsz/analyzer' ) {
+                    return true;
+                }
+            }
+        }
 
-			wp_enqueue_script(
-				'hsz-enhanced-frontend',
-				HSZ_ASSETS_URL . 'js/enhanced-frontend.js',
-				[ 'jquery' ],
-				HSZ_VERSION,
-				true
-			);
+        return false;
+    }
 
-			wp_localize_script( 'hsz-enhanced-frontend', 'hszEnhanced', [
-				'ajaxurl' => admin_url( 'admin-ajax.php' ),
-				'nonce' => wp_create_nonce( 'hsz_enhanced_nonce' ),
-				'i18n' => [
-					'analyzing' => __( 'Analyzing website...', 'hellaz-sitez-analyzer' ),
-					'grading' => __( 'Calculating grade...', 'hellaz-sitez-analyzer' ),
-					'screenshot' => __( 'Generating preview...', 'hellaz-sitez-analyzer' ),
-					'error' => __( 'Analysis failed. Please try again.', 'hellaz-sitez-analyzer' )
-				]
-			]);
+    /**
+     * AJAX handler for URL analysis
+     */
+    public function ajax_analyze_url() {
+        // Verify nonce
+        if ( ! wp_verify_nonce( $_POST['_wpnonce'] ?? '', 'hsz_admin_nonce' ) ) {
+            wp_send_json_error( __( 'Security check failed.', 'hellaz-sitez-analyzer' ) );
+        }
 
-			// Enqueue Hooks scripts if enabled
-			if ( isset( $this->components['hooks'] ) ) {
-				Hooks::enqueue_link_scripts();
-			}
-		}
-	}
+        $url = sanitize_url( $_POST['url'] ?? '' );
 
-	/**
-	 * Enqueue admin assets for enhanced features
-	 */
-	public function enqueue_admin_assets( $hook ) {
-		// Load on plugin settings pages
-		if ( strpos( $hook, 'hellaz-sitez-analyzer' ) !== false ) {
-			wp_enqueue_script(
-				'hsz-enhanced-admin',
-				HSZ_ASSETS_URL . 'js/enhanced-admin.js',
-				[ 'jquery', 'wp-util' ],
-				HSZ_VERSION,
-				true
-			);
+        if ( empty( $url ) ) {
+            wp_send_json_error( __( 'URL is required.', 'hellaz-sitez-analyzer' ) );
+        }
 
-			wp_localize_script( 'hsz-enhanced-admin', 'hszEnhancedAdmin', [
-				'ajaxurl' => admin_url( 'admin-ajax.php' ),
-				'nonce' => wp_create_nonce( 'hsz_enhanced_admin_nonce' ),
-				'features' => [
-					'performance' => $this->is_feature_enabled( 'performance_analysis' ),
-					'security' => $this->is_feature_enabled( 'security_analysis' ),
-					'preview' => $this->is_feature_enabled( 'preview_generation' ),
-					'grading' => $this->is_feature_enabled( 'grading_system' )
-				]
-			]);
-		}
-	}
+        try {
+            // Use the analyzer class to analyze the URL
+            if ( class_exists( 'HSZ\\Analyzer' ) ) {
+                $analyzer = new Analyzer();
+                $result = $analyzer->analyze_url( $url );
+                
+                wp_send_json_success( [
+                    'metadata' => $result,
+                    'url' => $url
+                ] );
+            } else {
+                // Fallback basic analysis
+                $result = [
+                    'title' => 'Analysis Complete',
+                    'description' => 'Basic analysis functionality - Analyzer class not found',
+                    'url' => $url
+                ];
+                
+                wp_send_json_success( [
+                    'metadata' => $result,
+                    'url' => $url
+                ] );
+            }
 
-	/**
-	 * Check if a feature is enabled
-	 *
-	 * @param string $feature Feature name
-	 * @return bool
-	 */
-	private function is_feature_enabled( $feature ) {
-		return (bool) get_option( "hsz_{$feature}_enabled", false );
-	}
+        } catch ( Exception $e ) {
+            wp_send_json_error( $e->getMessage() );
+        }
+    }
 
-	/**
-	 * Check if frontend assets should be loaded
-	 *
-	 * @return bool
-	 */
-	private function should_load_frontend_assets() {
-		global $post;
+    /**
+     * AJAX handler for bulk processing
+     */
+    public function ajax_start_bulk_processing() {
+        // Verify nonce
+        if ( ! wp_verify_nonce( $_POST['_wpnonce'] ?? '', 'hsz_admin_nonce' ) ) {
+            wp_send_json_error( __( 'Security check failed.', 'hellaz-sitez-analyzer' ) );
+        }
 
-		// Check if current page/post contains plugin shortcodes or blocks
-		if ( $post && (
-			has_shortcode( $post->post_content, 'sitez_analyzer' ) ||
-			has_shortcode( $post->post_content, 'hsz_analyzer' ) ||
-			has_block( 'hsz/analyzer', $post->post_content ) ||
-			has_block( 'hsz/analyzer-block', $post->post_content )
-		)) {
-			return true;
-		}
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( __( 'Permission denied.', 'hellaz-sitez-analyzer' ) );
+        }
 
-		// Check if widgets are active
-		if ( is_active_widget( false, false, 'hsz_site_analyzer_widget' ) ) {
-			return true;
-		}
+        $batch_name = sanitize_text_field( $_POST['batch_name'] ?? '' );
+        $urls = array_map( 'sanitize_url', $_POST['urls'] ?? [] );
 
-		return false;
-	}
+        if ( empty( $urls ) ) {
+            wp_send_json_error( __( 'No URLs provided.', 'hellaz-sitez-analyzer' ) );
+        }
 
-	/**
-	 * The main execution function for the plugin.
-	 */
-	public function run() {
-		// All functionality is initialized via hooks in the private constructor.
-		// This public method exists as a clean entry point.
-	}
+        // Generate batch ID
+        $batch_id = 'batch_' . time() . '_' . wp_rand( 1000, 9999 );
 
-	/**
-	 * Plugin activation routine.
-	 *
-	 * Creates database tables and sets default options.
-	 */
-	public static function activate() {
-		// **CRITICAL FIX**: Explicitly require the Database class file here to
-		// prevent a fatal error on activation if the autoloader is not yet available.
-		require_once HSZ_PLUGIN_PATH . 'includes/class-hsz-database.php';
+        // Store batch data (you would implement actual bulk processing here)
+        set_transient( 'hsz_bulk_' . $batch_id, [
+            'name' => $batch_name,
+            'urls' => $urls,
+            'status' => 'pending',
+            'created' => current_time( 'mysql' )
+        ], DAY_IN_SECONDS );
 
-		// Delegate table creation to the centralized Database class.
-		if ( class_exists( 'HSZ\\Database' ) ) {
-			Database::create_tables();
-		}
+        wp_send_json_success( [
+            'batch_id' => $batch_id,
+            'message' => __( 'Bulk processing started successfully.', 'hellaz-sitez-analyzer' )
+        ] );
+    }
 
-		// Set default cache duration if not set.
-		if ( false === get_option( 'hsz_cache_duration' ) ) {
-			update_option( 'hsz_cache_duration', DAY_IN_SECONDS );
-		}
+    /**
+     * Plugin activation hook
+     */
+    public static function activate() {
+        // Create necessary database tables
+        self::create_tables();
 
-		// Initialize upload directories
-		self::init_upload_directories();
+        // Set default options
+        self::set_default_options();
 
-		// Schedule enhanced cron jobs
-		wp_schedule_event( time(), 'daily', 'hsz_cleanup_cache' );
-		wp_schedule_event( time(), 'weekly', 'hsz_cleanup_screenshots' );
-		wp_schedule_event( time(), 'weekly', 'hsz_cleanup_reports' );
+        // Create upload directories
+        self::create_upload_directories();
 
-		// Flush rewrite rules to apply any new rules.
-		flush_rewrite_rules();
-	}
+        // Flush rewrite rules if needed
+        flush_rewrite_rules();
+    }
 
-	/**
-	 * Plugin deactivation routine.
-	 *
-	 * Cleanup tasks if necessary on plugin deactivation.
-	 */
-	public static function deactivate() {
-		// Clear scheduled cron jobs
-		wp_clear_scheduled_hook( 'hsz_cleanup_cache' );
-		wp_clear_scheduled_hook( 'hsz_cleanup_screenshots' );
-		wp_clear_scheduled_hook( 'hsz_cleanup_reports' );
+    /**
+     * Plugin deactivation hook
+     */
+    public static function deactivate() {
+        // Clean up scheduled events
+        wp_clear_scheduled_hook( 'hsz_cleanup_cache' );
 
-		// Clear any temporary data
-		delete_transient( 'hsz_api_rate_limits' );
+        // Flush rewrite rules
+        flush_rewrite_rules();
+    }
 
-		// Remove hooks if they were registered
-		if ( class_exists( 'HSZ\\Hooks' ) ) {
-			Hooks::remove_all_hooks();
-		}
-	}
+    /**
+     * Create necessary database tables
+     */
+    private static function create_tables() {
+        global $wpdb;
 
-	/**
-	 * Initialize upload directories
-	 */
-	private static function init_upload_directories() {
-		$upload_dir = wp_upload_dir();
-		$hsz_dir = $upload_dir['basedir'] . '/hsz-analyzer/';
-		
-		$directories = [
-			$hsz_dir,
-			$hsz_dir . 'screenshots/',
-			$hsz_dir . 'reports/',
-			$hsz_dir . 'cache/'
-		];
+        $charset_collate = $wpdb->get_charset_collate();
 
-		foreach ( $directories as $dir ) {
-			if ( ! file_exists( $dir ) ) {
-				wp_mkdir_p( $dir );
-				// Add .htaccess for security
-				file_put_contents( $dir . '.htaccess', 'deny from all' );
-			}
-		}
-	}
+        // Example table creation (implement based on your needs)
+        $table_name = $wpdb->prefix . 'hsz_analysis_cache';
 
-	/**
-	 * Cleanup old screenshots
-	 */
-	public function cleanup_old_screenshots() {
-		if ( isset( $this->components['preview'] ) ) {
-			$deleted = $this->components['preview']->cleanup_old_screenshots( 30 ); // 30 days
-			if ( $deleted > 0 ) {
-				Utils::log_error( "Cleaned up {$deleted} old screenshots", __FILE__, __LINE__ );
-			}
-		}
-	}
+        $sql = "CREATE TABLE $table_name (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            url varchar(500) NOT NULL,
+            analysis_data longtext NOT NULL,
+            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            expires_at datetime NOT NULL,
+            PRIMARY KEY (id),
+            UNIQUE KEY url (url),
+            KEY expires_at (expires_at)
+        ) $charset_collate;";
 
-	/**
-	 * Cleanup old reports
-	 */
-	public function cleanup_old_reports() {
-		$upload_dir = wp_upload_dir();
-		$reports_dir = $upload_dir['basedir'] . '/hsz-analyzer/reports/';
-		
-		if ( is_dir( $reports_dir ) ) {
-			$files = glob( $reports_dir . '*' );
-			$cutoff_time = time() - ( 60 * DAY_IN_SECONDS ); // 60 days
-			$deleted = 0;
+        require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+        dbDelta( $sql );
+    }
 
-			foreach ( $files as $file ) {
-				if ( is_file( $file ) && filemtime( $file ) < $cutoff_time ) {
-					if ( unlink( $file ) ) {
-						$deleted++;
-					}
-				}
-			}
+    /**
+     * Set default plugin options
+     */
+    private static function set_default_options() {
+        add_option( 'hsz_template_mode', 'classic' );
+        add_option( 'hsz_cache_duration', 24 );
+        add_option( 'hsz_performance_analysis_enabled', true );
+        add_option( 'hsz_security_analysis_enabled', true );
+        add_option( 'hsz_preview_generation_enabled', true );
+        add_option( 'hsz_grading_system_enabled', true );
+    }
 
-			if ( $deleted > 0 ) {
-				Utils::log_error( "Cleaned up {$deleted} old reports", __FILE__, __LINE__ );
-			}
-		}
-	}
+    /**
+     * Create upload directories
+     */
+    private static function create_upload_directories() {
+        $directories = [
+            HSZ_UPLOAD_DIR,
+            HSZ_UPLOAD_DIR . 'screenshots/',
+            HSZ_UPLOAD_DIR . 'reports/',
+            HSZ_UPLOAD_DIR . 'cache/',
+            HSZ_UPLOAD_DIR . 'logs/'
+        ];
 
-	/**
-	 * Get plugin version.
-	 *
-	 * @return string
-	 */
-	public function get_version() {
-		return $this->version;
-	}
+        foreach ( $directories as $dir ) {
+            if ( ! file_exists( $dir ) ) {
+                wp_mkdir_p( $dir );
+                
+                // Add security files
+                $htaccess_content = "Order deny,allow\nDeny from all\n";
+                if ( $dir !== HSZ_UPLOAD_DIR . 'screenshots/' ) {
+                    file_put_contents( $dir . '.htaccess', $htaccess_content );
+                }
+                
+                // Add index.php for security
+                file_put_contents( $dir . 'index.php', '<?php // Silence is golden' );
+            }
+        }
+    }
 
-	/**
-	 * Get component instance
-	 *
-	 * @param string $component Component name
-	 * @return object|null
-	 */
-	public function get_component( $component ) {
-		return isset( $this->components[ $component ] ) ? $this->components[ $component ] : null;
-	}
+    /**
+     * Get component instance
+     *
+     * @param string $component Component name
+     * @return mixed|null Component instance or null
+     */
+    public function get_component( $component ) {
+        return $this->components[ $component ] ?? null;
+    }
 
-	/**
-	 * Check if component exists
-	 *
-	 * @param string $component Component name
-	 * @return bool
-	 */
-	public function has_component( $component ) {
-		return isset( $this->components[ $component ] );
-	}
+/**
+ * Prevent cloning
+ */
+public function __clone() {
+    throw new Exception( 'Cannot clone singleton instance' );
+}
 
-	/**
-	 * Get all available components
-	 *
-	 * @return array
-	 */
-	public function get_components() {
-		return $this->components;
-	}
+/**
+ * Prevent unserialization
+ */
+public function __wakeup() {
+    throw new Exception( 'Cannot unserialize singleton instance' );
+}
+
 }

@@ -1,323 +1,336 @@
-# Copyright (C) 2025 HellaZ
-# This file is distributed under the same license as the HellaZ SiteZ Analyzer plugin.
 msgid ""
 msgstr ""
-"Project-Id-Version: HellaZ SiteZ Analyzer 1.0.1\n"
-"Report-Msgid-Bugs-To: https://github.com/hellaz/HellaZ-SiteZ-Analyzer/issues\n"
-"POT-Creation-Date: 2025-07-28 23:00+0300\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"Project-Id-Version: HellaZ SiteZ Analyzer 2.1.0\n"
+"POT-Creation-Date: 2025-08-06 00:00+0000\n"
+"PO-Revision-Date: 2025-08-06 00:00+0000\n"
+"Language-Team: \n"
+"Last-Translator: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Perplexity Code Guru\n"
-"X-Domain: hellaz-sitez-analyzer\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: WP-CLI make-pot\n"
 
-#: includes/class-hsz-ajax.php:40
-msgid "You do not have sufficient permissions to perform this action."
-msgstr ""
-
-#: includes/class-hsz-ajax.php:46
-msgid "The provided URL is not valid."
-msgstr ""
-
-#: includes/class-hsz-ajax.php:66
-msgid "An unexpected error occurred during analysis."
-msgstr ""
-
-#: includes/class-hsz-bulk-processor.php:111
-msgid "No recent bulk operations found."
-msgstr ""
-
-#: includes/class-hsz-bulk-processor.php:119
-msgid "Batch Name"
-msgstr ""
-
-#: includes/class-hsz-bulk-processor.php:120
-msgid "Status"
-msgstr ""
-
-#: includes/class-hsz-bulk-processor.php:121
-msgid "Progress"
-msgstr ""
-
-#: includes/class-hsz-bulk-processor.php:122
-#: includes/class-hsz-core.php:123
-msgid "Created At"
-msgstr ""
-
-#: includes/class-hsz-gutenberg.php:32 includes/class-hsz-gutenberg.php:69
+#: includes/class-hsz-admin.php
 msgid "HellaZ SiteZ Analyzer"
 msgstr ""
 
-#: includes/class-hsz-gutenberg.php:33
-msgid "Analyze and display website metadata, social links, and security information."
-msgstr ""
-
-#: includes/class-hsz-gutenberg.php:36
-msgid "website"
-msgstr ""
-
-#: includes/class-hsz-gutenberg.php:37
-msgid "metadata"
-msgstr ""
-
-#: includes/class-hsz-gutenberg.php:38
-msgid "analyze"
-msgstr ""
-
-#: includes/class-hsz-gutenberg.php:39
-msgid "social"
-msgstr ""
-
-#: includes/class-hsz-gutenberg.php:73
-msgid "Analyzer Settings"
-msgstr ""
-
-#: includes/class-hsz-gutenberg.php:77
-msgid "Website URL"
-msgstr ""
-
-#: includes/class-hsz-gutenberg.php:80
-msgid "https://example.com"
-msgstr ""
-
-#: includes/class-hsz-gutenberg.php:81
-msgid "Enter the URL you want to analyze."
-msgstr ""
-
-#: includes/class-hsz-gutenberg.php:84
-msgid "Display Type"
-msgstr ""
-
-#: includes/class-hsz-gutenberg.php:87
-msgid "Full Analysis"
-msgstr ""
-
-#: includes/class-hsz-gutenberg.php:88
-msgid "Metadata Only"
-msgstr ""
-
-#: includes/class-hsz-gutenberg.php:89
-msgid "Social Media Only"
-msgstr ""
-
-#: includes/class-hsz-gutenberg.php:92
-msgid "Choose what information to display."
-msgstr ""
-
-#: includes/class-hsz-gutenberg.php:98
-msgid "Analyzing..."
-msgstr ""
-
-#: includes/class-hsz-gutenberg.php:98
-msgid "Analyze URL"
-msgstr ""
-
-#: includes/class-hsz-metadata.php:39
-msgid "HTML content is empty and cannot be analyzed."
-msgstr ""
-
-#: includes/class-hsz-metadata.php:79
-msgid "An unexpected error occurred during metadata extraction."
-msgstr ""
-
-#: includes/class-hsz-security.php:28
-msgid "URL is not valid according to WordPress standards."
-msgstr ""
-
-#: includes/class-hsz-security.php:33
-msgid "Could not parse the hostname from the URL."
-msgstr ""
-
-#: includes/class-hsz-security.php:41
-msgid "URL resolves to a private or reserved IP address, which is not allowed."
-msgstr ""
-
-#: includes/class-hsz-settings.php:57
-msgid "Security check failed. Please try again."
-msgstr ""
-
-#: includes/class-hsz-settings.php:62
-msgid "You do not have permission to perform this action."
-msgstr ""
-
-#: includes/class-hsz-settings.php:73
-msgid "%d cache entry was successfully deleted."
-msgid_plural "%d cache entries were successfully deleted."
-msgstr[0] ""
-msgstr[1] ""
-
-#: includes/class-hsz-settings.php:127
-msgid "HellaZ SiteZ Analyzer Settings"
-msgstr ""
-
-#: includes/class-hsz-settings.php:131
-msgid "Security Warning:"
-msgstr ""
-
-#: includes/class-hsz-settings.php:132
-msgid "The encryption key is not defined in your wp-config.php file. API keys and other sensitive settings will be saved, but they will not be encrypted. Please define the HSZ_ENCRYPTION_KEY constant for full security."
-msgstr ""
-
-#: includes/class-hsz-settings.php:137
-msgid "General"
-msgstr ""
-
-#: includes/class-hsz-settings.php:138
-msgid "API Keys"
-msgstr ""
-
-#: includes/class-hsz-settings.php:139
-msgid "Bulk Processing"
-msgstr ""
-
-#: includes/class-hsz-settings.php:140
-msgid "Cache"
-msgstr ""
-
-#: includes/class-hsz-settings.php:141
-msgid "Templates"
-msgstr ""
-
-#: includes/class-hsz-settings.php:152
-msgid "Bulk Processing Report"
-msgstr ""
-
-#: includes/class-hsz-settings.php:154
-msgid "Bulk processing functionality is not installed or available."
-msgstr ""
-
-#: includes/class-hsz-settings.php:164
-msgid "Cache Settings"
-msgstr ""
-
-#: includes/class-hsz-settings.php:165
-msgid "Templates"
-msgstr ""
-
-#: includes/class-hsz-settings.php:181
-msgid "General Settings"
-msgstr ""
-
-#: includes/class-hsz-settings.php:184
-msgid "Fallback Image URL"
-msgstr ""
-
-#: includes/class-hsz-settings.php:191
-msgid "If a page has no image, this will be used."
-msgstr ""
-
-#: includes/class-hsz-settings.php:195
-msgid "Fallback Title"
-msgstr ""
-
-#: includes/class-hsz-settings.php:201
-msgid "Fallback Description"
-msgstr ""
-
-#: includes/class-hsz-settings.php:207
-msgid "Auto-Analyze Content"
-msgstr ""
-
-#: includes/class-hsz-settings.php:211
-msgid "Automatically add analysis attributes to external links in post content."
-msgstr ""
-
-#: includes/class-hsz-settings.php:215
-msgid "Enable Disclaimer"
-msgstr ""
-
-#: includes/class-hsz-settings.php:219
-msgid "Show a disclaimer message at the bottom of analyzed content."
-msgstr ""
-
-#: includes/class-hsz-settings.php:223
-msgid "Disclaimer Message"
-msgstr ""
-
-#: includes/class-hsz-settings.php:233
-msgid "Third-Party API Keys"
-msgstr ""
-
-#: includes/class-hsz-settings.php:234
-msgid "Enable and configure third-party services to enhance analysis."
-msgstr ""
-
-#: includes/class-hsz-settings.php:252
-msgid "Enable"
-msgstr ""
-
-#: includes/class-hsz-settings.php:255
-msgid "Enter API Key"
-msgstr ""
-
-#: includes/class-hsz-settings.php:271
-msgid "Cache Duration"
-msgstr ""
-
-#: includes/class-hsz-settings.php:275
-msgid "Duration in seconds for which analysis results are cached."
-msgstr ""
-
-#: includes/class-hsz-settings.php:279
-msgid "Cache Debug"
-msgstr ""
-
-#: includes/class-hsz-settings.php:283
-msgid "Enable cache debugging (adds comments to output)."
-msgstr ""
-
-#: includes/class-hsz-settings.php:293
-msgid "Clear Plugin Cache"
-msgstr ""
-
-#: includes/class-hsz-settings.php:294
-msgid "This will immediately delete all cached analysis data from the database."
-msgstr ""
-
-#: includes/class-hsz-settings.php:298
-msgid "Clear All Cache Now"
-msgstr ""
-
-#: includes/class-hsz-shortcode.php:33
-msgid "Please provide a valid URL."
-msgstr ""
-
-#: includes/class-hsz-shortcode.php:57
-msgid "Rendering template not found."
-msgstr ""
-
-#: includes/class-hsz-shortcode.php:61
-msgid "An error occurred while processing the URL."
-msgstr ""
-
-#: includes/class-hsz-widget.php:25 includes/class-hsz-widget.php:27
+#: includes/class-hsz-admin.php
 msgid "SiteZ Analyzer"
 msgstr ""
 
-#: includes/class-hsz-widget.php:29
-msgid "Displays website metadata and social profiles for a given URL."
+#: includes/class-hsz-admin.php
+msgid "Contact Information Extraction"
 msgstr ""
 
-#: includes/class-hsz-widget.php:46
-msgid "Please provide a valid URL in the widget settings."
+#: includes/class-hsz-admin.php templates/metadata-classic.php
+msgid "Contact Information"
 msgstr ""
 
-#: includes/class-hsz-widget.php:80
-msgid "Admin Error: "
+#: includes/class-hsz-admin.php
+msgid "Extract email addresses from content and mailto links"
 msgstr ""
 
-#: includes/class-hsz-widget.php:82
-msgid "An error occurred while analyzing the URL."
+#: includes/class-hsz-admin.php
+msgid "Extract phone numbers from content and tel links"
 msgstr ""
 
-#: includes/class-hsz-widget.php:94
-msgid "Title:"
+#: includes/class-hsz-admin.php
+msgid "Extract physical addresses and location information"
 msgstr ""
 
-#: includes/class-hsz-widget.php:98
-msgid "URL to Analyze:"
+#: includes/class-hsz-admin.php
+msgid "Detect and analyze contact forms on the website"
 msgstr ""
+
+#: includes/class-hsz-admin.php
+msgid "Extract social media profiles for contact purposes"
+msgstr ""
+
+#: includes/class-hsz-admin.php
+msgid "Extract business hours and operating times"
+msgstr ""
+
+#: includes/class-hsz-admin.php
+msgid "Validate contact information (may slow down analysis)"
+msgstr ""
+
+#: includes/class-hsz-admin.php
+msgid "Enable deep analysis for better accuracy"
+msgstr ""
+
+#: includes/class-hsz-admin.php
+msgid "Configure which contact information to extract from analyzed websites."
+msgstr ""
+
+#: includes/class-hsz-admin.php
+msgid "Email Extraction"
+msgstr ""
+
+#: includes/class-hsz-admin.php
+msgid "Phone Number Extraction"
+msgstr ""
+
+#: includes/class-hsz-admin.php
+msgid "Address Extraction"
+msgstr ""
+
+#: includes/class-hsz-admin.php
+msgid "Contact Form Detection"
+msgstr ""
+
+#: includes/class-hsz-admin.php
+msgid "Social Contact Info"
+msgstr ""
+
+#: includes/class-hsz-admin.php
+msgid "Business Hours"
+msgstr ""
+
+#: includes/class-hsz-admin.php
+msgid "Validation Options"
+msgstr ""
+
+#: includes/class-hsz-admin.php
+msgid "Save All Settings"
+msgstr ""
+
+#: includes/class-hsz-admin.php
+msgid "API key is required"
+msgstr ""
+
+#: includes/class-hsz-admin.php
+msgid "Testing API connection..."
+msgstr ""
+
+#: includes/class-hsz-admin.php
+msgid "API connection successful!"
+msgstr ""
+
+#: includes/class-hsz-admin.php
+msgid "API connection failed. Please check your settings."
+msgstr ""
+
+#: includes/class-hsz-admin.php
+msgid "Clearing cache..."
+msgstr ""
+
+#: includes/class-hsz-admin.php
+msgid "Cache cleared successfully!"
+msgstr ""
+
+#: includes/class-hsz-admin.php
+msgid "Are you sure you want to reset all settings to defaults?"
+msgstr ""
+
+#: includes/class-hsz-admin.php
+msgid "All settings have been reset to defaults."
+msgstr ""
+
+#: includes/class-hsz-admin.php
+msgid "Settings have been reset to defaults."
+msgstr ""
+
+#: templates/metadata-classic.php templates/metadata-modern.php
+msgid "Social Profiles"
+msgstr ""
+
+#: templates/metadata-classic.php templates/metadata-modern.php
+msgid "Performance"
+msgstr ""
+
+#: templates/metadata-classic.php
+msgid "Overall Score: %d"
+msgstr ""
+
+#: templates/metadata-classic.php templates/metadata-modern.php
+msgid "Security"
+msgstr ""
+
+#: templates/metadata-classic.php
+msgid "Threat Level: %s"
+msgstr ""
+
+#: templates/metadata-classic.php templates/metadata-modern.php
+msgid "Feeds"
+msgstr ""
+
+#: templates/metadata-classic.php
+msgid "Email:"
+msgstr ""
+
+#: templates/metadata-classic.php
+msgid "Phone:"
+msgstr ""
+
+#: templates/metadata-classic.php
+msgid "Address:"
+msgstr ""
+
+#: templates/metadata-classic.php
+msgid "Contact Form:"
+msgstr ""
+
+#: templates/metadata-classic.php
+msgid "Detected"
+msgstr ""
+
+#: templates/metadata-classic.php
+msgid "Business Hours:"
+msgstr ""
+
+#: templates/metadata-classic.php
+msgid "Recommendations"
+msgstr ""
+
+#: templates/metadata-compact.php
+msgid "Perf: %d"
+msgstr ""
+
+#: templates/metadata-compact.php
+msgid "Sec: %s"
+msgstr ""
+
+#: templates/metadata-modern.php
+msgid "Email"
+msgstr ""
+
+#: templates/metadata-modern.php
+msgid "Visit Site"
+msgstr ""
+
+#: includes/class-hsz-contact.php
+msgid "HTML content is empty and cannot be analyzed for contact information."
+msgstr ""
+
+#: includes/class-hsz-contact.php
+msgid "Failed to parse HTML content for contact extraction."
+msgstr ""
+
+#: includes/class-hsz-contact.php
+msgid "An error occurred during contact information extraction."
+msgstr ""
+
+#: includes/class-hsz-contact.php
+msgid "Add email contact information"
+msgstr ""
+
+#: includes/class-hsz-contact.php
+msgid "Provide at least one email address for customer inquiries."
+msgstr ""
+
+#: includes/class-hsz-contact.php
+msgid "Add phone contact information"
+msgstr ""
+
+#: includes/class-hsz-contact.php
+msgid "Include a phone number for direct customer contact."
+msgstr ""
+
+#: includes/class-hsz-contact.php
+msgid "Add a contact form"
+msgstr ""
+
+#: includes/class-hsz-contact.php
+msgid "Provide a contact form for easy customer inquiries."
+msgstr ""
+
+#: includes/class-hsz-contact.php
+msgid "Consider adding physical address"
+msgstr ""
+
+#: includes/class-hsz-contact.php
+msgid "If applicable, include your business address for local customers."
+msgstr ""
+
+#. General plugin phrases
+msgid "Version %s"
+msgstr ""
+msgid "Support"
+msgstr ""
+
+#: includes/class-hsz-analyzer.php
+msgid "Invalid URL provided for analysis."
+msgstr ""
+
+#: includes/class-hsz-analyzer.php
+msgid "No content received from URL"
+msgstr ""
+
+#: includes/class-hsz-analyzer.php
+msgid "An unexpected error occurred during analysis."
+msgstr ""
+
+#: includes/class-hsz-analyzer.php
+msgid "Basic contact detection - enhanced version requires Contact class"
+msgstr ""
+
+#: includes/class-hsz-analyzer.php
+msgid "Add more contact information (email, phone, contact form) to improve user experience"
+msgstr ""
+
+#: includes/class-hsz-analyzer.php
+msgid "Consider adding RSS/Atom feeds for content syndication"
+msgstr ""
+
+#: includes/class-hsz-metadata.php
+msgid "No metadata found."
+msgstr ""
+
+#: includes/class-hsz-metadata.php
+msgid "No favicon detected."
+msgstr ""
+
+#: includes/class-hsz-social-media.php
+msgid "No social profiles detected."
+msgstr ""
+
+#: includes/class-hsz-apianalysis.php
+msgid "API analysis failed"
+msgstr ""
+
+#: includes/class-hsz-apianalysis.php
+msgid "API analysis class not available"
+msgstr ""
+
+#: includes/class-hsz-analyzer.php
+msgid "Metadata analysis class not available"
+msgstr ""
+
+#: includes/class-hsz-analyzer.php
+msgid "Metadata analysis failed"
+msgstr ""
+
+#: includes/class-hsz-analyzer.php
+msgid "Social media analysis class not available"
+msgstr ""
+
+#: includes/class-hsz-analyzer.php
+msgid "Social media analysis failed"
+msgstr ""
+
+#: includes/class-hsz-analyzer.php
+msgid "Feed analysis class not available"
+msgstr ""
+
+#: includes/class-hsz-analyzer.php
+msgid "Feed analysis failed"
+msgstr ""
+
+#: includes/class-hsz-analyzer.php
+msgid "Contact information analysis failed"
+msgstr ""
+
+#: includes/class-hsz-analyzer.php
+msgid "API analysis class not available"
+msgstr ""
+
+#: includes/class-hsz-analyzer.php
+msgid "HTTP Error %d when fetching URL"
+msgstr ""
+
+#: includes/class-hsz-analyzer.php
+msgid "Failed to fetch URL: %s"
+msgstr ""
+
+#. End of file

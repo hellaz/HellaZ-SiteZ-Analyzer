@@ -1,118 +1,196 @@
-# Developer Guide – HellaZ SiteZ Analyzer
+# HellaZ SiteZ Analyzer — Developer Guide
+
+**Version:** 2.1.0  
+**Repository:** https://github.com/hellaz/HellaZ-SiteZAnalyzer
 
 ## Table of Contents
 
-- Overview
-- Architecture
-- Core Classes
-- Data Flow
-- Adding New Features
-- Hooks and Filters
-- Translation and i18n
-- Performance and Caching
-- Security Considerations
-- Templates and Theming
-- Bulk Processing
-- API Integrations
-- Testing and Debugging
+1. [Introduction](#introduction)  
+2. [Plugin Architecture Overview](#plugin-architecture-overview)  
+3. [Core Classes & Responsibilities](#core-classes--responsibilities)  
+4. [Analysis Workflow & The Analyzer Class](#analysis-workflow--the-analyzer-class)  
+5. [Contact Information Extraction](#contact-information-extraction)  
+6. [Template System & Rendering](#template-system--rendering)  
+7. [Admin Interface & Settings](#admin-interface--settings)  
+8. [API Integrations](#api-integrations)  
+9. [Caching & Performance](#caching--performance)  
+10. [Security & Best Practices](#security--best-practices)  
+11. [Development & Contribution Guidelines](#development--contribution-guidelines)  
+12. [Testing & Debugging](#testing--debugging)  
+13. [Changelog & Versioning](#changelog--versioning)  
+14. [Resources & References](#resources--references)
 
-## Overview
+## Introduction
 
-HellaZ SiteZ Analyzer is modular WordPress plugin designed to analyze websites by fetching metadata, social links, security data, and technology info. It provides multiple UI entry points (shortcode, widgets, Gutenberg blocks) and admin tooling for configuration, bulk processing, and logs.
+HellaZ SiteZ Analyzer is a powerful, comprehensive WordPress plugin that analyzes any publicly accessible website URL to extract detailed metadata, SEO quality, social media profiles, performance metrics, security checks, technology stacks, and—most recently—rich **contact information**, such as emails, phone numbers, physical addresses, business hours, and contact form presence.
 
-## Architecture
+Since version **2.1.0**, the plugin’s architecture has become fully modular and extensible, with a focus on security, clean code standards, and performance optimizations. It integrates multiple third-party APIs, offers several customizable display templates, and provides a rich admin interface for controlling every aspect of analysis and presentation.
 
-- **Bootstrap:** `hellaz-sitez-analyzer.php` initializes the plugin, defines constants and autoloading, and triggers `HSZ\Core::init()`.
-- **Core Orchestration:** `class-hsz-core.php` loads all components, registers hooks, and handles activation/deactivation tasks.
-- **Settings:** Provides admin UI and persistent options with tabbed organization.
-- **Metadata:** Extracts and parses metadata from fetched HTML and APIs.
-- **Social Media:** Parses social profile URLs from HTML and schema data.
-- **Bulk Processing:** Handles queued multiple URL analyses with database tracking.
-- **AJAX:** Supports asynchronous requests via secure handlers.
-- **Templates:** PHP partials provide flexible display of analysis results.
-- **Utilities:** Helpers for caching, encryption, logging, and performance measurement.
+## Plugin Architecture Overview
 
-## Core Classes
+The plugin follows a modular, namespace-based design with clear separation of concerns:
 
-- `Core` – Main plugin bootstrap.
-- `Settings` – Admin settings and forms.
-- `Metadata` – Metadata extraction logic.
-- `SocialMedia` – Social profile detection.
-- `BulkProcessor` – Batch job management.
-- `AjaxHandler` – Secure AJAX endpoints.
-- `AdminLogs` – Error and event log management.
-- `Utils` – Helper methods.
-- `Widget` – sidebar widget.
-- `Shortcode` – shortcode handler.
-- `Gutenberg` – block registration and rendering.
+```
+HellaZ SiteZ Analyzer
+├── hellaz-sitez-analyzer.php (plugin bootstrap entry)
+├── includes/
+│   ├── class-hsz-core.php (plugin main orchestrator)
+│   ├── class-hsz-analyzer.php (central analysis coordinator)
+│   ├── class-hsz-metadata.php (metadata extraction)
+│   ├── class-hsz-social-media.php (social profile detection)
+│   ├── class-hsz-contact.php (contact info extraction)
+│   ├── class-hsz-apianalysis.php (third-party API integrations)
+│   ├── class-hsz-cache.php (caching infrastructure)
+│   ├── class-hsz-util.php (utility functions)
+│   ├── class-hsz-shortcode.php (shortcodes & widgets)
+│   ├── class-hsz-admin.php (admin UI, AJAX handlers)
+│   └── ... utility classes & helpers ...
+├── templates/
+│   ├── metadata-classic.php
+│   ├── metadata-modern.php
+│   ├── metadata-compact.php
+│   └── partials/ (reusable UI sections)
+├── assets/
+│   ├── css/
+│   ├── js/
+│   └── images/ (template preview thumbnails)
+└── languages/
+    └── *.pot/mo files (translations)
+```
 
-## Data Flow
+This structure enables scalable development, easy maintenance, and enhanced testability.
 
-1. User triggers analysis (shortcode, widget, block, or bulk).
-2. `Metadata` class fetches URL content, extracts metadata, caches results.
-3. `SocialMedia` parses social links from content.
-4. Output rendered per selected template.
-5. Bulk processing allows queued URL analysis with progress stored in DB tables.
+## Core Classes & Responsibilities
 
-## Adding Features
+| Class                   | Responsibility                                         |
+| ----------------------- | ----------------------------------------------------- |
+| `HSZ\Core`              | Bootstrap, hooks, resource loading, activation/deactivation logic |
+| `HSZ\Analyzer`          | Central unified API for running all kinds of analysis; returns aggregated results |
+| `HSZ\Metadata`          | Extracts titles, descriptions, images, structured data, feeds, etc. |
+| `HSZ\SocialMedia`       | Detects and validates social media profiles across 30+ platforms |
+| `HSZ\Contact`           | Extracts emails, phone numbers, physical addresses, business hours, contact forms, social contact links |
+| `HSZ\APIAnalysis`       | Connects with third-party APIs such as VirusTotal, BuiltWith, URLScan.io to enhance analysis |
+| `HSZ\Cache`             | Manages caching of analysis results for efficiency |
+| `HSZ\Utils`             | General utility and helper functions (e.g., encryption, sanitization) |
+| `HSZ\Shortcode`         | Provides shortcode and widget implementations |
+| `HSZ\Admin`             | Builds and manages all admin pages and settings; handles AJAX requests |
 
-- Place new classes in `includes/`.
-- Register in `Core->load_dependencies()`.
-- Add new admin UI tabs in `Settings`.
-- Utilize caching via `Utils`.
-- Follow WordPress best practices for hooks, sanitization, and security.
+## Analysis Workflow & The Analyzer Class
 
-## Hooks and Filters
+- The **`HSZ\Analyzer`** class is the unified processing engine. Its primary method `analyze(url, options)` triggers the various modules, conditionally based on settings and context.
+- It gathers **metadata**, **social media links**, **contact info**, **performance metrics**, **security checks**, and **technology data**, and aggregates this into consistent arrays suitable for frontend and API consumption.
+- The Analyzer respects settings such as enabling/disabling specific modules, timeout values, caching duration, and user-agent strings for HTTP requests.
+- It supports error handling, logging, and result caching for performance.
 
-- `init` for shortcodes, blocks, REST registering.
-- `widgets_init` for widget registration.
-- `admin_menu` for settings UI.
-- AJAX actions protected by nonce (`hsz_analyze_nonce`) and capability checks.
+## Contact Information Extraction
 
-## Translation and i18n
+- HellaZ SiteZ Analyzer now features a **dedicated `HSZ\Contact`** class responsible for extracting website contact details.
+- It identifies:
+  - **Email addresses** across plain, obfuscated, mailto, and structured data formats.
+  - **Phone numbers**, including country codes and common formatting patterns.
+  - **Physical addresses** using regex-based heuristics and structured data parsing.
+  - **Business hours** from textual and structured sources.
+  - **Contact forms** presence with field type and validation analysis.
+  - **Social contact profiles** for direct communication.
+- Validation occurs through domain verification, pattern matching, and optional deep analysis.
+- The extracted data become part of the aggregate analysis results supplied to templates.
 
-- All user-facing strings are wrapped in `__()`, `_e()`, `_x()`, etc.
-- POT file located in `/languages/hellaz-sitez-analyzer.pot`.
-- Use `load_plugin_textdomain()` on plugin init.
+## Template System & Rendering
 
-## Performance and Caching
+- Output is generated using three professional templates: **Classic**, **Modern**, and **Compact**, selectable globally or overridden via shortcode/widget parameters.
+- Templates employ partials under `/templates/partials/` to modularize UI components such as SEO info, feed lists, performance graphs, security statuses, and the new contact info blocks.
+- All templates use WordPress recommended escaping functions (`esc_html()`, `esc_url()`, etc.) and follow accessibility and HTML standards.
+- Template enhancements include visually rich layouts, dynamic score graphs, and direct links to social/contact profiles.
+- The admin UI allows previewing templates with live thumbnails before selection.
 
-- Uses WP transients for result caching.
-- `Utils` provides cache get/set and clearing logic.
-- Cache duration controlled via admin.
-- Cache inspector displays current cache keys to admins.
+## Admin Interface & Settings
 
-## Security Considerations
-
-- All inputs sanitized via `sanitize_text_field()`, `esc_url_raw()`, etc.
-- All outputs escaped with `esc_html()`, `esc_url()`.
-- AJAX endpoints validate nonces and user capabilities.
-- Sensitive data (API keys) encrypted at rest.
-
-## Templates and Theming
-
-- Multiple output templates (classic, modern, compact).
-- Templates located in `/templates/`.
-- Templates receive sanitized data; can be overridden by developers.
-
-## Bulk Processing
-
-- Uses dedicated DB tables for batch and URL tracking.
-- Progress and errors recorded for admin status display.
-- Can be extended with WP Cron or manual triggers.
+- The plugin’s admin panel is organized into multiple tabs covering:
+  - General settings (fallbacks, disclaimers)
+  - API management (keys, toggles for multiple services)
+  - Template selection with live previews
+  - Caching controls and debug options
+  - Performance and security settings
+  - **Contact info extraction options** — granular toggles for each data type
+- AJAX-powered controls include:
+  - API key validation with real-time feedback
+  - Cache clearing
+  - Settings reset with nonce verification
+- User inputs are sanitized and securely encrypted/decrypted as needed.
 
 ## API Integrations
 
-- VirusTotal, BuiltWith, URLScan.io keys saved securely.
-- Extend `Metadata` class to add API-enhanced data fetching.
+- Out-of-the-box API connections include:
+  - VirusTotal — for security threat scanning
+  - BuiltWith — technology stack identification
+  - URLScan.io — detailed security and reputation insights
+  - Google Pagespeed and WebPageTest — for performance metrics
+- APIs respect rate limits; caching minimizes unnecessary calls.
+- API keys are stored encrypted in the database; users can enable/disable any service individually.
 
-## Testing and Debugging
+## Caching & Performance
 
-- Use WP_DEBUG and log monitoring.
-- Use browser console and network inspector for AJAX.
-- Manual and unit testing recommended for new features.
-- Use `Utils::log_error()` for standardized logging.
+- Results are cached intelligently to balance freshness and efficiency.
+- Supports both **transient API caching** and **dedicated database tables** for large-scale datasets.
+- Admin interface provides cache duration controls and debug toggling.
+- Batch processing (bulk analysis) module supports deferred scanning of multiple URLs and manages workload.
+- Compression options reduce storage footprint.
 
----
+## Security & Best Practices
 
-For detailed code examples and development best practices, refer to `/docs` folder and inline code comments.
+- All user inputs are rigorously sanitized using WordPress core functions.
+- Outputs are escaped to prevent XSS and related vulnerabilities.
+- Nonce verification is enforced on all form submissions and AJAX endpoints.
+- Direct file access is blocked via defined constant checks.
+- The plugin follows WordPress PHP coding standards for readability and maintainability.
+- Compatible with PHP 7.4 and 8.0+.
+- Logs errors responsibly without exposing sensitive information.
+
+## Development & Contribution Guidelines
+
+- Follow WordPress [Coding Standards](https://developer.wordpress.org/coding-standards/).
+- Use namespaces, class autoloading (PSR-4), and dependency injection where possible.
+- Write descriptions and docblocks for all new classes and methods.
+- Ensure user inputs and outputs are always validated and escaped.
+- Submit pull requests branched from master with descriptive commit messages.
+- Write unit tests for new features and maintain overall test coverage.
+- Document new settings, shortcodes, and user-facing features.
+
+## Testing & Debugging
+
+- Use sandboxed WordPress instances such as [TasteWP](https://tastewp.com/) or [InstaWP](https://instawp.io/) for safe testing.
+- Test all admin features, especially AJAX-driven ones like API key validation and cache clearing.
+- Use browser devtools and monitor console/network for JavaScript errors.
+- Enable debug logging (`WP_DEBUG`) and check plugin-generated logs for errors.
+- Validate front-end rendering against all three templates on desktop and mobile viewports.
+- Conduct security reviews using tools like WPScan or third-party audits against exposed endpoints.
+
+## Changelog & Versioning
+
+**Versioning follows [Semantic Versioning](https://semver.org/):**
+
+- **Major releases**: breaking changes, architecture overhaul.
+- **Minor releases**: new features such as contact extraction, new templates.
+- **Patch releases**: bug fixes, performance improvements.
+
+### Recent notable versions:
+
+- **v2.1.0**  
+  Major new feature: contact information extraction, admin UI enhancements, unified analyzer core, API integration improvements, enhanced templates.
+
+- **v2.0.0**  
+  Ground-up rewrite with modular design, multi-API support, improved caching and batch processing, comprehensive performance and security insights.
+
+## Resources & References
+
+- [WordPress Plugin Developer Handbook](https://developer.wordpress.org/plugins/)
+- [WordPress Security Guidelines](https://developer.wordpress.org/plugins/security/)
+- [WordPress REST API Handbook](https://developer.wordpress.org/rest-api/)
+- [WordPress Coding Standards](https://make.wordpress.org/core/handbook/best-practices/coding-standards/php/)
+- [Internationalization in Plugins](https://developer.wordpress.org/plugins/internationalization/)
+
+*Thank you for contributing to the HellaZ SiteZ Analyzer project!*
+
+**Note:** This Developer Guide is updated alongside each plugin release. Please consult it regularly for the latest development practices and insights.
+
+[1] https://github.com/hellaz/HellaZ-SiteZ-Analyzer/blob/main/Developer.md

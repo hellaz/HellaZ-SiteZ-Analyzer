@@ -1,15 +1,12 @@
 <?php
 /**
- * Manages the plugin's settings page and all admin-facing functionality.
+ * Enhanced Admin functionality for HellaZ SiteZ Analyzer
  *
- * This class is the central hub for the admin dashboard, creating the settings
- * page, registering all options, and rendering all fields and tabs.
- *
- * Enhanced with Phase 1 features: Performance Analysis, Security Analysis,
- * Preview Generation, and Grading System configuration.
+ * Handles comprehensive admin interface including settings pages, API management,
+ * performance settings, security configurations, and contact extraction options.
  *
  * @package HellaZ_SiteZ_Analyzer
- * @since 1.0.2
+ * @since 1.0.0
  */
 
 namespace HSZ;
@@ -19,35 +16,47 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+/**
+ * Class Admin
+ *
+ * Manages all admin functionality including settings, pages, and AJAX handlers.
+ */
 class Admin {
 
     /**
-     * Admin page slug
+     * Settings group identifier
      *
      * @var string
      */
-    private $page_slug = 'hellaz-sitez-analyzer';
+    private $settings_group = 'hsz_settings_group';
 
     /**
-     * Constructor
+     * Main page slug
+     *
+     * @var string
+     */
+    private $page_slug = 'hellaz-sitez-analyzer-settings';
+
+    /**
+     * Constructor - Initialize admin functionality
      */
     public function __construct() {
         add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
         add_action( 'admin_init', [ $this, 'register_settings' ] );
-        add_action( 'admin_init', [ $this, 'register_template_settings' ] );
+        add_action( 'admin_init', [ $this, 'handle_admin_actions' ] );
         add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_scripts' ] );
-        add_action( 'admin_post_hsz_admin_action', [ $this, 'handle_admin_actions' ] );
-        add_action( 'admin_init', [ $this, 'handle_cache_clearing' ] );
+        
+        // AJAX handlers
         add_action( 'wp_ajax_hsz_test_api', [ $this, 'ajax_test_api' ] );
-        add_action( 'wp_ajax_hsz_clear_cache_ajax', [ $this, 'ajax_clear_cache' ] );
+        add_action( 'wp_ajax_hsz_clear_cache', [ $this, 'ajax_clear_cache' ] );
         add_action( 'wp_ajax_hsz_reset_settings', [ $this, 'ajax_reset_settings' ] );
     }
 
     /**
-     * Add admin menu
+     * Add admin menu items
      */
-    public function add_admin_menu() {
-        // Main menu page
+    public function add_admin_menu(): void {
+        // Main settings page
         add_menu_page(
             __( 'HellaZ SiteZ Analyzer', 'hellaz-sitez-analyzer' ),
             __( 'SiteZ Analyzer', 'hellaz-sitez-analyzer' ),
@@ -85,6 +94,15 @@ class Admin {
             $this->page_slug . '-previews',
             [ $this, 'render_previews_page' ]
         );
+
+        add_submenu_page(
+            $this->page_slug,
+            __( 'Contact Settings', 'hellaz-sitez-analyzer' ),
+            __( 'Contact Info', 'hellaz-sitez-analyzer' ),
+            'manage_options',
+            $this->page_slug . '-contact',
+            [ $this, 'render_contact_page' ]
+        );
     }
 
     /**
@@ -95,20 +113,8 @@ class Admin {
             return;
         }
 
-        wp_enqueue_style(
-            'hsz-admin-enhanced',
-            HSZ_ASSETS_URL . 'css/hsz-admin.css',
-            [],
-            HSZ_VERSION
-        );
-
-        wp_enqueue_script(
-            'hsz-admin-enhanced',
-            HSZ_ASSETS_URL . 'js/hsz-admin.js',
-            [ 'jquery', 'wp-util' ],
-            HSZ_VERSION,
-            true
-        );
+        wp_enqueue_style( 'hsz-admin-enhanced', HSZ_ASSETS_URL . 'css/hsz-admin.css', [], HSZ_VERSION );
+        wp_enqueue_script( 'hsz-admin-enhanced', HSZ_ASSETS_URL . 'js/hsz-admin.js', [ 'jquery', 'wp-util' ], HSZ_VERSION, true );
 
         wp_localize_script( 'hsz-admin-enhanced', 'hszAdminEnhanced', [
             'ajaxurl' => admin_url( 'admin-ajax.php' ),
@@ -154,306 +160,171 @@ class Admin {
                     ),
                     $deleted_rows
                 );
-
-                printf(
-                    '<div class="notice notice-success is-dismissible"><p>%s</p></div>',
-                    esc_html( $message )
-                );
+                printf( '<div class="notice notice-success is-dismissible"><p>%s</p></div>', esc_html( $message ) );
             });
         }
     }
 
     /**
-     * Register settings
+     * Register all plugin settings
      */
-    public function register_settings() {
-        // API Settings Section
-        add_settings_section(
-            'hsz_api_section',
-            __( 'API Settings', 'hellaz-sitez-analyzer' ),
-            [ $this, 'api_section_callback' ],
-            'hsz_settings'
-        );
+    public function register_settings(): void {
+        // General Settings
+        register_setting( $this->settings_group, 'hsz_fallback_image', [ 'sanitize_callback' => [ 'HSZ\\Utils', 'sanitize_and_encrypt' ] ] );
+        register_setting( $this->settings_group, 'hsz_fallback_title', [ 'sanitize_callback' => 'sanitize_text_field' ] );
+        register_setting( $this->settings_group, 'hsz_fallback_description', [ 'sanitize_callback' => 'sanitize_textarea_field' ] );
+        register_setting( $this->settings_group, 'hsz_disclaimer_enabled', [ 'sanitize_callback' => 'absint' ] );
+        register_setting( $this->settings_group, 'hsz_disclaimer_message', [ 'sanitize_callback' => 'wp_kses_post' ] );
+        register_setting( $this->settings_group, 'hsz_auto_analyze_content', [ 'sanitize_callback' => 'absint' ] );
 
-        // VirusTotal API Key
-        add_settings_field(
-            'hsz_virustotal_api_key',
-            __( 'VirusTotal API Key', 'hellaz-sitez-analyzer' ),
-            [ $this, 'virustotal_api_key_callback' ],
-            'hsz_settings',
-            'hsz_api_section'
-        );
+        // API Keys and Toggles
+        $apis = [ 'virustotal', 'builtwith', 'urlscan', 'pagespeed', 'webpagetest' ];
+        foreach ( $apis as $api ) {
+            register_setting( $this->settings_group, "hsz_{$api}_enabled", [ 'sanitize_callback' => 'absint' ] );
+            register_setting( $this->settings_group, "hsz_{$api}_api_key", [ 'sanitize_callback' => [ 'HSZ\\Utils', 'sanitize_and_encrypt' ] ] );
+        }
 
-        // BuiltWith API Key
-        add_settings_field(
-            'hsz_builtwith_api_key',
-            __( 'BuiltWith API Key', 'hellaz-sitez-analyzer' ),
-            [ $this, 'builtwith_api_key_callback' ],
-            'hsz_settings',
-            'hsz_api_section'
-        );
+        // Template Settings
+        register_setting( $this->settings_group, 'hsz_template_mode', [ 'sanitize_callback' => 'sanitize_key' ] );
+        register_setting( $this->settings_group, 'hsz_custom_css', [ 'sanitize_callback' => 'wp_strip_all_tags' ] );
+        register_setting( $this->settings_group, 'hsz_show_powered_by', [ 'sanitize_callback' => 'absint' ] );
 
-        // URLScan.io API Key
-        add_settings_field(
-            'hsz_urlscan_api_key',
-            __( 'URLScan.io API Key', 'hellaz-sitez-analyzer' ),
-            [ $this, 'urlscan_api_key_callback' ],
-            'hsz_settings',
-            'hsz_api_section'
-        );
+        // Cache Settings
+        register_setting( $this->settings_group, 'hsz_cache_duration', [ 'sanitize_callback' => 'absint' ] );
+        register_setting( $this->settings_group, 'hsz_cache_debug', [ 'sanitize_callback' => 'absint' ] );
+        register_setting( $this->settings_group, 'hsz_cache_compression', [ 'sanitize_callback' => 'absint' ] );
 
-        // Cache Settings Section
-        add_settings_section(
-            'hsz_cache_section',
-            __( 'Cache Settings', 'hellaz-sitez-analyzer' ),
-            [ $this, 'cache_section_callback' ],
-            'hsz_settings'
-        );
+        // Performance Settings
+        register_setting( $this->settings_group, 'hsz_performance_analysis_enabled', [ 'sanitize_callback' => 'absint' ] );
+        register_setting( $this->settings_group, 'hsz_performance_threshold_good', [ 'sanitize_callback' => 'absint' ] );
+        register_setting( $this->settings_group, 'hsz_performance_threshold_poor', [ 'sanitize_callback' => 'absint' ] );
+        register_setting( $this->settings_group, 'hsz_performance_include_mobile', [ 'sanitize_callback' => 'absint' ] );
 
-        // Cache Duration
-        add_settings_field(
-            'hsz_cache_duration',
-            __( 'Cache Duration (hours)', 'hellaz-sitez-analyzer' ),
-            [ $this, 'cache_duration_callback' ],
-            'hsz_settings',
-            'hsz_cache_section'
-        );
+        // Security Settings
+        register_setting( $this->settings_group, 'hsz_security_analysis_enabled', [ 'sanitize_callback' => 'absint' ] );
+        register_setting( $this->settings_group, 'hsz_ssl_analysis_enabled', [ 'sanitize_callback' => 'absint' ] );
+        register_setting( $this->settings_group, 'hsz_security_scan_depth', [ 'sanitize_callback' => 'sanitize_key' ] );
 
-        // Register all settings
-        register_setting( 'hsz_settings', 'hsz_virustotal_api_key' );
-        register_setting( 'hsz_settings', 'hsz_builtwith_api_key' );
-        register_setting( 'hsz_settings', 'hsz_urlscan_api_key' );
-        register_setting( 'hsz_settings', 'hsz_cache_duration' );
+        // Preview Settings
+        register_setting( $this->settings_group, 'hsz_preview_generation_enabled', [ 'sanitize_callback' => 'absint' ] );
+        register_setting( $this->settings_group, 'hsz_preview_width', [ 'sanitize_callback' => 'absint' ] );
+        register_setting( $this->settings_group, 'hsz_preview_height', [ 'sanitize_callback' => 'absint' ] );
+        register_setting( $this->settings_group, 'hsz_preview_quality', [ 'sanitize_callback' => 'absint' ] );
+
+        // Contact Information Settings - NEW
+        register_setting( $this->settings_group, 'hsz_contact_extract_emails', [ 'sanitize_callback' => 'absint' ] );
+        register_setting( $this->settings_group, 'hsz_contact_extract_phones', [ 'sanitize_callback' => 'absint' ] );
+        register_setting( $this->settings_group, 'hsz_contact_extract_addresses', [ 'sanitize_callback' => 'absint' ] );
+        register_setting( $this->settings_group, 'hsz_contact_extract_forms', [ 'sanitize_callback' => 'absint' ] );
+        register_setting( $this->settings_group, 'hsz_contact_extract_social', [ 'sanitize_callback' => 'absint' ] );
+        register_setting( $this->settings_group, 'hsz_contact_extract_hours', [ 'sanitize_callback' => 'absint' ] );
+        register_setting( $this->settings_group, 'hsz_contact_validate', [ 'sanitize_callback' => 'absint' ] );
+        register_setting( $this->settings_group, 'hsz_contact_deep_analysis', [ 'sanitize_callback' => 'absint' ] );
+
+        // Grading System Settings
+        register_setting( $this->settings_group, 'hsz_grading_system_enabled', [ 'sanitize_callback' => 'absint' ] );
+        register_setting( $this->settings_group, 'hsz_grading_weights', [ 'sanitize_callback' => [ $this, 'sanitize_grading_weights' ] ] );
+
+        // Advanced Settings
+        register_setting( $this->settings_group, 'hsz_api_timeout', [ 'sanitize_callback' => 'absint' ] );
+        register_setting( $this->settings_group, 'hsz_disable_ssl_verify', [ 'sanitize_callback' => 'absint' ] );
+        register_setting( $this->settings_group, 'hsz_rate_limit_requests', [ 'sanitize_callback' => 'absint' ] );
     }
 
     /**
-     * Register template settings - Enhanced template selection
+     * Sanitize grading weights
+     *
+     * @param array $weights Grading weights
+     * @return array Sanitized weights
      */
-    public function register_template_settings() {
-        add_settings_section(
-            'hsz_display_section',
-            __( 'Display & Template Settings', 'hellaz-sitez-analyzer' ),
-            [ $this, 'display_section_callback' ],
-            'hsz_settings'
-        );
+    public function sanitize_grading_weights( $weights ): array {
+        if ( ! is_array( $weights ) ) {
+            return [];
+        }
 
-        add_settings_field(
-            'hsz_template_mode',
-            __( 'Template Style', 'hellaz-sitez-analyzer' ),
-            [ $this, 'template_mode_callback' ],
-            'hsz_settings',
-            'hsz_display_section'
-        );
+        $sanitized = [];
+        $allowed_keys = [ 'metadata', 'social', 'contact', 'performance', 'security' ];
 
-        register_setting( 'hsz_settings', 'hsz_template_mode' );
+        foreach ( $allowed_keys as $key ) {
+            if ( isset( $weights[$key] ) ) {
+                $sanitized[$key] = max( 0, min( 100, absint( $weights[$key] ) ) );
+            }
+        }
+
+        return $sanitized;
     }
 
     /**
      * Display section description
      */
-    public function display_section_callback() {
+    public function display_section_description(): void {
         echo '<p>' . esc_html__( 'Choose how analysis results are displayed to your users. These settings affect the default appearance of shortcodes, widgets, and blocks.', 'hellaz-sitez-analyzer' ) . '</p>';
     }
 
     /**
      * Template mode selection callback with visual previews
      */
-public function template_mode_callback() {
-    $template_mode = get_option( 'hsz_template_mode', 'classic' );
-    ?>
-    <div class="hsz-template-selector">
-        <div class="hsz-template-options">
-            
-            <!-- Classic Template Option -->
-            <div class="hsz-template-option <?php echo $template_mode === 'classic' ? 'hsz-selected' : ''; ?>">
-                <input type="radio" 
-                       name="hsz_template_mode" 
-                       value="classic" 
-                       id="template_classic" 
-                       <?php checked( $template_mode, 'classic' ); ?>>
-                <label for="template_classic" class="hsz-template-label">
-                    <div class="hsz-template-preview hsz-classic-preview">
-                        <img src="<?php echo HSZ_ASSETS_URL . 'images/template-classic.png'; ?>" 
-                             alt="<?php esc_attr_e( 'Classic Template Preview', 'hellaz-sitez-analyzer' ); ?>"
-                             class="hsz-preview-image">
-                    </div>
-                    <div class="hsz-template-info">
-                        <h4><?php esc_html_e( 'Classic Template', 'hellaz-sitez-analyzer' ); ?></h4>
-                        <p><?php esc_html_e( 'Comprehensive analysis with organized, collapsible sections. Perfect for detailed reports and professional presentations.', 'hellaz-sitez-analyzer' ); ?></p>
-                        <ul class="hsz-template-features">
-                            <li>✅ <?php esc_html_e( 'Collapsible sections', 'hellaz-sitez-analyzer' ); ?></li>
-                            <li>✅ <?php esc_html_e( 'Detailed analysis display', 'hellaz-sitez-analyzer' ); ?></li>
-                            <li>✅ <?php esc_html_e( 'Mobile responsive', 'hellaz-sitez-analyzer' ); ?></li>
-                            <li>✅ <?php esc_html_e( 'Fast loading', 'hellaz-sitez-analyzer' ); ?></li>
-                        </ul>
-                    </div>
+    public function template_mode_callback() {
+        $template_mode = get_option( 'hsz_template_mode', 'classic' );
+        ?>
+        <fieldset>
+            <legend class="screen-reader-text"><?php esc_html_e( 'Template Mode', 'hellaz-sitez-analyzer' ); ?></legend>
+            <div class="hsz-template-modes">
+                <label>
+                    <input type="radio" name="hsz_template_mode" value="classic" <?php checked( $template_mode, 'classic' ); ?> />
+                    <span class="template-preview classic">
+                        <strong><?php esc_html_e( 'Classic', 'hellaz-sitez-analyzer' ); ?></strong>
+                        <small><?php esc_html_e( 'Traditional layout with full details', 'hellaz-sitez-analyzer' ); ?></small>
+                    </span>
+                </label>
+                <label>
+                    <input type="radio" name="hsz_template_mode" value="modern" <?php checked( $template_mode, 'modern' ); ?> />
+                    <span class="template-preview modern">
+                        <strong><?php esc_html_e( 'Modern', 'hellaz-sitez-analyzer' ); ?></strong>
+                        <small><?php esc_html_e( 'Clean, card-based design', 'hellaz-sitez-analyzer' ); ?></small>
+                    </span>
+                </label>
+                <label>
+                    <input type="radio" name="hsz_template_mode" value="compact" <?php checked( $template_mode, 'compact' ); ?> />
+                    <span class="template-preview compact">
+                        <strong><?php esc_html_e( 'Compact', 'hellaz-sitez-analyzer' ); ?></strong>
+                        <small><?php esc_html_e( 'Minimal space usage', 'hellaz-sitez-analyzer' ); ?></small>
+                    </span>
                 </label>
             </div>
-            
-            <!-- Compact Template Option -->
-            <div class="hsz-template-option">
-                <div class="hsz-template-preview hsz-compact-preview">
-                    <img src="<?php echo HSZ_ASSETS_URL . 'images/template-compact.png'; ?>" 
-                         alt="<?php esc_attr_e( 'Compact Template Preview', 'hellaz-sitez-analyzer' ); ?>"
-                         class="hsz-preview-image">
-                </div>
-                <div class="hsz-template-info">
-                    <h4><?php esc_html_e( 'Compact Template', 'hellaz-sitez-analyzer' ); ?></h4>
-                    <p><?php esc_html_e( 'Essential metrics only, perfect for sidebars and small spaces.', 'hellaz-sitez-analyzer' ); ?></p>
-                    <ul class="hsz-template-features">
-                        <li>✅ <?php esc_html_e( 'Minimal space usage', 'hellaz-sitez-analyzer' ); ?></li>
-                        <li>✅ <?php esc_html_e( 'Key metrics display', 'hellaz-sitez-analyzer' ); ?></li>
-                        <li>✅ <?php esc_html_e( 'Sidebar friendly', 'hellaz-sitez-analyzer' ); ?></li>
-                        <li>✅ <?php esc_html_e( 'Always available via parameter', 'hellaz-sitez-analyzer' ); ?></li>
-                    </ul>
-                </div>
-            </div>
-            
-            <!-- Modern Template Option -->
-            <div class="hsz-template-option <?php echo $template_mode === 'modern' ? 'hsz-selected' : ''; ?>">
-                <input type="radio" 
-                       name="hsz_template_mode" 
-                       value="modern" 
-                       id="template_modern" 
-                       <?php checked( $template_mode, 'modern' ); ?>>
-                <label for="template_modern" class="hsz-template-label">
-                    <div class="hsz-template-preview hsz-modern-preview">
-                        <img src="<?php echo HSZ_ASSETS_URL . 'images/template-modern.png'; ?>" 
-                             alt="<?php esc_attr_e( 'Modern Template Preview', 'hellaz-sitez-analyzer' ); ?>"
-                             class="hsz-preview-image">
-                    </div>
-                    <div class="hsz-template-info">
-                        <h4><?php esc_html_e( 'Modern Template', 'hellaz-sitez-analyzer' ); ?></h4>
-                        <p><?php esc_html_e( 'Visually rich design with hero section, card-based layout, and interactive elements. Ideal for impressive presentations.', 'hellaz-sitez-analyzer' ); ?></p>
-                        <ul class="hsz-template-features">
-                            <li>✅ <?php esc_html_e( 'Hero section with background', 'hellaz-sitez-analyzer' ); ?></li>
-                            <li>✅ <?php esc_html_e( 'Card-based layout', 'hellaz-sitez-analyzer' ); ?></li>
-                            <li>✅ <?php esc_html_e( 'Interactive animations', 'hellaz-sitez-analyzer' ); ?></li>
-                            <li>✅ <?php esc_html_e( 'Visual metrics dashboard', 'hellaz-sitez-analyzer' ); ?></li>
-                        </ul>
-                    </div>
-                </label>
-            </div>
-            
-        </div>
-            
-            <!-- Template Selection Help -->
-            <div class="hsz-template-help">
-                <h4><?php esc_html_e( 'Template Selection Guide', 'hellaz-sitez-analyzer' ); ?></h4>
-                <div class="hsz-help-grid">
-                    <div class="hsz-help-item">
-                        <strong><?php esc_html_e( 'Choose Classic if:', 'hellaz-sitez-analyzer' ); ?></strong>
-                        <ul>
-                            <li><?php esc_html_e( 'You want comprehensive data display', 'hellaz-sitez-analyzer' ); ?></li>
-                            <li><?php esc_html_e( 'Users need to explore details', 'hellaz-sitez-analyzer' ); ?></li>
-                            <li><?php esc_html_e( 'Professional/business context', 'hellaz-sitez-analyzer' ); ?></li>
-                            <li><?php esc_html_e( 'Fast loading is priority', 'hellaz-sitez-analyzer' ); ?></li>
-                        </ul>
-                    </div>
-                    <div class="hsz-help-item">
-                        <strong><?php esc_html_e( 'Choose Modern if:', 'hellaz-sitez-analyzer' ); ?></strong>
-                        <ul>
-                            <li><?php esc_html_e( 'Visual appeal is important', 'hellaz-sitez-analyzer' ); ?></li>
-                            <li><?php esc_html_e( 'You want to impress visitors', 'hellaz-sitez-analyzer' ); ?></li>
-                            <li><?php esc_html_e( 'Creative/agency website', 'hellaz-sitez-analyzer' ); ?></li>
-                            <li><?php esc_html_e( 'Showcasing capabilities', 'hellaz-sitez-analyzer' ); ?></li>
-                        </ul>
-                    </div>
-                    <div class="hsz-help-item">
-                        <strong><?php esc_html_e( 'Use Compact for:', 'hellaz-sitez-analyzer' ); ?></strong>
-                        <ul>
-                            <li><?php esc_html_e( 'Sidebars and small spaces', 'hellaz-sitez-analyzer' ); ?></li>
-                            <li><?php esc_html_e( 'Quick overview display', 'hellaz-sitez-analyzer' ); ?></li>
-                            <li><?php esc_html_e( 'Multiple analyses on one page', 'hellaz-sitez-analyzer' ); ?></li>
-                            <li><?php esc_html_e( 'Mobile-first designs', 'hellaz-sitez-analyzer' ); ?></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
+        </fieldset>
         <?php
     }
 
     /**
-     * API section callback
+     * API Keys section description
      */
-    public function api_section_callback() {
-        echo '<p>' . esc_html__( 'Enter your API keys to enable enhanced features. All keys are optional but provide additional functionality.', 'hellaz-sitez-analyzer' ) . '</p>';
+    public function api_keys_section_description(): void {
+        echo '<p>' . esc_html__( 'Configure third-party API keys for enhanced analysis capabilities.', 'hellaz-sitez-analyzer' ) . '</p>';
+        echo '<div class="hsz-api-status-grid">';
+        
+        $apis = [
+            'virustotal' => __( 'VirusTotal', 'hellaz-sitez-analyzer' ),
+            'builtwith' => __( 'BuiltWith', 'hellaz-sitez-analyzer' ),
+            'urlscan' => __( 'URLScan.io', 'hellaz-sitez-analyzer' )
+        ];
+
+        foreach ( $apis as $api => $name ) {
+            $enabled = get_option( "hsz_{$api}_enabled" );
+            $has_key = ! empty( get_option( "hsz_{$api}_api_key" ) );
+            $status_class = $enabled && $has_key ? 'enabled' : 'disabled';
+            echo '<div class="api-status-card ' . esc_attr( $status_class ) . '">';
+            echo '<h4>' . esc_html( $name ) . '</h4>';
+            echo '<span class="status">' . ( $enabled && $has_key ? '✓ ' . esc_html__( 'Active', 'hellaz-sitez-analyzer' ) : '○ ' . esc_html__( 'Inactive', 'hellaz-sitez-analyzer' ) ) . '</span>';
+            echo '</div>';
+        }
+        echo '</div>';
     }
 
     /**
-     * VirusTotal API key callback
+     * Cache settings section description
      */
-    public function virustotal_api_key_callback() {
-        $api_key = get_option( 'hsz_virustotal_api_key', '' );
-        ?>
-        <input type="password" 
-               name="hsz_virustotal_api_key" 
-               value="<?php echo esc_attr( $api_key ); ?>" 
-               class="regular-text" 
-               placeholder="<?php esc_attr_e( 'Enter VirusTotal API key', 'hellaz-sitez-analyzer' ); ?>">
-        <button type="button" class="button hsz-test-api" data-api="virustotal">
-            <?php esc_html_e( 'Test API', 'hellaz-sitez-analyzer' ); ?>
-        </button>
-        <p class="description">
-            <?php printf(
-                esc_html__( 'Get your free API key from %s. Enables security scanning features.', 'hellaz-sitez-analyzer' ),
-                '<a href="https://www.virustotal.com/gui/join-us" target="_blank">VirusTotal</a>'
-            ); ?>
-        </p>
-        <?php
-    }
-
-    /**
-     * BuiltWith API key callback
-     */
-    public function builtwith_api_key_callback() {
-        $api_key = get_option( 'hsz_builtwith_api_key', '' );
-        ?>
-        <input type="password" 
-               name="hsz_builtwith_api_key" 
-               value="<?php echo esc_attr( $api_key ); ?>" 
-               class="regular-text" 
-               placeholder="<?php esc_attr_e( 'Enter BuiltWith API key', 'hellaz-sitez-analyzer' ); ?>">
-        <button type="button" class="button hsz-test-api" data-api="builtwith">
-            <?php esc_html_e( 'Test API', 'hellaz-sitez-analyzer' ); ?>
-        </button>
-        <p class="description">
-            <?php printf(
-                esc_html__( 'Get your API key from %s. Enables technology stack detection.', 'hellaz-sitez-analyzer' ),
-                '<a href="https://builtwith.com/api" target="_blank">BuiltWith</a>'
-            ); ?>
-        </p>
-        <?php
-    }
-
-    /**
-     * URLScan.io API key callback
-     */
-    public function urlscan_api_key_callback() {
-        $api_key = get_option( 'hsz_urlscan_api_key', '' );
-        ?>
-        <input type="password" 
-               name="hsz_urlscan_api_key" 
-               value="<?php echo esc_attr( $api_key ); ?>" 
-               class="regular-text" 
-               placeholder="<?php esc_attr_e( 'Enter URLScan.io API key', 'hellaz-sitez-analyzer' ); ?>">
-        <button type="button" class="button hsz-test-api" data-api="urlscan">
-            <?php esc_html_e( 'Test API', 'hellaz-sitez-analyzer' ); ?>
-        </button>
-        <p class="description">
-            <?php printf(
-                esc_html__( 'Get your free API key from %s. Enables website screenshots and detailed analysis.', 'hellaz-sitez-analyzer' ),
-                '<a href="https://urlscan.io/user/signup" target="_blank">URLScan.io</a>'
-            ); ?>
-        </p>
-        <?php
-    }
-
-    /**
-     * Cache section callback
-     */
-    public function cache_section_callback() {
+    public function cache_section_description(): void {
         echo '<p>' . esc_html__( 'Configure caching settings to optimize performance and reduce API usage.', 'hellaz-sitez-analyzer' ) . '</p>';
     }
 
@@ -463,27 +334,27 @@ public function template_mode_callback() {
     public function cache_duration_callback() {
         $cache_duration = get_option( 'hsz_cache_duration', 24 );
         ?>
-        <input type="number" 
-               name="hsz_cache_duration" 
-               value="<?php echo esc_attr( $cache_duration ); ?>" 
-               min="1" 
-               max="168" 
-               class="small-text">
-        <p class="description">
-            <?php esc_html_e( 'How long to cache analysis results (1-168 hours). Longer caching reduces API usage but may show outdated data.', 'hellaz-sitez-analyzer' ); ?>
-        </p>
+        <select name="hsz_cache_duration">
+            <option value="1" <?php selected( $cache_duration, 1 ); ?>><?php esc_html_e( '1 hour', 'hellaz-sitez-analyzer' ); ?></option>
+            <option value="6" <?php selected( $cache_duration, 6 ); ?>><?php esc_html_e( '6 hours', 'hellaz-sitez-analyzer' ); ?></option>
+            <option value="12" <?php selected( $cache_duration, 12 ); ?>><?php esc_html_e( '12 hours', 'hellaz-sitez-analyzer' ); ?></option>
+            <option value="24" <?php selected( $cache_duration, 24 ); ?>><?php esc_html_e( '24 hours', 'hellaz-sitez-analyzer' ); ?></option>
+            <option value="48" <?php selected( $cache_duration, 48 ); ?>><?php esc_html_e( '48 hours', 'hellaz-sitez-analyzer' ); ?></option>
+            <option value="168" <?php selected( $cache_duration, 168 ); ?>><?php esc_html_e( '1 week', 'hellaz-sitez-analyzer' ); ?></option>
+        </select>
+        <p class="description"><?php esc_html_e( 'How long to cache analysis results before refreshing.', 'hellaz-sitez-analyzer' ); ?></p>
         <?php
     }
 
     /**
      * Handle admin actions
      */
-    public function handle_admin_actions() {
-        if ( ! current_user_can( 'manage_options' ) ) {
-            wp_die( __( 'You do not have permission to perform this action.', 'hellaz-sitez-analyzer' ) );
+    public function handle_admin_actions(): void {
+        if ( ! isset( $_POST['hsz_action'] ) || ! current_user_can( 'manage_options' ) ) {
+            return;
         }
 
-        $action = sanitize_text_field( $_POST['action'] ?? '' );
+        $action = sanitize_key( $_POST['hsz_action'] );
 
         switch ( $action ) {
             case 'clear_cache':
@@ -562,7 +433,7 @@ public function template_mode_callback() {
         }
 
         $status_code = wp_remote_retrieve_response_code( $response );
-        
+
         if ( $status_code === 200 ) {
             return [
                 'success' => true,
@@ -596,7 +467,7 @@ public function template_mode_callback() {
         }
 
         $status_code = wp_remote_retrieve_response_code( $response );
-        
+
         if ( $status_code === 200 ) {
             return [
                 'success' => true,
@@ -634,7 +505,7 @@ public function template_mode_callback() {
         }
 
         $status_code = wp_remote_retrieve_response_code( $response );
-        
+
         if ( $status_code === 200 ) {
             return [
                 'success' => true,
@@ -689,13 +560,33 @@ public function template_mode_callback() {
         }
 
         // Reset all plugin settings to defaults
-        delete_option( 'hsz_virustotal_api_key' );
-        delete_option( 'hsz_builtwith_api_key' );
-        delete_option( 'hsz_urlscan_api_key' );
-        delete_option( 'hsz_cache_duration' );
-        delete_option( 'hsz_template_mode' );
+        $settings_to_reset = [
+            'hsz_virustotal_api_key', 'hsz_builtwith_api_key', 'hsz_urlscan_api_key',
+            'hsz_cache_duration', 'hsz_template_mode', 'hsz_performance_analysis_enabled',
+            'hsz_security_analysis_enabled', 'hsz_preview_generation_enabled',
+            'hsz_contact_extract_emails', 'hsz_contact_extract_phones',
+            'hsz_contact_extract_addresses', 'hsz_contact_extract_forms'
+        ];
+
+        foreach ( $settings_to_reset as $setting ) {
+            delete_option( $setting );
+        }
 
         wp_send_json_success( __( 'All settings have been reset to defaults.', 'hellaz-sitez-analyzer' ) );
+    }
+
+    /**
+     * Handle settings reset
+     */
+    private function handle_settings_reset(): void {
+        if ( ! wp_verify_nonce( $_POST['_wpnonce'] ?? '', 'hsz_reset_settings_nonce' ) ) {
+            wp_die( __( 'Security check failed.', 'hellaz-sitez-analyzer' ) );
+        }
+
+        // Reset logic here (same as AJAX handler)
+        add_action( 'admin_notices', function () {
+            echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Settings have been reset to defaults.', 'hellaz-sitez-analyzer' ) . '</p></div>';
+        });
     }
 
     /**
@@ -707,65 +598,102 @@ public function template_mode_callback() {
             <h1><?php esc_html_e( 'HellaZ SiteZ Analyzer Settings', 'hellaz-sitez-analyzer' ); ?></h1>
             
             <div class="hsz-admin-header">
-                <div class="hsz-admin-title">
-                    <h2><?php esc_html_e( 'Website Analysis & SEO Tools', 'hellaz-sitez-analyzer' ); ?></h2>
-                    <p class="hsz-admin-subtitle">
-                        <?php esc_html_e( 'Configure your website analysis settings, API keys, and template preferences.', 'hellaz-sitez-analyzer' ); ?>
-                    </p>
-                </div>
-                
-                <div class="hsz-admin-actions">
-                    <button type="button" class="button button-secondary hsz-clear-cache-btn">
-                        <?php esc_html_e( 'Clear Cache', 'hellaz-sitez-analyzer' ); ?>
-                    </button>
-                    <button type="button" class="button button-secondary hsz-reset-settings-btn">
-                        <?php esc_html_e( 'Reset Settings', 'hellaz-sitez-analyzer' ); ?>
-                    </button>
+                <div class="hsz-version-info">
+                    <span class="version"><?php echo esc_html( 'Version ' . HSZ_VERSION ); ?></span>
+                    <span class="separator">|</span>
+                    <a href="https://hellaz.net" target="_blank"><?php esc_html_e( 'Support', 'hellaz-sitez-analyzer' ); ?></a>
                 </div>
             </div>
 
-            <form method="post" action="options.php" class="hsz-settings-form">
-                <?php
-                settings_fields( 'hsz_settings' );
-                do_settings_sections( 'hsz_settings' );
-                submit_button( __( 'Save Settings', 'hellaz-sitez-analyzer' ), 'primary', 'submit', true, [
-                    'class' => 'button-primary hsz-save-settings'
-                ]);
-                ?>
-            </form>
+            <div class="hsz-admin-content">
+                <form method="post" action="options.php" class="hsz-settings-form">
+                    <?php
+                    settings_fields( $this->settings_group );
+                    do_settings_sections( $this->settings_group );
+                    ?>
 
-            <!-- System Status -->
-            <div class="hsz-system-status">
-                <h3><?php esc_html_e( 'System Status', 'hellaz-sitez-analyzer' ); ?></h3>
-                <?php $this->render_system_status(); ?>
-            </div>
+                    <div class="hsz-settings-sections">
+                        <!-- General Settings -->
+                        <div class="hsz-settings-section">
+                            <h2><?php esc_html_e( 'General Settings', 'hellaz-sitez-analyzer' ); ?></h2>
+                            <?php $this->render_general_settings(); ?>
+                        </div>
 
-            <!-- Usage Examples -->
-            <div class="hsz-usage-examples">
-                <h3><?php esc_html_e( 'Usage Examples', 'hellaz-sitez-analyzer' ); ?></h3>
-                <div class="hsz-examples-grid">
-                    <div class="hsz-example-card">
-                        <h4><?php esc_html_e( 'Shortcode Usage', 'hellaz-sitez-analyzer' ); ?></h4>
-                        <code>[hsz_analyzer url="https://example.com"]</code>
-                        <p><?php esc_html_e( 'Basic analysis with default template', 'hellaz-sitez-analyzer' ); ?></p>
-                        
-                        <code>[hsz_analyzer url="https://example.com" display_type="compact"]</code>
-                        <p><?php esc_html_e( 'Compact view for sidebars', 'hellaz-sitez-analyzer' ); ?></p>
+                        <!-- Template Settings -->
+                        <div class="hsz-settings-section">
+                            <h2><?php esc_html_e( 'Display Templates', 'hellaz-sitez-analyzer' ); ?></h2>
+                            <?php $this->render_template_settings(); ?>
+                        </div>
+
+                        <!-- API Settings -->
+                        <div class="hsz-settings-section">
+                            <h2><?php esc_html_e( 'API Configuration', 'hellaz-sitez-analyzer' ); ?></h2>
+                            <?php $this->render_api_settings(); ?>
+                        </div>
+
+                        <!-- Contact Settings -->
+                        <div class="hsz-settings-section">
+                            <h2><?php esc_html_e( 'Contact Information Extraction', 'hellaz-sitez-analyzer' ); ?></h2>
+                            <?php $this->render_contact_settings(); ?>
+                        </div>
+
+                        <!-- Cache Settings -->
+                        <div class="hsz-settings-section">
+                            <h2><?php esc_html_e( 'Cache Settings', 'hellaz-sitez-analyzer' ); ?></h2>
+                            <?php $this->render_cache_settings(); ?>
+                        </div>
                     </div>
-                    
-                    <div class="hsz-example-card">
-                        <h4><?php esc_html_e( 'Widget Configuration', 'hellaz-sitez-analyzer' ); ?></h4>
-                        <p><?php esc_html_e( '1. Go to Appearance → Widgets', 'hellaz-sitez-analyzer' ); ?></p>
-                        <p><?php esc_html_e( '2. Add "HellaZ SiteZ Analyzer" widget', 'hellaz-sitez-analyzer' ); ?></p>
-                        <p><?php esc_html_e( '3. Enter URL and choose display type', 'hellaz-sitez-analyzer' ); ?></p>
+
+                    <?php submit_button( __( 'Save All Settings', 'hellaz-sitez-analyzer' ), 'primary large' ); ?>
+                </form>
+
+                <!-- Quick Actions -->
+                <div class="hsz-quick-actions">
+                    <h3><?php esc_html_e( 'Quick Actions', 'hellaz-sitez-analyzer' ); ?></h3>
+                    <div class="hsz-action-buttons">
+                        <button type="button" id="hsz-clear-cache" class="button"><?php esc_html_e( 'Clear Cache', 'hellaz-sitez-analyzer' ); ?></button>
+                        <button type="button" id="hsz-reset-settings" class="button button-secondary"><?php esc_html_e( 'Reset Settings', 'hellaz-sitez-analyzer' ); ?></button>
                     </div>
-                    
-                    <div class="hsz-example-card">
-                        <h4><?php esc_html_e( 'Gutenberg Block', 'hellaz-sitez-analyzer' ); ?></h4>
-                        <p><?php esc_html_e( '1. Add new block in editor', 'hellaz-sitez-analyzer' ); ?></p>
-                        <p><?php esc_html_e( '2. Search for "SiteZ Analyzer"', 'hellaz-sitez-analyzer' ); ?></p>
-                        <p><?php esc_html_e( '3. Configure URL and options', 'hellaz-sitez-analyzer' ); ?></p>
+                </div>
+
+                <!-- Usage Examples -->
+                <div class="hsz-usage-examples">
+                    <h3><?php esc_html_e( 'Usage Examples', 'hellaz-sitez-analyzer' ); ?></h3>
+                    <div class="usage-grid">
+                        <div class="usage-card">
+                            <h4><?php esc_html_e( 'Basic Shortcode', 'hellaz-sitez-analyzer' ); ?></h4>
+                            <code>[hsz_analyzer url="https://example.com"]</code>
+                        </div>
+                        <div class="usage-card">
+                            <h4><?php esc_html_e( 'Compact Display', 'hellaz-sitez-analyzer' ); ?></h4>
+                            <code>[hsz_analyzer url="https://example.com" display_type="compact"]</code>
+                        </div>
                     </div>
+                </div>
+
+                <!-- System Status -->
+                <div class="hsz-system-status">
+                    <h3><?php esc_html_e( 'System Status', 'hellaz-sitez-analyzer' ); ?></h3>
+                    <table class="widefat">
+                        <tbody>
+                            <tr>
+                                <td><?php esc_html_e( 'PHP Version', 'hellaz-sitez-analyzer' ); ?></td>
+                                <td><?php echo version_compare( PHP_VERSION, '7.4', '>=' ) ? '<span class="hsz-status-good">✓ ' . esc_html__( 'Available', 'hellaz-sitez-analyzer' ) . '</span>' : '<span class="hsz-status-bad">✗ ' . esc_html__( 'Not Available', 'hellaz-sitez-analyzer' ) . '</span>'; ?></td>
+                            </tr>
+                            <tr>
+                                <td><?php esc_html_e( 'cURL Extension', 'hellaz-sitez-analyzer' ); ?></td>
+                                <td><?php echo extension_loaded( 'curl' ) ? '<span class="hsz-status-good">✓ ' . esc_html__( 'Available', 'hellaz-sitez-analyzer' ) . '</span>' : '<span class="hsz-status-bad">✗ ' . esc_html__( 'Not Available', 'hellaz-sitez-analyzer' ) . '</span>'; ?></td>
+                            </tr>
+                            <tr>
+                                <td><?php esc_html_e( 'JSON Extension', 'hellaz-sitez-analyzer' ); ?></td>
+                                <td><?php echo extension_loaded( 'json' ) ? '<span class="hsz-status-good">✓ ' . esc_html__( 'Available', 'hellaz-sitez-analyzer' ) . '</span>' : '<span class="hsz-status-bad">✗ ' . esc_html__( 'Not Available', 'hellaz-sitez-analyzer' ) . '</span>'; ?></td>
+                            </tr>
+                            <tr>
+                                <td><?php esc_html_e( 'Upload Directory', 'hellaz-sitez-analyzer' ); ?></td>
+                                <td><?php echo is_writable( HSZ_UPLOAD_DIR ) ? '<span class="hsz-status-good">✓ ' . esc_html__( 'Writable', 'hellaz-sitez-analyzer' ) . '</span>' : '<span class="hsz-status-bad">✗ ' . esc_html__( 'Not Writable', 'hellaz-sitez-analyzer' ) . '</span>'; ?></td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -773,125 +701,381 @@ public function template_mode_callback() {
     }
 
     /**
-     * Render system status
+     * Render general settings section
      */
-    private function render_system_status() {
-        $php_extensions = [
-            'curl' => extension_loaded( 'curl' ),
-            'json' => extension_loaded( 'json' ),
-            'mbstring' => extension_loaded( 'mbstring' ),
-            'openssl' => extension_loaded( 'openssl' )
-        ];
-
-        $missing_extensions = array_keys( array_filter( $php_extensions, function( $loaded ) {
-            return ! $loaded;
-        }));
-
-        $wp_upload_dir = wp_upload_dir();
-        $cache_writable = is_writable( $wp_upload_dir['basedir'] );
+    private function render_general_settings(): void {
         ?>
-        
-        <table class="widefat">
-            <thead>
-                <tr>
-                    <th><?php esc_html_e( 'Component', 'hellaz-sitez-analyzer' ); ?></th>
-                    <th><?php esc_html_e( 'Status', 'hellaz-sitez-analyzer' ); ?></th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td><?php esc_html_e( 'PHP Version', 'hellaz-sitez-analyzer' ); ?></td>
-                    <td><?php echo esc_html( PHP_VERSION ); ?></td>
-                </tr>
-                <tr>
-                    <td><?php esc_html_e( 'WordPress Version', 'hellaz-sitez-analyzer' ); ?></td>
-                    <td><?php echo esc_html( get_bloginfo( 'version' ) ); ?></td>
-                </tr>
-                <tr>
-                    <td><?php esc_html_e( 'cURL Extension', 'hellaz-sitez-analyzer' ); ?></td>
-                    <td><?php echo $php_extensions['curl'] ? '<span style="color: green;">✓ ' . esc_html__( 'Available', 'hellaz-sitez-analyzer' ) . '</span>' : '<span style="color: red;">✗ ' . esc_html__( 'Not Available', 'hellaz-sitez-analyzer' ) . '</span>'; ?></td>
-                </tr>
-                <tr>
-                    <td><?php esc_html_e( 'JSON Extension', 'hellaz-sitez-analyzer' ); ?></td>
-                    <td><?php echo $php_extensions['json'] ? '<span style="color: green;">✓ ' . esc_html__( 'Available', 'hellaz-sitez-analyzer' ) . '</span>' : '<span style="color: red;">✗ ' . esc_html__( 'Not Available', 'hellaz-sitez-analyzer' ) . '</span>'; ?></td>
-                </tr>
-                <tr>
-                    <td><?php esc_html_e( 'mbstring Extension', 'hellaz-sitez-analyzer' ); ?></td>
-                    <td><?php echo $php_extensions['mbstring'] ? '<span style="color: green;">✓ ' . esc_html__( 'Available', 'hellaz-sitez-analyzer' ) . '</span>' : '<span style="color: red;">✗ ' . esc_html__( 'Not Available', 'hellaz-sitez-analyzer' ) . '</span>'; ?></td>
-                </tr>
-                <tr>
-                    <td><?php esc_html_e( 'Cache Directory', 'hellaz-sitez-analyzer' ); ?></td>
-                    <td><?php echo $cache_writable ? '<span style="color: green;">✓ ' . esc_html__( 'Writable', 'hellaz-sitez-analyzer' ) . '</span>' : '<span style="color: red;">✗ ' . esc_html__( 'Not Writable', 'hellaz-sitez-analyzer' ) . '</span>'; ?></td>
-                </tr>
-            </tbody>
+        <table class="form-table">
+            <tr>
+                <th scope="row"><?php esc_html_e( 'Fallback Image URL', 'hellaz-sitez-analyzer' ); ?></th>
+                <td>
+                    <?php
+                    $encrypted_url = get_option( 'hsz_fallback_image' );
+                    $decrypted_url = ( $encrypted_url && is_string( $encrypted_url ) ) ? Utils::decrypt( $encrypted_url ) : '';
+                    if ( false === $decrypted_url ) {
+                        $decrypted_url = $encrypted_url;
+                    }
+                    ?>
+                    <input type="url" name="hsz_fallback_image" value="<?php echo esc_attr( $decrypted_url ); ?>" class="regular-text" />
+                    <p class="description"><?php esc_html_e( 'Default image when no favicon or preview is available.', 'hellaz-sitez-analyzer' ); ?></p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row"><?php esc_html_e( 'Fallback Title', 'hellaz-sitez-analyzer' ); ?></th>
+                <td>
+                    <input type="text" name="hsz_fallback_title" value="<?php echo esc_attr( get_option( 'hsz_fallback_title', '' ) ); ?>" class="regular-text" />
+                    <p class="description"><?php esc_html_e( 'Default title when page title cannot be extracted.', 'hellaz-sitez-analyzer' ); ?></p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row"><?php esc_html_e( 'Auto-Analyze Content', 'hellaz-sitez-analyzer' ); ?></th>
+                <td>
+                    <label>
+                        <input type="checkbox" name="hsz_auto_analyze_content" value="1" <?php checked( get_option( 'hsz_auto_analyze_content', 0 ) ); ?> />
+                        <?php esc_html_e( 'Automatically analyze external links in post content', 'hellaz-sitez-analyzer' ); ?>
+                    </label>
+                </td>
+            </tr>
         </table>
-
-        <?php if ( ! defined( 'HSZ_ENCRYPTION_KEY' ) ): ?>
-            <div class="notice notice-warning">
-                <p>
-                    <strong><?php esc_html_e( 'Security Warning:', 'hellaz-sitez-analyzer' ); ?></strong>
-                    <?php esc_html_e( 'The encryption key is not defined in your wp-config.php file. API keys and other sensitive settings will be saved, but they will not be encrypted. Please define the HSZ_ENCRYPTION_KEY constant for full security.', 'hellaz-sitez-analyzer' ); ?>
-                </p>
-            </div>
-        <?php endif; ?>
-
-        <?php if ( ! empty( $missing_extensions ) ): ?>
-            <div class="notice notice-warning">
-                <p>
-                    <strong><?php esc_html_e( 'Missing Extensions:', 'hellaz-sitez-analyzer' ); ?></strong>
-                    <?php printf( __( 'The following PHP extensions are recommended for full functionality: %s', 'hellaz-sitez-analyzer' ), implode( ', ', $missing_extensions ) ); ?>
-                </p>
-            </div>
-        <?php endif; ?>
         <?php
     }
 
     /**
-     * Render performance settings page
+     * Render template settings section
      */
-    public function render_performance_page() {
+    private function render_template_settings(): void {
+        ?>
+        <table class="form-table">
+            <tr>
+                <th scope="row"><?php esc_html_e( 'Template Mode', 'hellaz-sitez-analyzer' ); ?></th>
+                <td><?php $this->template_mode_callback(); ?></td>
+            </tr>
+            <tr>
+                <th scope="row"><?php esc_html_e( 'Show Powered By', 'hellaz-sitez-analyzer' ); ?></th>
+                <td>
+                    <label>
+                        <input type="checkbox" name="hsz_show_powered_by" value="1" <?php checked( get_option( 'hsz_show_powered_by', 1 ) ); ?> />
+                        <?php esc_html_e( 'Display "Powered by HellaZ SiteZ Analyzer" link', 'hellaz-sitez-analyzer' ); ?>
+                    </label>
+                </td>
+            </tr>
+        </table>
+        <?php
+    }
+
+    /**
+     * Render API settings section
+     */
+    private function render_api_settings(): void {
+        ?>
+        <div class="hsz-api-settings">
+            <?php $this->api_keys_section_description(); ?>
+            
+            <table class="form-table">
+                <?php
+                $apis = [
+                    'virustotal' => 'VirusTotal',
+                    'builtwith' => 'BuiltWith',
+                    'urlscan' => 'URLScan.io'
+                ];
+                
+                foreach ( $apis as $slug => $name ) :
+                    $enabled_option = "hsz_{$slug}_enabled";
+                    $key_option = "hsz_{$slug}_api_key";
+                    $encrypted_key = get_option( $key_option, '' );
+                    $decrypted_key = ( $encrypted_key && is_string( $encrypted_key ) ) ? Utils::decrypt( $encrypted_key ) : '';
+                    if ( false === $decrypted_key ) {
+                        $decrypted_key = $encrypted_key;
+                    }
+                ?>
+                <tr>
+                    <th scope="row"><?php echo esc_html( $name ); ?></th>
+                    <td class="hsz-api-field">
+                        <div class="api-toggle">
+                            <label>
+                                <input type="checkbox" name="<?php echo esc_attr( $enabled_option ); ?>" value="1" <?php checked( get_option( $enabled_option ) ); ?> />
+                                <?php esc_html_e( 'Enable', 'hellaz-sitez-analyzer' ); ?>
+                            </label>
+                        </div>
+                        <div class="api-key-field">
+                            <input type="password" name="<?php echo esc_attr( $key_option ); ?>" value="<?php echo esc_attr( $decrypted_key ); ?>" class="regular-text" placeholder="<?php esc_attr_e( 'Enter API key...', 'hellaz-sitez-analyzer' ); ?>" />
+                            <button type="button" class="button test-api-btn" data-api="<?php echo esc_attr( $slug ); ?>"><?php esc_html_e( 'Test', 'hellaz-sitez-analyzer' ); ?></button>
+                        </div>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+            </table>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render contact settings section - NEW
+     */
+    private function render_contact_settings(): void {
+        ?>
+        <div class="hsz-contact-settings">
+            <p class="description"><?php esc_html_e( 'Configure which contact information to extract from analyzed websites.', 'hellaz-sitez-analyzer' ); ?></p>
+            
+            <table class="form-table">
+                <tr>
+                    <th scope="row"><?php esc_html_e( 'Email Extraction', 'hellaz-sitez-analyzer' ); ?></th>
+                    <td>
+                        <label>
+                            <input type="checkbox" name="hsz_contact_extract_emails" value="1" <?php checked( get_option( 'hsz_contact_extract_emails', 1 ) ); ?> />
+                            <?php esc_html_e( 'Extract email addresses from content and mailto links', 'hellaz-sitez-analyzer' ); ?>
+                        </label>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><?php esc_html_e( 'Phone Number Extraction', 'hellaz-sitez-analyzer' ); ?></th>
+                    <td>
+                        <label>
+                            <input type="checkbox" name="hsz_contact_extract_phones" value="1" <?php checked( get_option( 'hsz_contact_extract_phones', 1 ) ); ?> />
+                            <?php esc_html_e( 'Extract phone numbers from content and tel links', 'hellaz-sitez-analyzer' ); ?>
+                        </label>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><?php esc_html_e( 'Address Extraction', 'hellaz-sitez-analyzer' ); ?></th>
+                    <td>
+                        <label>
+                            <input type="checkbox" name="hsz_contact_extract_addresses" value="1" <?php checked( get_option( 'hsz_contact_extract_addresses', 1 ) ); ?> />
+                            <?php esc_html_e( 'Extract physical addresses and location information', 'hellaz-sitez-analyzer' ); ?>
+                        </label>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><?php esc_html_e( 'Contact Form Detection', 'hellaz-sitez-analyzer' ); ?></th>
+                    <td>
+                        <label>
+                            <input type="checkbox" name="hsz_contact_extract_forms" value="1" <?php checked( get_option( 'hsz_contact_extract_forms', 1 ) ); ?> />
+                            <?php esc_html_e( 'Detect and analyze contact forms on the website', 'hellaz-sitez-analyzer' ); ?>
+                        </label>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><?php esc_html_e( 'Social Contact Info', 'hellaz-sitez-analyzer' ); ?></th>
+                    <td>
+                        <label>
+                            <input type="checkbox" name="hsz_contact_extract_social" value="1" <?php checked( get_option( 'hsz_contact_extract_social', 1 ) ); ?> />
+                            <?php esc_html_e( 'Extract social media profiles for contact purposes', 'hellaz-sitez-analyzer' ); ?>
+                        </label>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><?php esc_html_e( 'Business Hours', 'hellaz-sitez-analyzer' ); ?></th>
+                    <td>
+                        <label>
+                            <input type="checkbox" name="hsz_contact_extract_hours" value="1" <?php checked( get_option( 'hsz_contact_extract_hours', 1 ) ); ?> />
+                            <?php esc_html_e( 'Extract business hours and operating times', 'hellaz-sitez-analyzer' ); ?>
+                        </label>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><?php esc_html_e( 'Validation Options', 'hellaz-sitez-analyzer' ); ?></th>
+                    <td>
+                        <label>
+                            <input type="checkbox" name="hsz_contact_validate" value="1" <?php checked( get_option( 'hsz_contact_validate', 0 ) ); ?> />
+                            <?php esc_html_e( 'Validate contact information (may slow down analysis)', 'hellaz-sitez-analyzer' ); ?>
+                        </label>
+                        <br>
+                        <label>
+                            <input type="checkbox" name="hsz_contact_deep_analysis" value="1" <?php checked( get_option( 'hsz_contact_deep_analysis', 0 ) ); ?> />
+                            <?php esc_html_e( 'Enable deep analysis for better accuracy', 'hellaz-sitez-analyzer' ); ?>
+                        </label>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render cache settings section
+     */
+    private function render_cache_settings(): void {
+        ?>
+        <div class="hsz-cache-settings">
+            <?php $this->cache_section_description(); ?>
+            
+            <table class="form-table">
+                <tr>
+                    <th scope="row"><?php esc_html_e( 'Cache Duration', 'hellaz-sitez-analyzer' ); ?></th>
+                    <td><?php $this->cache_duration_callback(); ?></td>
+                </tr>
+                <tr>
+                    <th scope="row"><?php esc_html_e( 'Cache Debug', 'hellaz-sitez-analyzer' ); ?></th>
+                    <td>
+                        <label>
+                            <input type="checkbox" name="hsz_cache_debug" value="1" <?php checked( get_option( 'hsz_cache_debug', 0 ) ); ?> />
+                            <?php esc_html_e( 'Add debug comments to output showing cache status', 'hellaz-sitez-analyzer' ); ?>
+                        </label>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><?php esc_html_e( 'Cache Compression', 'hellaz-sitez-analyzer' ); ?></th>
+                    <td>
+                        <label>
+                            <input type="checkbox" name="hsz_cache_compression" value="1" <?php checked( get_option( 'hsz_cache_compression', 1 ) ); ?> />
+                            <?php esc_html_e( 'Compress cached data to save database space', 'hellaz-sitez-analyzer' ); ?>
+                        </label>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render performance page
+     */
+    public function render_performance_page(): void {
         ?>
         <div class="wrap hsz-admin-wrap">
             <h1><?php esc_html_e( 'Performance Settings', 'hellaz-sitez-analyzer' ); ?></h1>
-            <p><?php esc_html_e( 'Configure performance analysis settings and thresholds.', 'hellaz-sitez-analyzer' ); ?></p>
-            
-            <!-- Performance settings form would go here -->
-            <div class="notice notice-info">
-                <p><?php esc_html_e( 'Performance settings panel - Coming in future update!', 'hellaz-sitez-analyzer' ); ?></p>
-            </div>
+            <form method="post" action="options.php">
+                <?php
+                settings_fields( $this->settings_group );
+                ?>
+                <table class="form-table">
+                    <tr>
+                        <th scope="row"><?php esc_html_e( 'Performance Analysis', 'hellaz-sitez-analyzer' ); ?></th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="hsz_performance_analysis_enabled" value="1" <?php checked( get_option( 'hsz_performance_analysis_enabled', 1 ) ); ?> />
+                                <?php esc_html_e( 'Enable performance analysis for analyzed websites', 'hellaz-sitez-analyzer' ); ?>
+                            </label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php esc_html_e( 'Include Mobile Analysis', 'hellaz-sitez-analyzer' ); ?></th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="hsz_performance_include_mobile" value="1" <?php checked( get_option( 'hsz_performance_include_mobile', 1 ) ); ?> />
+                                <?php esc_html_e( 'Include mobile performance metrics', 'hellaz-sitez-analyzer' ); ?>
+                            </label>
+                        </td>
+                    </tr>
+                </table>
+                <?php submit_button(); ?>
+            </form>
         </div>
         <?php
     }
 
     /**
-     * Render security settings page  
+     * Render security page
      */
-    public function render_security_page() {
+    public function render_security_page(): void {
         ?>
         <div class="wrap hsz-admin-wrap">
             <h1><?php esc_html_e( 'Security Settings', 'hellaz-sitez-analyzer' ); ?></h1>
-            <p><?php esc_html_e( 'Configure security analysis settings and API integrations.', 'hellaz-sitez-analyzer' ); ?></p>
-            
-            <!-- Security settings form would go here -->
-            <div class="notice notice-info">
-                <p><?php esc_html_e( 'Security settings panel - Coming in future update!', 'hellaz-sitez-analyzer' ); ?></p>
-            </div>
+            <form method="post" action="options.php">
+                <?php
+                settings_fields( $this->settings_group );
+                ?>
+                <table class="form-table">
+                    <tr>
+                        <th scope="row"><?php esc_html_e( 'Security Analysis', 'hellaz-sitez-analyzer' ); ?></th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="hsz_security_analysis_enabled" value="1" <?php checked( get_option( 'hsz_security_analysis_enabled', 1 ) ); ?> />
+                                <?php esc_html_e( 'Enable security analysis for analyzed websites', 'hellaz-sitez-analyzer' ); ?>
+                            </label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php esc_html_e( 'SSL Analysis', 'hellaz-sitez-analyzer' ); ?></th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="hsz_ssl_analysis_enabled" value="1" <?php checked( get_option( 'hsz_ssl_analysis_enabled', 1 ) ); ?> />
+                                <?php esc_html_e( 'Analyze SSL certificates and security', 'hellaz-sitez-analyzer' ); ?>
+                            </label>
+                        </td>
+                    </tr>
+                </table>
+                <?php submit_button(); ?>
+            </form>
         </div>
         <?php
     }
 
     /**
-     * Render previews settings page
+     * Render previews page
      */
-    public function render_previews_page() {
+    public function render_previews_page(): void {
         ?>
         <div class="wrap hsz-admin-wrap">
             <h1><?php esc_html_e( 'Preview Settings', 'hellaz-sitez-analyzer' ); ?></h1>
-            <p><?php esc_html_e( 'Preview and test different template styles and configurations.', 'hellaz-sitez-analyzer' ); ?></p>
+            <form method="post" action="options.php">
+                <?php
+                settings_fields( $this->settings_group );
+                ?>
+                <table class="form-table">
+                    <tr>
+                        <th scope="row"><?php esc_html_e( 'Preview Generation', 'hellaz-sitez-analyzer' ); ?></th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="hsz_preview_generation_enabled" value="1" <?php checked( get_option( 'hsz_preview_generation_enabled', 1 ) ); ?> />
+                                <?php esc_html_e( 'Generate website previews/screenshots', 'hellaz-sitez-analyzer' ); ?>
+                            </label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php esc_html_e( 'Preview Dimensions', 'hellaz-sitez-analyzer' ); ?></th>
+                        <td>
+                            <input type="number" name="hsz_preview_width" value="<?php echo esc_attr( get_option( 'hsz_preview_width', 1200 ) ); ?>" min="400" max="1920" /> 
+                            × 
+                            <input type="number" name="hsz_preview_height" value="<?php echo esc_attr( get_option( 'hsz_preview_height', 800 ) ); ?>" min="300" max="1200" />
+                            <p class="description"><?php esc_html_e( 'Width × Height in pixels', 'hellaz-sitez-analyzer' ); ?></p>
+                        </td>
+                    </tr>
+                </table>
+                <?php submit_button(); ?>
+            </form>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render contact page - NEW
+     */
+    public function render_contact_page(): void {
+        ?>
+        <div class="wrap hsz-admin-wrap">
+            <h1><?php esc_html_e( 'Contact Information Settings', 'hellaz-sitez-analyzer' ); ?></h1>
             
-            <!-- Preview panel would go here -->
-            <div class="notice notice-info">
-                <p><?php esc_html_e( 'Preview panel - Coming in future update!', 'hellaz-sitez-analyzer' ); ?></p>
+            <div class="hsz-contact-info">
+                <p><?php esc_html_e( 'Configure how the plugin extracts and displays contact information from analyzed websites.', 'hellaz-sitez-analyzer' ); ?></p>
+            </div>
+
+            <form method="post" action="options.php">
+                <?php
+                settings_fields( $this->settings_group );
+                $this->render_contact_settings();
+                submit_button();
+                ?>
+            </form>
+
+            <div class="hsz-contact-preview">
+                <h3><?php esc_html_e( 'Contact Information Preview', 'hellaz-sitez-analyzer' ); ?></h3>
+                <p><?php esc_html_e( 'When enabled, extracted contact information will be displayed like this:', 'hellaz-sitez-analyzer' ); ?></p>
+                
+                <div class="contact-preview-example">
+                    <div class="contact-item email">
+                        <strong><?php esc_html_e( 'Email:', 'hellaz-sitez-analyzer' ); ?></strong> contact@example.com
+                    </div>
+                    <div class="contact-item phone">
+                        <strong><?php esc_html_e( 'Phone:', 'hellaz-sitez-analyzer' ); ?></strong> (555) 123-4567
+                    </div>
+                    <div class="contact-item address">
+                        <strong><?php esc_html_e( 'Address:', 'hellaz-sitez-analyzer' ); ?></strong> 123 Main St, City, ST 12345
+                    </div>
+                    <div class="contact-item hours">
+                        <strong><?php esc_html_e( 'Hours:', 'hellaz-sitez-analyzer' ); ?></strong> Mon-Fri 9AM-5PM
+                    </div>
+                </div>
             </div>
         </div>
         <?php

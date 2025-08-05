@@ -1,37 +1,66 @@
 === HellaZ SiteZ Analyzer ===
 Contributors: hellaz
-Tags: website analysis, metadata, security, social profiles, feeds
-Requires at least: 5.0
-Tested up to: 6.3
-Requires PHP: 7.4
-Stable tag: 1.0.0
+Tags: seo, metadata, website analysis, contact extraction, performance, security
+Requires at least: 5.8
+Tested up to: 6.5
+Stable tag: 2.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-HellaZ SiteZ Analyzer is a comprehensive WordPress plugin that extracts and displays detailed website metadata, social media profiles, security info, and technology stack analysis.
-
 == Description ==
 
-With HellaZ SiteZ Analyzer, easily analyze any website URL directly from your WordPress site. Extract page titles, descriptions, favicons, social profiles, RSS feeds, technology stack details, and security info from services like VirusTotal and BuiltWith.
-
-Features include:
-
-* Metadata extraction (title, description, favicon)
-* Social media detection across 30+ platforms
-* Bulk processing with progress tracking
-* Fully configurable admin settings with tabs
-* Caching and cache management
-* Multiple output templates for shortcodes, widgets, and blocks
-* Secure AJAX and REST endpoints
-* Error logging and admin log viewer
-* Multisite network compatibility
+HellaZ SiteZ Analyzer is an all-in-one WordPress plugin for comprehensive website analysis.  
+Extracts full site metadata (title, description, Open Graph, Twitter cards, favicon), social media profiles (30+ platforms), contact information (emails, phone numbers, physical addresses, business hours, contact forms), and site technology stack.  
+Provides detailed security and performance auditing including VirusTotal, URLScan.io integration, and Core Web Vitals metrics.  
+Offers 3 beautifully designed templates (classic, modern, compact) with a user-friendly admin interface and live preview of templates.
 
 == Installation ==
 
 1. Upload the plugin folder to `/wp-content/plugins/`.
-2. Activate the plugin via the Plugins menu in WordPress.
-3. Configure your API keys and settings under Settings > SiteZ Analyzer.
-4. Use the shortcode `[hsz_analyzer url="https://example.com"]`, widget, or block to display analysis.
+2. Activate the plugin through the 'Plugins' menu in WordPress.
+3. Navigate to SiteZ Analyzer -> Settings.
+4. Configure API keys and extraction options.
+5. Use shortcode `[hsz_analyzer]` or add the widget/block to your site.
+
+== Frequently Asked Questions ==
+
+= Does the plugin analyze private or password-protected sites? =  
+No, HellaZ SiteZ Analyzer only works with publicly accessible URLs.
+
+= Can I customize the output display? =  
+Yes, choose among classic, modern, or compact templates in settings or shortcode attributes.
+
+== Screenshots ==
+
+1. Classic template display preview
+2. Compact template display preview
+3. Modern template display preview
+4. Admin settings with contact extraction options
+5. Contact info displayed in analysis output
+
+== Changelog ==
+
+= 2.1.0 =
+* Added comprehensive contact information extraction: emails, phones, addresses, forms, hours, social contact links
+* Added new contact extraction settings page and controls
+* Updated all templates to display contact info elegantly
+* Improved Analyzer core and admin UI with template previews
+* Added multi-API integrations for security and performance
+* Improved PHP 8 compatibility and security checks
+
+= 2.0.0 =
+* Initial major release with metadata, social media, performance, and security analysis
+* Multiple display templates and advanced caching
+
+== Upgrade Notice ==
+
+Upgrade to 2.1.0 to gain contact extraction features and enhanced admin template preview functionality.
+
+== License ==
+
+GPL v2 or later
+
+---
 
 == Frequently Asked Questions ==
 
@@ -46,26 +75,3 @@ Yes, caching is enabled by default with configurable duration and manual clearin
 = Can I analyze multiple URLs in bulk? =
 
 Yes, the Bulk tab allows queueing multiple URLs and tracking progress.
-
-== Changelog ==
-
-= 1.0.0 =
-* Complete restoration and enhancement of plugin features.
-* Added support for 30+ social platforms and comprehensive metadata extraction.
-* Improved caching, bulk processing, AJAX, and admin interfaces.
-
-== Upgrade Notice ==
-
-Upgrade only after backing up your site and database.
-
-== Screenshots ==
-
-1. Settings page with tabbed interface  
-2. SiteZ Analyzer block in Gutenberg  
-3. SiteZ Analyzer widget in sidebar  
-4. Bulk processing status tab  
-5. Admin error log viewer
-
-== License ==
-
-This plugin is licensed under the GPLv2 or later.

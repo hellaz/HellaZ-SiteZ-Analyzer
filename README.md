@@ -1,100 +1,81 @@
 # HellaZ SiteZ Analyzer
 
-**Contributors:** Hellaz  
-**Tags:** website analysis, metadata, security, social profiles, feeds, WordPress plugin  
-**Requires at least:** 5.0  
-**Tested up to:** 6.3  
-**Requires PHP:** 7.4  
-**License:** GPLv2 or later  
-**License URI:** https://www.gnu.org/licenses/gpl-2.0.html  
+A comprehensive WordPress website analysis & metadata plugin that uncovers SEO quality, security, performance, technology stack, social, and contact information from any public URL. Features a multi-section, template-driven UI, advanced caching, bulk analysis, and deep admin controls.
 
-## Description
+## 🚀 Features
 
-HellaZ SiteZ Analyzer is a powerful WordPress plugin designed to fetch, analyze, and display detailed metadata and insights about any given website URL. It extracts page titles, descriptions, favicons, social profiles, RSS/Atom feeds, technology stacks, security indicators, and more. The plugin supports single URL lookups via shortcode, widgets, or Gutenberg blocks as well as batch (bulk) analyses with detailed progress monitoring.
+- Extracts full site metadata, Open Graph, Twitter, favicon and feeds
+- ✅ **Contact Information Extraction**: email addresses, phone numbers, physical addresses, business hours, detected contact forms, and social contact links
+- 🔗 Social media profiling (30+ platforms auto-detected)
+- 🌐 Language and structured data analysis (JSON-LD, microdata)
+- ⚡ Performance and Core Web Vitals via integrated 3rd-party APIs
+- 🔒 Security auditing: HTTPS, headers, VirusTotal, URLScan, and more
+- 🏷️ Technology detection (BuiltWith integration)
+- 📊 Bulk processing with results database and advanced caching
+- 🎨 3 modern, responsive metadata output templates (classic, modern, compact)
+- 🛠️ Live template previews and configurable output via WordPress admin
+- 🧩 Shortcode, widget, and Gutenberg block integration
+- 📋 Admin controls for all API keys, feature toggles, fallbacks, disclaimer, and ALL extraction settings
+- 🧪 Optimized for security, performance, and code quality (WordPress Coding Standards)
 
-**Key Features:**
+## 📷 Template Previews
 
-- Extracts rich metadata (titles, descriptions, favicons) reliably.
-- **Gutenberg Block**: Add a block to analyze metadata for any URL.
-- **Shortcode Support**: Use `[hsz_metadata url="https://example.com"]` for backward compatibility.
-- **Widget Support**: Display metadata in sidebars or widgetized areas.
-- Detects social media profiles across 30+ major platforms.
-- Integrates with VirusTotal, BuiltWith, URLScan.io via APIs for security and technology data.
-- **Metadata Detection**:  Extracts metadata, title, favicon, keywords, author, open graph tags from remote website.
-- **Social Media Detection**: Extracts links for Facebook, Twitter/X, LinkedIn, YouTube, Instagram, WhatsApp, TikTok, Pinterest, Reddit, and Telegram.
-- **Contact Info Detection**: Extracts emails, contact forms, address from target website
-- **Feed Detection**: Retrieves RSS/Atom Feeds
-- **Server & Security Info**: Retrieves Server location, Security & SSL details using APIs or direct parsing.
-- Supports caching with customizable expiration and manual clearing. Reduces server load by caching API responses.
-- Flexible, multi-layout output: classic, modern, or minimal views.
-- Provides comprehensive bulk URL processing with progress tracking.
-- Full WordPress admin settings with organized tabbed interface.
-- GDPR friendly, fully translatable, and compatible with multisite.
-- Admin tool for reviewing error and event logs.
-- REST and AJAX endpoints secured by nonces and capability checks.
-- Supports theme and plugin developers by allowing template customization.
+![Classic Template](assets/images/template-classic.png)  
+![Compact Template](assets/images/template-compact.png)  
+![Modern Template](assets/images/template-modern.png)  
 
-## Installation
-1. Upload the plugin to the `/wp-content/plugins/` directory. Extract to Create `/wp-content/plugins/hellaz-sitez-analyzer` directory, or install via the WordPress plugin admin.
-2. Activate the plugin through the 'Plugins' menu.
-3. Configure API keys and settings under **Settings > SiteZ Analyzer**.
-4. Use shortcodes `[hsz_analyzer url="https://example.com"]`, widgets, or blocks to display site analyses.
+## ⚙️ Installation & Setup
 
-## Usage
+1. Upload and activate the plugin through the WordPress admin area.
+2. Navigate to **SiteZ Analyzer > Settings** in the admin menu.
+3. Optionally enter API keys for VirusTotal, BuiltWith, and URLScan for enhanced analysis.
+4. Configure contact extraction options to specify what info to extract (emails, phones, addresses, forms).
+5. Choose your preferred output template: classic, modern, or compact.
+6. Adjust caching duration, performance thresholds, security toggles, and disclaimer settings as needed.
 
-- **Shortcode:** `[hsz_analyzer url="https://example.com"]`
-- **Widget:** Add the "SiteZ Analyzer" widget to any widgetized area.
-- **Gutenberg Block:** Use the "SiteZ Analyzer" block in posts or pages.
-- **Bulk Analysis:** Upload URLs from the admin interface and monitor progress in the Bulk tab.
-- **Cache:** Control and clear cached results from the Cache tab.
-- **Logs:** Review runtime errors and events under Tools > SiteZ Logs.
+## 🚦 Usage
 
-## Screenshots
+**Shortcode:**  
+- Basic analysis:  
+  `[hsz_analyzer url="https://example.com"]`  
+- Compact view (minimal info):  
+  `[hsz_analyzer url="https://example.com" display_type="compact"]`
 
-1. Plugin settings with tabbed interface  
-2. Site analysis block on post editor  
-3. Widget displaying site metadata and social links  
-4. Bulk analysis status page  
-5. Logs viewer interface  
+**Widget:**  
+- Add the HellaZ SiteZ Analyzer widget under Appearance → Widgets.  
+- Configure URL and display type in widget settings.
 
-## Frequently Asked Questions
+**Gutenberg Block:**  
+- Add "SiteZ Analyzer" block in the block editor and configure options.
 
-**Q:** Do I need API keys to use the plugin?  
-**A:** Basic metadata extraction is free and requires no keys. API keys enable extended features like VirusTotal or BuiltWith data.
+**Templates:**  
+- Select the output template globally via plugin settings or override per instance with shortcode parameter.
 
-**Q:** How does caching work?  
-**A:** The plugin caches analysis results via WordPress transients, configurable in the admin with manual purge option.
+## 🆕 Changelog
 
-**Q:** Is this plugin multisite compatible?  
-**A:** Yes, it supports network activation and per-site configuration.
+### 2.1.0 — August 2025
+- NEW: Contact extraction (emails, phones, addresses, contact forms, operating hours, social links)
+- NEW: Contact settings page enables granular control over extraction and validation
+- IMPROVED: Unified Analyzer class coordinating all analysis modules
+- IMPROVED: Templates updated to display comprehensive contact information elegantly
+- IMPROVED: Enhanced admin template selection interface with live previews and detailed guides
+- IMPROVED: Multi-API integrations for security, performance, and technology analysis
+- FIXED: PHP 8+ compatibility, improved error handling, and input sanitization
+- MAINTAINED: Full display of metadata, SEO analysis, social media, feeds, and recommendations
 
-## Changelog
+## 🔐 Security & Standards
 
-### 1.0.0 – July 2025
+- All input is sanitized and escaped following WordPress Coding Standards
+- Nonce verification on all forms and AJAX endpoints to prevent CSRF
+- Caching implemented for performance and API request minimization
+- Tested on PHP 7.4 to 8.2 with major WordPress versions
 
-- Complete restoration and enhancement of plugin system.
-- Added support for 30+ social media platforms.
-- Bulk processing with database-driven queue and progress tracking.
-- Fully featured tabbed settings UI with API toggles and cache management.
-- Enhanced shortcode, widget, and block output with customizable templates.
-- Comprehensive error logging and admin interface improvements.
-- Secure AJAX and REST endpoints implemented.
-- Optimized caching and performance controls.
+## 🤝 Contributing
 
+Have ideas, bugs, or improvements?  
+Feel free to submit issues or pull requests on [GitHub](https://github.com/hellaz/HellaZ-SiteZ-Analyzer).
 
+For support or questions, visit [hellaz.net](https://hellaz.net).
 
-### Support
-For support, please visit the [GitHub repository](https://github.com/hellaz/HellaZ-SiteZ-Analyzer/) .
-
-### Contributing
-Contributions are welcome! If you'd like to contribute, please follow these steps:
-
-1. Fork the repository. 
-2. Create a new branch for your feature or bug fix.
-3. Submit a pull request with a detailed description of your changes.
-
-### License
-This plugin is released under the GPLv2 or later license.
-[Hellaz.Team](https://hellaz.net)  
-
+---
 

@@ -322,33 +322,43 @@ class Utils {
 		}
 		return self::resolve_url( '/favicon.ico', $base_url );
 	}
-	/**
-	 * Get the client IP address, accounting for proxies.
-	 *
-	 * @return string
-	 */
-	public static function get_client_ip() {
-		foreach ([
-			'HTTP_CLIENT_IP',
-			'HTTP_X_FORWARDED_FOR',
-			'HTTP_X_FORWARDED',
-			'HTTP_X_CLUSTER_CLIENT_IP',
-			'HTTP_FORWARDED_FOR',
-			'HTTP_FORWARDED',
-			'REMOTE_ADDR'
-		] as $key) {
-			if (!empty($_SERVER[$key])) {
-				$iplist = explode(',', $_SERVER[$key]);
-				foreach ($iplist as $ip) {
-					$ip = trim($ip);
-					if (filter_var($ip, FILTER_VALIDATE_IP)) {
-						return sanitize_text_field($ip);
-					}
-				}
-			}
-		}
-		return '0.0.0.0';
-	}
+    public static function get_client_ip() {
+        foreach ([
+            'HTTP_CLIENT_IP',
+            'HTTP_X_FORWARDED_FOR',
+            'HTTP_X_FORWARDED',
+            'HTTP_X_CLUSTER_CLIENT_IP',
+            'HTTP_FORWARDED_FOR',
+            'HTTP_FORWARDED',
+            'REMOTE_ADDR'
+        ] as $key) {
+            if (!empty($_SERVER[$key])) {
+                $iplist = explode(',', $_SERVER[$key]);
+                foreach ($iplist as $ip) {
+                    $ip = trim($ip);
+                    if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                        return sanitize_text_field($ip);
+                    }
+                }
+            }
+        }
+        return '0.0.0.0';
+    }
+
+    /**
+     * Convert a numeric score (0-100) to a letter grade.
+     *
+     * @param int|float $score
+     * @return string Grade A-F
+     */
+    public static function score_to_grade( $score ) {
+        $score = intval($score);
+        if ($score >= 90) return 'A';
+        if ($score >= 80) return 'B';
+        if ($score >= 70) return 'C';
+        if ($score >= 60) return 'D';
+        return 'F';
+    }
 
 	
 	/**

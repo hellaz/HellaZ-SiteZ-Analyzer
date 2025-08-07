@@ -195,7 +195,10 @@ class Utils {
 
 		$args = wp_parse_args( $args, $default_args );
 
-		if ( get_option( 'hsz_disable_ssl_verify', 0 ) ) {
+		// UPDATED: Add SSL bypass for testing environments
+		if ( get_option( 'hsz_disable_ssl_verify', 0 ) || 
+			(defined('WP_DEBUG') && WP_DEBUG) || 
+			strpos($_SERVER['HTTP_HOST'] ?? '', 'tastewp.com') !== false ) {
 			$args['sslverify'] = false;
 		}
 
@@ -322,43 +325,65 @@ class Utils {
 		}
 		return self::resolve_url( '/favicon.ico', $base_url );
 	}
-    public static function get_client_ip() {
-        foreach ([
-            'HTTP_CLIENT_IP',
-            'HTTP_X_FORWARDED_FOR',
-            'HTTP_X_FORWARDED',
-            'HTTP_X_CLUSTER_CLIENT_IP',
-            'HTTP_FORWARDED_FOR',
-            'HTTP_FORWARDED',
-            'REMOTE_ADDR'
-        ] as $key) {
-            if (!empty($_SERVER[$key])) {
-                $iplist = explode(',', $_SERVER[$key]);
-                foreach ($iplist as $ip) {
-                    $ip = trim($ip);
-                    if (filter_var($ip, FILTER_VALIDATE_IP)) {
-                        return sanitize_text_field($ip);
-                    }
+
+
+/**
+ * Get the client IP address, accounting for proxies.
+ *
+ * @return string
+ */
+public static function get_client_ip() {
+    foreach ([
+        'HTTP_CLIENT_IP',
+        'HTTP_X_FORWARDED_FOR',
+        'HTTP_X_FORWARDED',
+        'HTTP_X_CLUSTER_CLIENT_IP',
+        'HTTP_FORWARDED_FOR',
+        'HTTP_FORWARDED',
+        'REMOTE_ADDR'
+    ] as $key) {
+        if (!empty($_SERVER[$key])) {
+            $iplist = explode(',', $_SERVER[$key]);
+            foreach ($iplist as $ip) {
+                $ip = trim($ip);
+                if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                    return sanitize_text_field($ip);
                 }
             }
         }
-        return '0.0.0.0';
     }
+    return '0.0.0.0';
+}
 
-    /**
-     * Convert a numeric score (0-100) to a letter grade.
-     *
-     * @param int|float $score
-     * @return string Grade A-F
-     */
-    public static function score_to_grade( $score ) {
-        $score = intval($score);
-        if ($score >= 90) return 'A';
-        if ($score >= 80) return 'B';
-        if ($score >= 70) return 'C';
-        if ($score >= 60) return 'D';
-        return 'F';
+/**
+ * Convert a numeric score (0-100) to a letter grade.
+ *
+ * @param int|float $score
+ * @return string Grade A-F
+ */
+public static function score_to_grade( $score ) {
+    $score = intval($score);
+    if ($score >= 90) return 'A';
+    if ($score >= 80) return 'B';
+    if ($score >= 70) return 'C';
+    if ($score >= 60) return 'D';
+    return 'F';
+}
+
+/**
+ * Clear rate limiting for debugging/testing
+ * @param string $identifier Optional specific identifier to clear
+ */
+public static function clear_rate_limits(string $identifier = '') {
+    if ($identifier) {
+        delete_transient('hsz_rate_limit_' . $identifier);
+    } else {
+        // Clear all HSZ rate limits
+        global $wpdb;
+        $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_hsz_rate_limit_%'");
+        $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_timeout_hsz_rate_limit_%'");
     }
+}
 
 	
 	/**

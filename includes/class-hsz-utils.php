@@ -322,6 +322,34 @@ class Utils {
 		}
 		return self::resolve_url( '/favicon.ico', $base_url );
 	}
+	/**
+	 * Get the client IP address, accounting for proxies.
+	 *
+	 * @return string
+	 */
+	public static function get_client_ip() {
+		foreach ([
+			'HTTP_CLIENT_IP',
+			'HTTP_X_FORWARDED_FOR',
+			'HTTP_X_FORWARDED',
+			'HTTP_X_CLUSTER_CLIENT_IP',
+			'HTTP_FORWARDED_FOR',
+			'HTTP_FORWARDED',
+			'REMOTE_ADDR'
+		] as $key) {
+			if (!empty($_SERVER[$key])) {
+				$iplist = explode(',', $_SERVER[$key]);
+				foreach ($iplist as $ip) {
+					$ip = trim($ip);
+					if (filter_var($ip, FILTER_VALIDATE_IP)) {
+						return sanitize_text_field($ip);
+					}
+				}
+			}
+		}
+		return '0.0.0.0';
+	}
+
 	
 	/**
 	 * Extracts all image URLs from HTML.
